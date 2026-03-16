@@ -4,81 +4,89 @@ import { useState } from 'react'
 const t = {
   en: {
     nav_features: 'Features', nav_pricing: 'Pricing', nav_cta: 'Get started',
-    badge: 'Trusted by 500+ dropshippers',
-    hero1: 'Your ads keep getting', hero2: 'rejected by Meta.',
+    badge: 'Trusted by 500+ advertisers',
+    hero1: 'Your ads keep getting', hero2: 'rejected.',
     hero3: "We fix that.",
-    subtitle: 'Strip metadata, resize to every Meta format, and clean your creatives automatically. One click. No blocked ads.',
+    subtitle: 'Strip metadata, resize to every ad format, and clean your creatives automatically. One click. Works on Meta, Google, TikTok and more.',
     drop: 'Drop images here', drop_sub: 'PNG, JPG, WEBP · Up to 50MB each',
     select: 'Choose files', process: 'Process & Download', processing: 'Processing...',
     clear: 'Clear', success: 'images processed successfully',
-    f1_title: 'Metadata stripped', f1_desc: 'EXIF, GPS, device info removed on every export',
-    f2_title: 'Every Meta format', f2_desc: '1:1 · 4:5 · 9:16 · 1.91:1 — auto-resized instantly',
-    f3_title: 'Bulk processing', f3_desc: 'Upload and process 50+ images in a single pass',
+    f1_title: 'Metadata stripped', f1_desc: 'Every hidden data point removed before your image reaches any ad platform.', f1_sub: 'EXIF · GPS · Device info · Timestamps',
+    f2_title: 'Every ad format', f2_desc: 'Auto-resized to every placement across Meta, Google, TikTok and more.', f2_sub: '1:1 · 4:5 · 9:16 · 1.91:1 · 16:9',
+    f3_title: 'Bulk processing', f3_desc: 'Drop 50 images, get 50 clean images back. All at once.', f3_sub: 'Up to 50MB per file · Batch download',
+    know_more: 'Learn more →',
     stats: '50,000+ images processed this month',
     free: 'Free', free_sub: 'Get started', free_desc: '10 images per day',
     pro: 'Pro', pro_sub: 'Most popular', pro_desc: 'Unlimited images · All formats · Priority processing',
+    platforms: 'Works with',
   },
   pt: {
     nav_features: 'Funcionalidades', nav_pricing: 'Preços', nav_cta: 'Começar',
-    badge: 'Usado por +500 dropshippers',
-    hero1: 'Os teus anúncios continuam', hero2: 'a ser rejeitados pelo Meta.',
+    badge: 'Usado por +500 anunciantes',
+    hero1: 'Os teus anúncios continuam', hero2: 'a ser rejeitados.',
     hero3: 'Nós resolvemos isso.',
-    subtitle: 'Remove metadata, redimensiona para todos os formatos Meta e limpa os teus criativos automaticamente. Um clique. Sem bloqueios.',
+    subtitle: 'Remove metadata, redimensiona para todos os formatos e limpa os teus criativos automaticamente. Um clique. Funciona no Meta, Google, TikTok e mais.',
     drop: 'Arrasta imagens aqui', drop_sub: 'PNG, JPG, WEBP · Até 50MB cada',
     select: 'Escolher ficheiros', process: 'Processar e Descarregar', processing: 'A processar...',
     clear: 'Limpar', success: 'imagens processadas com sucesso',
-    f1_title: 'Metadata removida', f1_desc: 'EXIF, GPS, dados do dispositivo eliminados em cada exportação',
-    f2_title: 'Todos os formatos Meta', f2_desc: '1:1 · 4:5 · 9:16 · 1.91:1 — redimensionados automaticamente',
-    f3_title: 'Processamento em massa', f3_desc: 'Carrega e processa 50+ imagens de uma vez',
+    f1_title: 'Metadata removida', f1_desc: 'Todos os dados ocultos eliminados antes de a tua imagem chegar a qualquer plataforma.', f1_sub: 'EXIF · GPS · Info do dispositivo · Timestamps',
+    f2_title: 'Todos os formatos de anúncio', f2_desc: 'Redimensionado automaticamente para todos os placements do Meta, Google, TikTok e mais.', f2_sub: '1:1 · 4:5 · 9:16 · 1.91:1 · 16:9',
+    f3_title: 'Processamento em massa', f3_desc: 'Arrasta 50 imagens, recebe 50 imagens limpas. Tudo de uma vez.', f3_sub: 'Até 50MB por ficheiro · Download em batch',
+    know_more: 'Saber mais →',
     stats: '+50.000 imagens processadas este mês',
     free: 'Grátis', free_sub: 'Começar', free_desc: '10 imagens por dia',
     pro: 'Pro', pro_sub: 'Mais popular', pro_desc: 'Imagens ilimitadas · Todos os formatos · Processamento prioritário',
+    platforms: 'Funciona com',
   },
   es: {
     nav_features: 'Funciones', nav_pricing: 'Precios', nav_cta: 'Empezar',
-    badge: 'Usado por +500 dropshippers',
-    hero1: 'Tus anuncios siguen siendo', hero2: 'rechazados por Meta.',
+    badge: 'Usado por +500 anunciantes',
+    hero1: 'Tus anuncios siguen siendo', hero2: 'rechazados.',
     hero3: 'Nosotros lo solucionamos.',
-    subtitle: 'Elimina metadatos, redimensiona a todos los formatos Meta y limpia tus creativos automáticamente. Un clic. Sin bloqueos.',
+    subtitle: 'Elimina metadatos, redimensiona a todos los formatos y limpia tus creativos automáticamente. Un clic. Funciona en Meta, Google, TikTok y más.',
     drop: 'Arrastra imágenes aquí', drop_sub: 'PNG, JPG, WEBP · Hasta 50MB cada una',
     select: 'Elegir archivos', process: 'Procesar y Descargar', processing: 'Procesando...',
     clear: 'Limpiar', success: 'imágenes procesadas correctamente',
-    f1_title: 'Metadatos eliminados', f1_desc: 'EXIF, GPS, datos del dispositivo eliminados en cada exportación',
-    f2_title: 'Todos los formatos Meta', f2_desc: '1:1 · 4:5 · 9:16 · 1.91:1 — redimensionado automático',
-    f3_title: 'Procesamiento masivo', f3_desc: 'Sube y procesa 50+ imágenes en un solo paso',
+    f1_title: 'Metadatos eliminados', f1_desc: 'Todos los datos ocultos eliminados antes de que tu imagen llegue a cualquier plataforma.', f1_sub: 'EXIF · GPS · Info del dispositivo · Timestamps',
+    f2_title: 'Todos los formatos de anuncio', f2_desc: 'Redimensionado automáticamente para todos los placements de Meta, Google, TikTok y más.', f2_sub: '1:1 · 4:5 · 9:16 · 1.91:1 · 16:9',
+    f3_title: 'Procesamiento masivo', f3_desc: 'Sube 50 imágenes, recibe 50 imágenes limpias. Todo a la vez.', f3_sub: 'Hasta 50MB por archivo · Descarga en batch',
+    know_more: 'Saber más →',
     stats: '+50.000 imágenes procesadas este mes',
     free: 'Gratis', free_sub: 'Empezar', free_desc: '10 imágenes por día',
     pro: 'Pro', pro_sub: 'Más popular', pro_desc: 'Imágenes ilimitadas · Todos los formatos · Procesamiento prioritario',
+    platforms: 'Funciona con',
   },
 }
 
-const flags = { en: '🇬🇧', pt: '🇵🇹', es: '🇪🇸' }
+const flags = {
+  en: 'https://flagcdn.com/w20/gb.png',
+  pt: 'https://flagcdn.com/w20/pt.png',
+  es: 'https://flagcdn.com/w20/es.png',
+}
 
-const btnBase = {
+const glowStyle = {
   background: 'linear-gradient(135deg, #2563eb, #4f46e5, #8b5cf6, #6366f1)',
   backgroundSize: '300% 300%',
   backgroundPosition: '0% 50%',
-  boxShadow: '0 0 0 1px rgba(99,102,241,0.3), 0 8px 24px rgba(79,70,229,0.2)',
-  transition: 'box-shadow 0.4s ease, transform 0.2s ease, background-position 0.1s ease',
+  transition: 'box-shadow 0.4s ease, background-position 0.1s ease',
 }
 
-function useGlowBtn() {
-  const onMouseEnter = (e) => {
+const glowHandlers = {
+  onMouseEnter: (e) => {
     e.currentTarget.style.backgroundPosition = '100% 50%'
-    e.currentTarget.style.boxShadow = '0 0 0 1px rgba(139,92,246,0.6), 0 0 20px rgba(99,102,241,0.5), 0 0 45px rgba(139,92,246,0.25), 0 8px 24px rgba(79,70,229,0.3)'
+    e.currentTarget.style.boxShadow = '0 0 0 1px rgba(139,92,246,0.6), 0 0 20px rgba(99,102,241,0.5), 0 0 45px rgba(139,92,246,0.25)'
     e.currentTarget.style.transform = 'scale(1.02)'
-  }
-  const onMouseLeave = (e) => {
+  },
+  onMouseLeave: (e) => {
     e.currentTarget.style.backgroundPosition = '0% 50%'
-    e.currentTarget.style.boxShadow = '0 0 0 1px rgba(99,102,241,0.3), 0 8px 24px rgba(79,70,229,0.2)'
+    e.currentTarget.style.boxShadow = 'none'
     e.currentTarget.style.transform = 'scale(1)'
-  }
-  const onMouseMove = (e) => {
+  },
+  onMouseMove: (e) => {
     const rect = e.currentTarget.getBoundingClientRect()
     const x = ((e.clientX - rect.left) / rect.width * 100).toFixed(1)
     e.currentTarget.style.backgroundPosition = `${x}% 50%`
-  }
-  return { onMouseEnter, onMouseLeave, onMouseMove }
+  },
 }
 
 function IconUpload() {
@@ -102,15 +110,15 @@ function IconSpin() {
 }
 
 function IconShield() {
-  return <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" /></svg>
+  return <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" /></svg>
 }
 
 function IconResize() {
-  return <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9m5.25 11.25h-4.5m4.5 0v-4.5m0 4.5L15 15" /></svg>
+  return <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9m5.25 11.25h-4.5m4.5 0v-4.5m0 4.5L15 15" /></svg>
 }
 
 function IconBolt() {
-  return <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" /></svg>
+  return <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" /></svg>
 }
 
 function Logo() {
@@ -139,6 +147,15 @@ function Logo() {
   )
 }
 
+function PlatformBadge({ name, color }) {
+  return (
+    <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg" style={{background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)'}}>
+      <div className="w-2 h-2 rounded-full" style={{background: color}}></div>
+      <span className="text-[12px] text-gray-400 font-medium">{name}</span>
+    </div>
+  )
+}
+
 export default function Home() {
   const [files, setFiles] = useState([])
   const [processing, setProcessing] = useState(false)
@@ -147,7 +164,6 @@ export default function Home() {
   const [lang, setLang] = useState('en')
   const [langOpen, setLangOpen] = useState(false)
   const i = t[lang]
-  const glow = useGlowBtn()
 
   const handleFiles = (e) => { setFiles(Array.from(e.target.files)); setDone(false) }
   const handleDrop = (e) => { e.preventDefault(); setDragging(false); setFiles(Array.from(e.dataTransfer.files)); setDone(false) }
@@ -169,6 +185,12 @@ export default function Home() {
     setDone(true)
   }
 
+  const features = [
+    { Icon: IconShield, title: i.f1_title, desc: i.f1_desc, sub: i.f1_sub, accent: '#3b82f6', href: '/features#metadata' },
+    { Icon: IconResize, title: i.f2_title, desc: i.f2_desc, sub: i.f2_sub, accent: '#8b5cf6', href: '/features#formats' },
+    { Icon: IconBolt, title: i.f3_title, desc: i.f3_desc, sub: i.f3_sub, accent: '#6366f1', href: '/features#bulk' },
+  ]
+
   return (
     <main className="min-h-screen bg-[#060609] text-white overflow-x-hidden" style={{fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'}}>
 
@@ -184,7 +206,7 @@ export default function Home() {
           <a href="#pricing" className="text-[13px] text-gray-400 hover:text-gray-200 transition-colors tracking-wide">{i.nav_pricing}</a>
           <div className="relative">
             <button onClick={() => setLangOpen(!langOpen)} className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-[12px] text-gray-400 hover:text-gray-200 transition-colors" style={{border: '1px solid rgba(255,255,255,0.07)'}}>
-              <span className="text-sm">{flags[lang]}</span>
+              <img src={flags[lang]} alt={lang} style={{width:'16px', height:'11px', objectFit:'cover', borderRadius:'2px'}} />
               <span className="uppercase font-medium tracking-wider">{lang}</span>
               <svg className="w-3 h-3 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
             </button>
@@ -192,7 +214,7 @@ export default function Home() {
               <div className="absolute right-0 mt-1.5 w-32 rounded-xl overflow-hidden z-30" style={{background: '#0d0d14', border: '1px solid rgba(255,255,255,0.08)', boxShadow: '0 20px 40px rgba(0,0,0,0.5)'}}>
                 {Object.keys(t).map((l) => (
                   <button key={l} onClick={() => { setLang(l); setLangOpen(false) }} className="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-[12px] hover:bg-white/5 transition-colors">
-                    <span className="text-sm">{flags[l]}</span>
+                    <img src={flags[l]} alt={l} style={{width:'16px', height:'11px', objectFit:'cover', borderRadius:'2px'}} />
                     <span className={`uppercase font-medium tracking-wider ${lang === l ? 'text-blue-400' : 'text-gray-400'}`}>{l}</span>
                     {lang === l && <svg className="w-3 h-3 text-blue-400 ml-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4.5 12.75l6 6 9-13.5" /></svg>}
                   </button>
@@ -200,11 +222,7 @@ export default function Home() {
               </div>
             )}
           </div>
-          <button
-            {...glow}
-            className="px-5 py-2 rounded-lg text-[13px] font-medium text-white"
-            style={btnBase}
-          >
+          <button {...glowHandlers} className="px-5 py-2 rounded-lg text-[13px] font-medium text-white" style={glowStyle}>
             {i.nav_cta}
           </button>
         </div>
@@ -212,7 +230,7 @@ export default function Home() {
 
       <div className="relative z-10 max-w-4xl mx-auto px-6 pt-28 pb-32">
 
-        <div className="text-center mb-20">
+        <div className="text-center mb-16">
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-[11px] font-medium tracking-wide mb-10 uppercase" style={{background: 'rgba(59,130,246,0.08)', border: '1px solid rgba(59,130,246,0.18)', color: '#93bbfd', letterSpacing: '0.08em'}}>
             <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse inline-block"></span>
             {i.badge}
@@ -240,7 +258,16 @@ export default function Home() {
             <span className="text-gray-100">{i.hero3}</span>
           </h1>
 
-          <p className="text-gray-400 max-w-lg mx-auto leading-relaxed" style={{fontSize: '17px'}}>{i.subtitle}</p>
+          <p className="text-gray-400 max-w-lg mx-auto leading-relaxed mb-8" style={{fontSize: '17px'}}>{i.subtitle}</p>
+
+          <div className="flex items-center justify-center gap-2 flex-wrap">
+            <span className="text-[11px] text-gray-600 uppercase tracking-widest mr-1">{i.platforms}</span>
+            <PlatformBadge name="Meta Ads" color="#1877f2" />
+            <PlatformBadge name="Google Ads" color="#4285f4" />
+            <PlatformBadge name="TikTok Ads" color="#ff0050" />
+            <PlatformBadge name="Pinterest" color="#e60023" />
+            <PlatformBadge name="Snapchat" color="#fffc00" />
+          </div>
         </div>
 
         <div
@@ -263,11 +290,7 @@ export default function Home() {
               </div>
               <p className="text-white font-semibold text-lg mb-2">{i.drop}</p>
               <p className="text-gray-500 text-sm mb-8">{i.drop_sub}</p>
-              <label
-                {...glow}
-                className="inline-flex items-center gap-2 px-7 py-3 rounded-xl text-sm font-semibold text-white cursor-pointer"
-                style={btnBase}
-              >
+              <label {...glowHandlers} className="inline-flex items-center gap-2 px-7 py-3 rounded-xl text-sm font-semibold text-white cursor-pointer" style={glowStyle}>
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
                 {i.select}
                 <input type="file" multiple accept="image/*" className="hidden" onChange={handleFiles} />
@@ -285,13 +308,7 @@ export default function Home() {
                 ))}
               </div>
               <div className="flex items-center justify-center gap-3">
-                <button
-                  onClick={processImages}
-                  disabled={processing}
-                  {...glow}
-                  className="inline-flex items-center gap-2.5 px-9 py-3.5 rounded-xl text-sm font-semibold text-white disabled:opacity-40"
-                  style={btnBase}
-                >
+                <button onClick={processImages} disabled={processing} {...glowHandlers} className="inline-flex items-center gap-2.5 px-9 py-3.5 rounded-xl text-sm font-semibold text-white disabled:opacity-40" style={glowStyle}>
                   {processing ? <><IconSpin />{i.processing}</> : <><IconDownload />{i.process}</>}
                 </button>
                 <button onClick={() => { setFiles([]); setDone(false) }} className="px-4 py-3.5 text-xs text-gray-500 hover:text-gray-300 transition-colors tracking-wide">{i.clear}</button>
@@ -307,21 +324,17 @@ export default function Home() {
 
         <p className="text-center text-[11px] text-gray-600 mb-24 tracking-wide">{i.stats}</p>
 
-        <div id="features" className="grid grid-cols-3 gap-3 mb-28">
-          {[
-            { Icon: IconShield, title: i.f1_title, desc: i.f1_desc, accent: '#3b82f6' },
-            { Icon: IconResize, title: i.f2_title, desc: i.f2_desc, accent: '#8b5cf6' },
-            { Icon: IconBolt, title: i.f3_title, desc: i.f3_desc, accent: '#6366f1' },
-          ].map(({ Icon, title, desc, accent }, idx) => (
+        <div id="features" className="grid grid-cols-3 gap-4 mb-28">
+          {features.map(({ Icon, title, desc, sub, accent, href }, idx) => (
             <div
               key={idx}
-              className="rounded-2xl p-6 transition-all duration-300 hover:scale-[1.02]"
+              className="rounded-2xl p-7 flex flex-col transition-all duration-300 hover:scale-[1.02]"
               onMouseMove={(e) => {
                 const rect = e.currentTarget.getBoundingClientRect()
                 const x = ((e.clientX - rect.left) / rect.width * 100).toFixed(1)
                 const y = ((e.clientY - rect.top) / rect.height * 100).toFixed(1)
-                e.currentTarget.style.background = `radial-gradient(circle at ${x}% ${y}%, rgba(99,102,241,0.08) 0%, rgba(255,255,255,0.02) 60%)`
-                e.currentTarget.style.borderColor = `rgba(99,102,241,0.25)`
+                e.currentTarget.style.background = `radial-gradient(circle at ${x}% ${y}%, ${accent}12 0%, rgba(255,255,255,0.02) 65%)`
+                e.currentTarget.style.borderColor = `${accent}40`
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.background = 'rgba(255,255,255,0.02)'
@@ -329,11 +342,19 @@ export default function Home() {
               }}
               style={{background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)'}}
             >
-              <div className="w-9 h-9 rounded-xl flex items-center justify-center mb-4" style={{background: `${accent}18`, color: accent}}>
+              <div className="w-11 h-11 rounded-2xl flex items-center justify-center mb-5" style={{background: `${accent}15`, color: accent}}>
                 <Icon />
               </div>
-              <p className="font-semibold text-[14px] text-white mb-2">{title}</p>
-              <p className="text-gray-500 text-[13px] leading-relaxed">{desc}</p>
+              <p className="font-bold text-[16px] text-white mb-3 tracking-tight">{title}</p>
+              <p className="text-gray-400 text-[13px] leading-relaxed mb-4">{desc}</p>
+              <div className="px-3 py-2 rounded-lg mb-5" style={{background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)'}}>
+                <p className="text-[11px] tracking-wide font-medium" style={{color: accent}}>{sub}</p>
+              </div>
+              <div className="mt-auto">
+                <a href={href} className="text-[12px] font-medium transition-colors hover:opacity-80" style={{color: accent}}>
+                  {i.know_more}
+                </a>
+              </div>
             </div>
           ))}
         </div>
@@ -343,19 +364,21 @@ export default function Home() {
           <h2 className="text-center text-3xl font-bold tracking-tight mb-12">Simple, transparent pricing</h2>
 
           <div className="grid grid-cols-2 gap-4 max-w-lg mx-auto">
-            <div className="rounded-2xl p-7" style={{background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.07)'}}>
+            <div className="rounded-2xl p-7 flex flex-col" style={{background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.07)'}}>
               <p className="text-[11px] text-gray-500 uppercase tracking-widest font-medium mb-4">{i.free}</p>
               <div className="flex items-baseline gap-1 mb-1">
                 <span className="text-4xl font-bold">€0</span>
                 <span className="text-gray-500 text-sm">/mo</span>
               </div>
               <p className="text-gray-500 text-[13px] mb-6">{i.free_desc}</p>
-              <button className="w-full py-2.5 rounded-xl text-[13px] font-medium text-gray-300 transition-colors hover:text-white" style={{border: '1px solid rgba(255,255,255,0.1)'}}>
-                {i.free_sub}
-              </button>
+              <div className="mt-auto">
+                <button className="w-full py-2.5 rounded-xl text-[13px] font-medium text-gray-300 transition-colors hover:text-white" style={{border: '1px solid rgba(255,255,255,0.1)'}}>
+                  {i.free_sub}
+                </button>
+              </div>
             </div>
 
-            <div className="rounded-2xl p-7 relative overflow-hidden" style={{background: 'linear-gradient(145deg, rgba(37,99,235,0.15), rgba(79,70,229,0.2))', border: '1px solid rgba(99,102,241,0.35)', boxShadow: '0 0 40px rgba(79,70,229,0.1)'}}>
+            <div className="rounded-2xl p-7 relative overflow-hidden flex flex-col" style={{background: 'linear-gradient(145deg, rgba(37,99,235,0.15), rgba(79,70,229,0.2))', border: '1px solid rgba(99,102,241,0.35)', boxShadow: '0 0 40px rgba(79,70,229,0.1)'}}>
               <div className="absolute top-0 right-0 left-0 h-px" style={{background: 'linear-gradient(90deg, transparent, rgba(99,102,241,0.6), transparent)'}} />
               <p className="text-[11px] uppercase tracking-widest font-medium mb-4" style={{color: '#818cf8'}}>{i.pro_sub}</p>
               <div className="flex items-baseline gap-1 mb-1">
@@ -363,16 +386,23 @@ export default function Home() {
                 <span className="text-gray-400 text-sm">/mo</span>
               </div>
               <p className="text-gray-300 text-[13px] mb-6">{i.pro_desc}</p>
-              <button
-                {...glow}
-                className="w-full py-2.5 rounded-xl text-[13px] font-semibold text-white"
-                style={btnBase}
-              >
-                {i.nav_cta}
-              </button>
+              <div className="mt-auto">
+                <button {...glowHandlers} className="w-full py-2.5 rounded-xl text-[13px] font-semibold text-white" style={glowStyle}>
+                  {i.nav_cta}
+                </button>
+              </div>
             </div>
           </div>
         </div>
+
+        <footer className="mt-24 pt-8 border-t border-white/5 flex items-center justify-between">
+          <Logo />
+          <div className="flex items-center gap-6 text-[12px] text-gray-500">
+            <a href="/privacy" className="hover:text-gray-300 transition-colors">Privacy Policy</a>
+            <a href="/terms" className="hover:text-gray-300 transition-colors">Terms of Service</a>
+            <span>© 2025 MetaClean</span>
+          </div>
+        </footer>
 
       </div>
     </main>
