@@ -230,6 +230,7 @@ function DashboardInner() {
   const [profile, setProfile] = useState(null)
   const [history, setHistory] = useState([])
   const [loading, setLoading] = useState(true)
+  const [loaded, setLoaded] = useState(false)
   const [lang, setLang] = useState('en')
   const [langOpen, setLangOpen] = useState(false)
 
@@ -260,6 +261,7 @@ function DashboardInner() {
       await loadProfile(data.session.user.id)
       await loadHistory(data.session.user.id)
       setLoading(false)
+      setTimeout(() => setLoaded(true), 40)
       if (searchParams.get('upgraded') === '1') setUpgradedNotice(true)
     })
   }, [router, searchParams])
@@ -393,6 +395,18 @@ function DashboardInner() {
   const usagePct = usageLimit ? Math.min((imagesUsed / usageLimit) * 100, 100) : 0
   const platformCfg = PLATFORM_CONFIGS[selectedPlatform]
 
+  // Animation helpers
+  const anim = (delay = 0) => ({
+    opacity: loaded ? 1 : 0,
+    transform: loaded ? 'none' : 'translateY(14px)',
+    transition: `opacity 0.5s cubic-bezier(0.16,1,0.3,1) ${delay}ms, transform 0.5s cubic-bezier(0.16,1,0.3,1) ${delay}ms`,
+  })
+  const animNav = {
+    opacity: loaded ? 1 : 0,
+    transform: loaded ? 'none' : 'translateY(-10px)',
+    transition: 'opacity 0.4s ease 0ms, transform 0.4s ease 0ms',
+  }
+
   return (
     <main className="min-h-screen bg-[#060609] text-white" style={{fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'}}>
 
@@ -402,7 +416,7 @@ function DashboardInner() {
       </div>
 
       {/* Nav */}
-      <nav className="relative z-20 flex items-center justify-between px-4 sm:px-8 py-4" style={{borderBottom: '1px solid rgba(255,255,255,0.05)'}}>
+      <nav className="relative z-20 flex items-center justify-between px-4 sm:px-8 py-4" style={{borderBottom: '1px solid rgba(255,255,255,0.05)', ...animNav}}>
         <Logo />
         <div className="flex items-center gap-3 sm:gap-4">
 
@@ -454,7 +468,7 @@ function DashboardInner() {
         </div>
       </nav>
 
-      <div className="relative z-10 max-w-3xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
+      <div className="relative z-10 max-w-3xl mx-auto px-4 sm:px-6 py-8 sm:py-12" style={anim(0)}>
 
         {/* Upgraded notice */}
         {upgradedNotice && (
@@ -497,7 +511,7 @@ function DashboardInner() {
         )}
 
         {/* ─── Processing tool ─── */}
-        <div className="rounded-2xl mb-6" style={{background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)'}}>
+        <div className="rounded-2xl mb-6" style={{background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', ...anim(60)}}>
           <div className="p-5 sm:p-6" style={{borderBottom: '1px solid rgba(255,255,255,0.05)'}}>
 
             {/* Platform selector */}
@@ -642,7 +656,7 @@ function DashboardInner() {
         </div>
 
         {/* ─── Conversion history ─── */}
-        <div>
+        <div style={anim(120)}>
           <p className="text-[11px] text-gray-500 uppercase tracking-widest font-medium mb-4">{i.history_title}</p>
           {history.length === 0 ? (
             <div className="px-5 py-8 rounded-xl text-center text-[13px] text-gray-600" style={{background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)'}}>
@@ -657,10 +671,13 @@ function DashboardInner() {
                 return (
                   <div
                     key={entry.id}
-                    className="flex items-center justify-between px-4 py-3 text-[12px]"
+                    className="flex items-center justify-between px-4 py-3 text-[12px] transition-colors hover:bg-white/[0.025]"
                     style={{
                       background: idx % 2 === 0 ? 'rgba(255,255,255,0.015)' : 'transparent',
                       borderBottom: idx < history.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none',
+                      opacity: loaded ? 1 : 0,
+                      transform: loaded ? 'none' : 'translateX(-8px)',
+                      transition: `opacity 0.4s ease ${140 + idx * 35}ms, transform 0.4s ease ${140 + idx * 35}ms, background 0.15s ease`,
                     }}
                   >
                     <div className="flex items-center gap-3 min-w-0">

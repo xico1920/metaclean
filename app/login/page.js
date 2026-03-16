@@ -57,11 +57,15 @@ export default function Login() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [checkingSession, setCheckingSession] = useState(true)
+  const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
       if (data.session) router.replace('/dashboard')
-      else setCheckingSession(false)
+      else {
+        setCheckingSession(false)
+        setTimeout(() => setMounted(true), 40)
+      }
     })
   }, [router])
 
@@ -117,21 +121,33 @@ export default function Login() {
     )
   }
 
+  const cardStyle = {
+    opacity: mounted ? 1 : 0,
+    transform: mounted ? 'none' : 'translateY(20px) scale(0.98)',
+    transition: 'opacity 0.55s cubic-bezier(0.16,1,0.3,1) 80ms, transform 0.55s cubic-bezier(0.16,1,0.3,1) 80ms',
+  }
+  const headerStyle = {
+    opacity: mounted ? 1 : 0,
+    transform: mounted ? 'none' : 'translateY(-10px)',
+    transition: 'opacity 0.45s ease 30ms, transform 0.45s ease 30ms',
+  }
+
   return (
     <main className="min-h-screen bg-[#060609] text-white flex flex-col" style={{fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'}}>
 
       <div className="fixed inset-0 pointer-events-none">
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[400px]" style={{background: 'radial-gradient(ellipse at top, rgba(99,102,241,0.08) 0%, transparent 65%)'}} />
+        <div className="absolute bottom-1/3 left-1/2 -translate-x-1/2 w-[400px] h-[400px]" style={{background: 'radial-gradient(circle, rgba(37,99,235,0.04) 0%, transparent 70%)'}} />
       </div>
 
-      <nav className="relative z-20 flex items-center justify-between px-8 py-5" style={{borderBottom: '1px solid rgba(255,255,255,0.05)'}}>
+      <nav className="relative z-20 flex items-center justify-between px-4 sm:px-8 py-4 sm:py-5" style={{borderBottom: '1px solid rgba(255,255,255,0.05)', ...headerStyle}}>
         <Logo />
       </nav>
 
-      <div className="relative z-10 flex-1 flex items-center justify-center px-6 py-20">
+      <div className="relative z-10 flex-1 flex items-center justify-center px-4 sm:px-6 py-16 sm:py-20">
         <div className="w-full max-w-sm">
 
-          <div className="text-center mb-8">
+          <div className="text-center mb-7" style={headerStyle}>
             <h1 className="text-2xl font-bold tracking-tight mb-2">
               {mode === 'login' ? 'Welcome back' : 'Create your account'}
             </h1>
@@ -140,7 +156,7 @@ export default function Login() {
             </p>
           </div>
 
-          <div className="rounded-2xl p-8" style={{background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.07)'}}>
+          <div className="rounded-2xl p-6 sm:p-8" style={{background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.07)', ...cardStyle}}>
 
             <div className="flex rounded-xl p-1 mb-6" style={{background: 'rgba(255,255,255,0.04)'}}>
               <button

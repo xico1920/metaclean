@@ -1,17 +1,39 @@
 'use client'
+import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 
+// ── Reveal on scroll ──────────────────────────────────────────────────────────
+function Reveal({ children, delay = 0, y = 18, className = '' }) {
+  const ref = useRef(null)
+  const [visible, setVisible] = useState(false)
+  useEffect(() => {
+    const el = ref.current; if (!el) return
+    const obs = new IntersectionObserver(
+      ([e]) => { if (e.isIntersecting) { setVisible(true); obs.disconnect() } },
+      { threshold: 0.05, rootMargin: '0px 0px -24px 0px' }
+    )
+    obs.observe(el)
+    return () => obs.disconnect()
+  }, [])
+  return (
+    <div ref={ref} className={className} style={{
+      opacity: visible ? 1 : 0,
+      transform: visible ? 'none' : `translateY(${y}px)`,
+      transition: `opacity 0.55s cubic-bezier(0.16,1,0.3,1) ${delay}ms, transform 0.55s cubic-bezier(0.16,1,0.3,1) ${delay}ms`,
+    }}>
+      {children}
+    </div>
+  )
+}
+
+// ── Logo ──────────────────────────────────────────────────────────────────────
 function Logo() {
   return (
     <Link href="/" style={{display:'flex', alignItems:'center', gap:'10px', textDecoration:'none'}}>
-      <svg width="32" height="32" viewBox="0 0 56 56" fill="none">
-        <defs>
-          <clipPath id="iconClip">
-            <rect width="56" height="56" rx="13"/>
-          </clipPath>
-        </defs>
+      <svg width="30" height="30" viewBox="0 0 56 56" fill="none">
+        <defs><clipPath id="fClip"><rect width="56" height="56" rx="13"/></clipPath></defs>
         <rect width="56" height="56" rx="13" fill="#4338ca"/>
-        <g clipPath="url(#iconClip)">
+        <g clipPath="url(#fClip)">
           <circle cx="14" cy="18" r="5" fill="rgba(255,255,255,0.9)"/>
           <polygon points="6,52 22,26 38,52" fill="rgba(255,255,255,0.9)"/>
           <polygon points="24,52 36,34 50,52" fill="rgba(255,255,255,0.7)"/>
@@ -19,97 +41,163 @@ function Logo() {
           <line x1="34" y1="0" x2="56" y2="24" stroke="#a5b4fc" strokeWidth="2" strokeLinecap="round"/>
         </g>
       </svg>
-      <span style={{fontFamily:'-apple-system,BlinkMacSystemFont,"Helvetica Neue",sans-serif', fontSize:'20px', letterSpacing:'-0.8px', lineHeight:1}}>
+      <span style={{fontFamily:'-apple-system,BlinkMacSystemFont,"Helvetica Neue",sans-serif', fontSize:'19px', letterSpacing:'-0.7px', lineHeight:1}}>
         <span style={{fontWeight:800, color:'white'}}>meta</span>
-        <span style={{fontWeight:200, color:'rgba(255,255,255,0.45)'}}>clean</span>
+        <span style={{fontWeight:200, color:'rgba(255,255,255,0.4)'}}>clean</span>
       </span>
     </Link>
   )
 }
 
+const glowStyle = {
+  background: 'linear-gradient(135deg, #2563eb, #4f46e5, #8b5cf6, #6366f1)',
+  backgroundSize: '300% 300%', backgroundPosition: '0% 50%',
+  transition: 'box-shadow 0.4s ease, background-position 0.1s ease',
+}
+const glowHandlers = {
+  onMouseEnter: (e) => {
+    e.currentTarget.style.backgroundPosition = '100% 50%'
+    e.currentTarget.style.boxShadow = '0 0 0 1px rgba(139,92,246,0.6), 0 0 20px rgba(99,102,241,0.5), 0 0 45px rgba(139,92,246,0.25)'
+  },
+  onMouseLeave: (e) => { e.currentTarget.style.backgroundPosition = '0% 50%'; e.currentTarget.style.boxShadow = 'none' },
+  onMouseMove: (e) => {
+    const r = e.currentTarget.getBoundingClientRect()
+    e.currentTarget.style.backgroundPosition = `${((e.clientX - r.left) / r.width * 100).toFixed(1)}% 50%`
+  },
+}
+
+// ── Feature section ───────────────────────────────────────────────────────────
 function Section({ id, icon, title, badge, badgeColor, intro, items, note }) {
   return (
-    <div id={id} className="mb-20 scroll-mt-24">
-      <div className="flex items-start gap-4 mb-6">
-        <div className="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 mt-1" style={{background: `${badgeColor}15`, color: badgeColor}}>
+    <div id={id} className="mb-20 sm:mb-28 scroll-mt-24">
+
+      {/* Header */}
+      <Reveal className="flex items-start gap-4 mb-6">
+        <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl flex items-center justify-center shrink-0 mt-0.5" style={{background: `${badgeColor}15`, color: badgeColor}}>
           {icon}
         </div>
         <div>
-          <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-md text-[10px] font-medium uppercase tracking-widest mb-2" style={{background: `${badgeColor}15`, color: badgeColor}}>
+          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-widest mb-2" style={{background: `${badgeColor}15`, color: badgeColor}}>
             {badge}
           </div>
-          <h2 className="text-2xl font-bold tracking-tight text-white">{title}</h2>
+          <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-white">{title}</h2>
         </div>
-      </div>
+      </Reveal>
 
-      <p className="text-gray-400 text-[15px] leading-relaxed mb-8 ml-16">{intro}</p>
+      {/* Intro */}
+      <Reveal delay={60} className="mb-7 sm:ml-16">
+        <p className="text-gray-400 text-[14px] sm:text-[15px] leading-relaxed">{intro}</p>
+      </Reveal>
 
-      <div className="ml-16 grid gap-3">
+      {/* Items */}
+      <div className="sm:ml-16 grid gap-2.5">
         {items.map((item, idx) => (
-          <div key={idx} className="rounded-xl p-5" style={{background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)'}}>
-            <div className="flex items-start gap-3">
-              <div className="w-1.5 h-1.5 rounded-full mt-2 shrink-0" style={{background: badgeColor}}></div>
-              <div>
-                <p className="text-white font-medium text-[14px] mb-1">{item.title}</p>
-                <p className="text-gray-500 text-[13px] leading-relaxed">{item.desc}</p>
+          <Reveal key={idx} delay={80 + idx * 55}>
+            <div
+              className="rounded-xl p-4 sm:p-5 transition-all duration-300 group cursor-default"
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = `radial-gradient(circle at 20% 50%, ${badgeColor}10 0%, rgba(255,255,255,0.025) 70%)`
+                e.currentTarget.style.borderColor = `${badgeColor}30`
+                e.currentTarget.style.transform = 'translateX(3px)'
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'rgba(255,255,255,0.02)'
+                e.currentTarget.style.borderColor = 'rgba(255,255,255,0.06)'
+                e.currentTarget.style.transform = 'none'
+              }}
+              style={{background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', transition: 'all 0.25s ease'}}
+            >
+              <div className="flex items-start gap-3">
+                <div className="w-1.5 h-1.5 rounded-full mt-[7px] shrink-0 transition-all" style={{background: badgeColor}} />
+                <div>
+                  <p className="text-white font-semibold text-[13px] sm:text-[14px] mb-1">{item.title}</p>
+                  <p className="text-gray-500 text-[12px] sm:text-[13px] leading-relaxed">{item.desc}</p>
+                </div>
               </div>
             </div>
-          </div>
+          </Reveal>
         ))}
       </div>
 
       {note && (
-        <div className="ml-16 mt-4 px-4 py-3 rounded-xl text-[12px] text-gray-500" style={{background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.04)'}}>
-          {note}
-        </div>
+        <Reveal delay={100 + items.length * 55} className="sm:ml-16 mt-4">
+          <div className="px-4 py-3 rounded-xl text-[12px] text-gray-500 flex items-start gap-2.5" style={{background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.04)'}}>
+            <svg className="w-3.5 h-3.5 mt-0.5 shrink-0" style={{color: badgeColor}} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+            {note}
+          </div>
+        </Reveal>
       )}
     </div>
   )
 }
 
+// ── Page ─────────────────────────────────────────────────────────────────────
 export default function Features() {
-  return (
-    <main className="min-h-screen bg-[#060609] text-white" style={{fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'}}>
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => { const t = setTimeout(() => setMounted(true), 30); return () => clearTimeout(t) }, [])
 
+  const entranceStyle = (delay = 0) => ({
+    opacity: mounted ? 1 : 0,
+    transform: mounted ? 'none' : 'translateY(-12px)',
+    transition: `opacity 0.5s cubic-bezier(0.16,1,0.3,1) ${delay}ms, transform 0.5s cubic-bezier(0.16,1,0.3,1) ${delay}ms`,
+  })
+
+  return (
+    <main className="min-h-screen bg-[#060609] text-white overflow-x-hidden" style={{fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'}}>
+
+      {/* Ambient glow */}
       <div className="fixed inset-0 pointer-events-none">
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px]" style={{background: 'radial-gradient(ellipse at top, rgba(59,130,246,0.06) 0%, transparent 65%)'}} />
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[700px] h-[350px]" style={{background: 'radial-gradient(ellipse at top, rgba(59,130,246,0.06) 0%, transparent 65%)'}} />
+        <div className="absolute top-1/2 right-0 w-[300px] h-[300px]" style={{background: 'radial-gradient(circle, rgba(99,102,241,0.03) 0%, transparent 70%)'}} />
       </div>
 
-      <nav className="relative z-20 flex items-center justify-between px-8 py-5" style={{borderBottom: '1px solid rgba(255,255,255,0.05)'}}>
+      {/* Nav */}
+      <nav className="relative z-20 flex items-center justify-between px-4 sm:px-8 py-4 sm:py-5" style={{borderBottom: '1px solid rgba(255,255,255,0.05)', ...entranceStyle(0)}}>
         <Logo />
-        <div className="flex items-center gap-6">
-          <Link href="/pricing" className="text-[13px] text-gray-400 hover:text-gray-200 transition-colors">Pricing</Link>
-          <Link href="/login" className="text-[13px] text-gray-400 hover:text-gray-200 transition-colors">Login</Link>
-          <Link href="/" className="px-5 py-2 rounded-lg text-[13px] font-medium text-white transition-all hover:opacity-90" style={{background: 'linear-gradient(135deg, #2563eb, #4f46e5)'}}>
+        <div className="flex items-center gap-2 sm:gap-5">
+          <Link href="/pricing" className="hidden sm:block text-[13px] text-gray-400 hover:text-gray-200 transition-colors">Pricing</Link>
+          <Link href="/login" className="hidden sm:block text-[13px] text-gray-400 hover:text-gray-200 transition-colors">Login</Link>
+          <Link href="/" {...glowHandlers} className="px-4 sm:px-5 py-2 rounded-lg text-[13px] font-semibold text-white" style={glowStyle}>
             Get started
           </Link>
         </div>
       </nav>
 
-      <div className="relative z-10 max-w-3xl mx-auto px-6 pt-20 pb-32">
+      <div className="relative z-10 max-w-3xl mx-auto px-4 sm:px-6 pt-12 sm:pt-20 pb-24 sm:pb-32">
 
-        <div className="mb-16">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-[11px] font-medium uppercase tracking-widest mb-6" style={{background: 'rgba(99,102,241,0.08)', border: '1px solid rgba(99,102,241,0.18)', color: '#a5b4fc'}}>
+        {/* Page header */}
+        <div className="mb-10 sm:mb-16" style={entranceStyle(60)}>
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-[11px] font-medium uppercase tracking-widest mb-5" style={{background: 'rgba(99,102,241,0.08)', border: '1px solid rgba(99,102,241,0.18)', color: '#a5b4fc'}}>
             Documentation
           </div>
-          <h1 className="text-4xl font-bold tracking-tight mb-4">Features</h1>
-          <p className="text-gray-400 text-lg leading-relaxed">Everything MetaClean does to make your images ready for any ad platform.</p>
+          <h1 className="text-3xl sm:text-4xl font-bold tracking-tight mb-3">Features</h1>
+          <p className="text-gray-400 text-base sm:text-lg leading-relaxed">Everything MetaClean does to make your images ready for any ad platform.</p>
         </div>
 
-        <div className="flex gap-2 flex-wrap mb-16 p-4 rounded-2xl" style={{background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)'}}>
-          <p className="text-[11px] text-gray-500 uppercase tracking-widest w-full mb-2">Jump to</p>
-          {['#metadata', '#formats', '#bulk'].map((href, idx) => (
-            <a key={idx} href={href} className="px-3 py-1.5 rounded-lg text-[12px] text-gray-400 hover:text-white transition-colors" style={{background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)'}}>
-              {['Metadata removal', 'Ad formats', 'Bulk processing'][idx]}
-            </a>
-          ))}
-        </div>
+        {/* Jump links */}
+        <Reveal y={10} className="mb-12 sm:mb-16">
+          <div className="flex gap-2 flex-wrap p-3.5 sm:p-4 rounded-2xl" style={{background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)'}}>
+            <p className="text-[10px] text-gray-600 uppercase tracking-widest w-full mb-2 font-medium">Jump to</p>
+            {[['#metadata', 'Metadata removal', '#3b82f6'], ['#formats', 'Ad formats', '#8b5cf6'], ['#bulk', 'Bulk processing', '#6366f1']].map(([href, label, color]) => (
+              <a
+                key={href}
+                href={href}
+                className="px-3 py-1.5 rounded-lg text-[12px] text-gray-400 hover:text-white transition-all duration-200"
+                onMouseEnter={(e) => { e.currentTarget.style.background = `${color}18`; e.currentTarget.style.borderColor = `${color}40`; e.currentTarget.style.color = 'white' }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.06)'; e.currentTarget.style.color = '' }}
+                style={{background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)', transition: 'all 0.2s ease'}}
+              >
+                {label}
+              </a>
+            ))}
+          </div>
+        </Reveal>
 
         <Section
           id="metadata"
           badgeColor="#3b82f6"
           badge="Feature 01"
-          icon={<svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" /></svg>}
+          icon={<svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" /></svg>}
           title="Metadata removal"
           intro="Ad platforms like Meta and Google scan image metadata before approving creatives. Hidden data points can trigger automated rejections. MetaClean strips all of them before your image ever reaches a platform."
           items={[
@@ -123,13 +211,13 @@ export default function Features() {
           note="All processing happens server-side and files are never stored. Your images are processed in memory and returned immediately."
         />
 
-        <div className="h-px mb-20" style={{background: 'rgba(255,255,255,0.05)'}}></div>
+        <Reveal><div className="h-px mb-20 sm:mb-28" style={{background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.06), transparent)'}} /></Reveal>
 
         <Section
           id="formats"
           badgeColor="#8b5cf6"
           badge="Feature 02"
-          icon={<svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9m5.25 11.25h-4.5m4.5 0v-4.5m0 4.5L15 15" /></svg>}
+          icon={<svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9m5.25 11.25h-4.5m4.5 0v-4.5m0 4.5L15 15" /></svg>}
           title="Ad format resizing"
           intro="Every platform has its own required dimensions. MetaClean automatically resizes your images to every supported format — no manual cropping, no distortion, no guesswork."
           items={[
@@ -142,13 +230,13 @@ export default function Features() {
           note="Resizing uses smart cropping — the most important area of the image is preserved automatically using content-aware detection."
         />
 
-        <div className="h-px mb-20" style={{background: 'rgba(255,255,255,0.05)'}}></div>
+        <Reveal><div className="h-px mb-20 sm:mb-28" style={{background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.06), transparent)'}} /></Reveal>
 
         <Section
           id="bulk"
           badgeColor="#6366f1"
           badge="Feature 03"
-          icon={<svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" /></svg>}
+          icon={<svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" /></svg>}
           title="Bulk processing"
           intro="Stop processing images one by one. Drop your entire creative batch and get everything back clean in one go."
           items={[
@@ -163,9 +251,10 @@ export default function Features() {
 
       </div>
 
-      <footer className="relative z-10 border-t border-white/5 px-8 py-6 flex items-center justify-between max-w-3xl mx-auto">
+      {/* Footer */}
+      <footer className="relative z-10 border-t border-white/5 px-4 sm:px-8 py-6 flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-0 max-w-3xl mx-auto">
         <Logo />
-        <div className="flex items-center gap-6 text-[12px] text-gray-500">
+        <div className="flex items-center gap-5 text-[12px] text-gray-500">
           <Link href="/privacy" className="hover:text-gray-300 transition-colors">Privacy</Link>
           <Link href="/terms" className="hover:text-gray-300 transition-colors">Terms</Link>
           <span>© 2025 MetaClean</span>
