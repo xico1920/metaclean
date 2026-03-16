@@ -85,6 +85,14 @@ export default function Login() {
   const [loading, setLoading] = useState(false)
   const [checkingSession, setCheckingSession] = useState(true)
   const [mounted, setMounted] = useState(false)
+  const [transitioning, setTransitioning] = useState(false)
+
+  const switchMode = (newMode) => {
+    if (newMode === mode || transitioning) return
+    setTransitioning(true)
+    setTimeout(() => { setMode(newMode); setError('') }, 150)
+    setTimeout(() => setTransitioning(false), 165)
+  }
 
   useEffect(() => {
     // Read mode from URL
@@ -234,7 +242,16 @@ export default function Login() {
           <div className="w-full max-w-[360px]">
 
             {/* Heading */}
-            <div className="mb-7" style={fadeIn(60)}>
+            <div className="mb-7" style={{
+              opacity: !mounted ? 0 : transitioning ? 0 : 1,
+              filter: transitioning ? 'blur(4px)' : 'blur(0px)',
+              transform: !mounted ? 'translateY(16px)' : transitioning ? 'translateY(5px)' : 'none',
+              transition: !mounted
+                ? 'opacity 0.55s cubic-bezier(0.16,1,0.3,1) 60ms, transform 0.55s cubic-bezier(0.16,1,0.3,1) 60ms'
+                : transitioning
+                  ? 'opacity 0.15s ease, filter 0.15s ease, transform 0.15s ease'
+                  : 'opacity 0.28s cubic-bezier(0.16,1,0.3,1), filter 0.28s cubic-bezier(0.16,1,0.3,1), transform 0.28s cubic-bezier(0.16,1,0.3,1)',
+            }}>
               <h1 className="text-2xl font-bold tracking-tight mb-1.5">
                 {mode === 'login' ? 'Welcome back' : 'Create your account'}
               </h1>
@@ -249,28 +266,40 @@ export default function Login() {
               {/* Tab switcher */}
               <div className="flex rounded-xl p-1 mb-6" style={{background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)'}}>
                 <button
-                  onClick={() => { setMode('login'); setError('') }}
-                  className="flex-1 py-2 rounded-lg text-[13px] font-medium transition-all"
+                  onClick={() => switchMode('login')}
+                  className="flex-1 py-2 rounded-lg text-[13px] font-medium transition-all duration-200"
                   style={{
                     background: mode === 'login' ? 'rgba(255,255,255,0.09)' : 'transparent',
                     color: mode === 'login' ? 'white' : 'rgba(255,255,255,0.4)',
                     boxShadow: mode === 'login' ? '0 1px 3px rgba(0,0,0,0.3)' : 'none',
+                    transform: mode !== 'login' ? 'scale(0.98)' : 'scale(1)',
                   }}
                 >
                   Log in
                 </button>
                 <button
-                  onClick={() => { setMode('signup'); setError('') }}
-                  className="flex-1 py-2 rounded-lg text-[13px] font-medium transition-all"
+                  onClick={() => switchMode('signup')}
+                  className="flex-1 py-2 rounded-lg text-[13px] font-medium transition-all duration-200"
                   style={{
                     background: mode === 'signup' ? 'rgba(255,255,255,0.09)' : 'transparent',
                     color: mode === 'signup' ? 'white' : 'rgba(255,255,255,0.4)',
                     boxShadow: mode === 'signup' ? '0 1px 3px rgba(0,0,0,0.3)' : 'none',
+                    transform: mode !== 'signup' ? 'scale(0.98)' : 'scale(1)',
                   }}
                 >
                   Sign up
                 </button>
               </div>
+
+              {/* Transition wrapper — fades/blurs on mode switch */}
+              <div style={{
+                opacity: transitioning ? 0 : 1,
+                filter: transitioning ? 'blur(6px)' : 'blur(0px)',
+                transform: transitioning ? 'translateY(8px) scale(0.983)' : 'translateY(0) scale(1)',
+                transition: transitioning
+                  ? 'opacity 0.15s ease, filter 0.15s ease, transform 0.15s ease'
+                  : 'opacity 0.28s cubic-bezier(0.16,1,0.3,1), filter 0.28s cubic-bezier(0.16,1,0.3,1), transform 0.28s cubic-bezier(0.16,1,0.3,1)',
+              }}>
 
               {/* Form */}
               <form onSubmit={handleSubmit}>
@@ -340,7 +369,7 @@ export default function Login() {
               </div>
 
               <button
-                onClick={() => { setMode(mode === 'login' ? 'signup' : 'login'); setError('') }}
+                onClick={() => switchMode(mode === 'login' ? 'signup' : 'login')}
                 className="w-full py-2.5 rounded-xl text-[13px] text-gray-400 transition-all"
                 style={{border: '1px solid rgba(255,255,255,0.07)'}}
                 onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; e.currentTarget.style.color = 'white'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.12)' }}
@@ -348,6 +377,8 @@ export default function Login() {
               >
                 {mode === 'login' ? "Don't have an account? Sign up" : 'Already have an account? Log in'}
               </button>
+
+              </div>{/* end transition wrapper */}
 
             </div>
           </div>

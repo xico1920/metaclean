@@ -844,7 +844,23 @@ export default function Home() {
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-3xl mx-auto">
             <Reveal delay={0} className="flex flex-col">
-              <div className="rounded-2xl p-6 sm:p-7 flex flex-col flex-1" style={{background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.07)'}}>
+              <div
+                className="rounded-2xl p-6 sm:p-7 flex flex-col flex-1 transition-all duration-300"
+                onMouseMove={(e) => {
+                  const r = e.currentTarget.getBoundingClientRect()
+                  const x = ((e.clientX - r.left) / r.width * 100).toFixed(1)
+                  const y = ((e.clientY - r.top) / r.height * 100).toFixed(1)
+                  e.currentTarget.style.background = `radial-gradient(circle at ${x}% ${y}%, rgba(255,255,255,0.045) 0%, rgba(255,255,255,0.02) 65%)`
+                  e.currentTarget.style.borderColor = 'rgba(255,255,255,0.12)'
+                  e.currentTarget.style.transform = 'translateY(-2px)'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'rgba(255,255,255,0.02)'
+                  e.currentTarget.style.borderColor = 'rgba(255,255,255,0.07)'
+                  e.currentTarget.style.transform = 'none'
+                }}
+                style={{background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.07)'}}
+              >
                 <p className="text-[11px] text-gray-500 uppercase tracking-widest font-medium mb-4">{i.free}</p>
                 <div className="flex items-baseline gap-1 mb-1">
                   <span className="text-4xl font-bold">€0</span>
@@ -860,7 +876,12 @@ export default function Home() {
             </Reveal>
 
             <Reveal delay={100} className="flex flex-col">
-              <div className="rounded-2xl p-6 sm:p-7 relative overflow-hidden flex flex-col flex-1" style={{background: 'linear-gradient(145deg, rgba(37,99,235,0.15), rgba(79,70,229,0.2))', border: '1px solid rgba(99,102,241,0.35)', boxShadow: '0 0 40px rgba(79,70,229,0.1)'}}>
+              <div
+                className="rounded-2xl p-6 sm:p-7 relative overflow-hidden flex flex-col flex-1 transition-all duration-300"
+                style={{background: 'linear-gradient(145deg, rgba(37,99,235,0.15), rgba(79,70,229,0.2))', border: '1px solid rgba(99,102,241,0.35)', boxShadow: '0 0 40px rgba(79,70,229,0.1)'}}
+                onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 0 60px rgba(79,70,229,0.2), 0 8px 20px rgba(0,0,0,0.2)' }}
+                onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = '0 0 40px rgba(79,70,229,0.1)' }}
+              >
                 <div className="absolute top-0 right-0 left-0 h-px" style={{background: 'linear-gradient(90deg, transparent, rgba(99,102,241,0.6), transparent)'}} />
                 <p className="text-[11px] uppercase tracking-widest font-medium mb-4" style={{color: '#818cf8'}}>{i.pro_sub}</p>
                 <div className="flex items-baseline gap-1 mb-1">
@@ -877,7 +898,12 @@ export default function Home() {
             </Reveal>
 
             <Reveal delay={200} className="flex flex-col">
-              <div className="rounded-2xl p-6 sm:p-7 relative overflow-hidden flex flex-col flex-1" style={{background: 'rgba(255,255,255,0.015)', border: '1px solid rgba(139,92,246,0.22)'}}>
+              <div
+                className="rounded-2xl p-6 sm:p-7 relative overflow-hidden flex flex-col flex-1 transition-all duration-300"
+                style={{background: 'rgba(255,255,255,0.015)', border: '1px solid rgba(139,92,246,0.22)'}}
+                onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.borderColor = 'rgba(139,92,246,0.45)'; e.currentTarget.style.boxShadow = '0 0 40px rgba(139,92,246,0.1)' }}
+                onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.borderColor = 'rgba(139,92,246,0.22)'; e.currentTarget.style.boxShadow = 'none' }}
+              >
                 <div className="absolute inset-0 pointer-events-none" style={{background: 'radial-gradient(ellipse at 50% 0%, rgba(139,92,246,0.07) 0%, transparent 65%)'}} />
                 <div className="flex items-center gap-2 mb-4">
                   <p className="text-[11px] uppercase tracking-widest font-medium" style={{color: '#c084fc'}}>{i.ai_plan}</p>

@@ -886,14 +886,16 @@ function DashboardInner() {
 
         {/* ─── Processing tool ─── */}
         {step === 'crop' ? (
-          <CropEditor
-            files={files}
-            selectedFormats={selectedFormats}
-            platformCfg={platformCfg}
-            onProcess={processImages}
-            onBack={() => setStep('upload')}
-            processing={processing}
-          />
+          <div style={{animation: 'scaleIn 0.35s cubic-bezier(0.16,1,0.3,1) both'}}>
+            <CropEditor
+              files={files}
+              selectedFormats={selectedFormats}
+              platformCfg={platformCfg}
+              onProcess={processImages}
+              onBack={() => setStep('upload')}
+              processing={processing}
+            />
+          </div>
         ) : null}
         <div className="rounded-2xl mb-6" style={{display: step === 'crop' ? 'none' : undefined, background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', ...anim(60)}}>
           <div className="p-5 sm:p-6" style={{borderBottom: '1px solid rgba(255,255,255,0.05)'}}>
@@ -1112,13 +1114,15 @@ function DashboardInner() {
                 return (
                   <div
                     key={entry.id}
-                    className="flex items-center justify-between px-4 py-3 text-[12px] transition-colors hover:bg-white/[0.025]"
+                    className="flex items-center justify-between px-4 py-3 text-[12px] cursor-default"
+                    onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; e.currentTarget.style.paddingLeft = '18px' }}
+                    onMouseLeave={e => { e.currentTarget.style.background = idx % 2 === 0 ? 'rgba(255,255,255,0.015)' : 'transparent'; e.currentTarget.style.paddingLeft = '16px' }}
                     style={{
                       background: idx % 2 === 0 ? 'rgba(255,255,255,0.015)' : 'transparent',
                       borderBottom: idx < history.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none',
                       opacity: loaded ? 1 : 0,
                       transform: loaded ? 'none' : 'translateX(-8px)',
-                      transition: `opacity 0.4s ease ${140 + idx * 35}ms, transform 0.4s ease ${140 + idx * 35}ms, background 0.15s ease`,
+                      transition: `opacity 0.4s ease ${140 + idx * 35}ms, transform 0.4s ease ${140 + idx * 35}ms, background 0.15s ease, padding-left 0.2s ease`,
                     }}
                   >
                     <div className="flex items-center gap-3 min-w-0">
