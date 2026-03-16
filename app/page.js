@@ -1,5 +1,5 @@
 'use client'
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 
 const t = {
@@ -97,6 +97,35 @@ const glowHandlers = {
     const x = ((e.clientX - rect.left) / rect.width * 100).toFixed(1)
     e.currentTarget.style.backgroundPosition = `${x}% 50%`
   },
+}
+
+function Reveal({ children, delay = 0, y = 20, className = '', style: extStyle = {} }) {
+  const ref = useRef(null)
+  const [visible, setVisible] = useState(false)
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    const obs = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) { setVisible(true); obs.disconnect() } },
+      { threshold: 0.05, rootMargin: '0px 0px -30px 0px' }
+    )
+    obs.observe(el)
+    return () => obs.disconnect()
+  }, [])
+  return (
+    <div
+      ref={ref}
+      className={className}
+      style={{
+        opacity: visible ? 1 : 0,
+        transform: visible ? 'none' : `translateY(${y}px)`,
+        transition: `opacity 0.6s cubic-bezier(0.16,1,0.3,1) ${delay}ms, transform 0.6s cubic-bezier(0.16,1,0.3,1) ${delay}ms`,
+        ...extStyle,
+      }}
+    >
+      {children}
+    </div>
+  )
 }
 
 function IconUpload() {
@@ -203,24 +232,26 @@ export default function Home() {
   const features = [
     { Icon: IconShield, title: i.f1_title, desc: i.f1_desc, sub: i.f1_sub, accent: '#3b82f6', href: '/features#metadata' },
     { Icon: IconResize, title: i.f2_title, desc: i.f2_desc, sub: i.f2_sub, accent: '#8b5cf6', href: '/features#formats' },
-    { Icon: IconBolt, title: i.f3_title, desc: i.f3_desc, sub: i.f3_sub, accent: '#6366f1', href: '/features#bulk' },
+    { Icon: IconBolt,   title: i.f3_title, desc: i.f3_desc, sub: i.f3_sub, accent: '#6366f1', href: '/features#bulk' },
   ]
 
   return (
     <main className="min-h-screen bg-[#060609] text-white overflow-x-hidden" style={{fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'}}>
 
+      {/* Background glows */}
       <div className="fixed inset-0 pointer-events-none">
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[500px]" style={{background: 'radial-gradient(ellipse at top, rgba(59,130,246,0.07) 0%, transparent 65%)'}} />
         <div className="absolute top-1/3 left-1/4 w-[400px] h-[400px] rounded-full" style={{background: 'radial-gradient(circle, rgba(99,102,241,0.04) 0%, transparent 70%)'}} />
       </div>
 
-      <nav className="relative z-20 flex items-center justify-between px-8 py-5" style={{borderBottom: '1px solid rgba(255,255,255,0.05)'}}>
+      {/* Nav */}
+      <nav className="relative z-20 flex items-center justify-between px-4 sm:px-8 py-4 sm:py-5" style={{borderBottom: '1px solid rgba(255,255,255,0.05)'}}>
         <Logo />
-        <div className="flex items-center gap-8">
-          <Link href="/features" className="text-[13px] text-gray-400 hover:text-gray-200 transition-colors tracking-wide">{i.nav_features}</Link>
-          <Link href="/pricing" className="text-[13px] text-gray-400 hover:text-gray-200 transition-colors tracking-wide">{i.nav_pricing}</Link>
+        <div className="flex items-center gap-3 sm:gap-8">
+          <Link href="/features" className="hidden sm:block text-[13px] text-gray-400 hover:text-gray-200 transition-colors tracking-wide">{i.nav_features}</Link>
+          <Link href="/pricing" className="hidden sm:block text-[13px] text-gray-400 hover:text-gray-200 transition-colors tracking-wide">{i.nav_pricing}</Link>
           <div className="relative">
-            <button onClick={() => setLangOpen(!langOpen)} className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-[12px] text-gray-400 hover:text-gray-200 transition-colors" style={{border: '1px solid rgba(255,255,255,0.07)'}}>
+            <button onClick={() => setLangOpen(!langOpen)} className="flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1.5 rounded-lg text-[12px] text-gray-400 hover:text-gray-200 transition-colors" style={{border: '1px solid rgba(255,255,255,0.07)'}}>
               <img src={flags[lang]} alt={lang} style={{width:'16px', height:'11px', objectFit:'cover', borderRadius:'2px'}} />
               <span className="uppercase font-medium tracking-wider">{lang}</span>
               <svg className="w-3 h-3 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
@@ -237,21 +268,22 @@ export default function Home() {
               </div>
             )}
           </div>
-          <Link href="/login" {...glowHandlers} className="px-5 py-2 rounded-lg text-[13px] font-medium text-white" style={glowStyle}>
+          <Link href="/login" {...glowHandlers} className="px-3.5 sm:px-5 py-2 rounded-lg text-[13px] font-medium text-white whitespace-nowrap" style={glowStyle}>
             {i.nav_cta}
           </Link>
         </div>
       </nav>
 
-      <div className="relative z-10 max-w-4xl mx-auto px-6 pt-28 pb-32">
+      <div className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 pt-16 sm:pt-28 pb-24 sm:pb-32">
 
-        <div className="text-center mb-16">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-[11px] font-medium tracking-wide mb-10 uppercase" style={{background: 'rgba(59,130,246,0.08)', border: '1px solid rgba(59,130,246,0.18)', color: '#93bbfd', letterSpacing: '0.08em'}}>
+        {/* Hero */}
+        <Reveal className="text-center mb-10 sm:mb-16">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-[11px] font-medium tracking-wide mb-8 sm:mb-10 uppercase" style={{background: 'rgba(59,130,246,0.08)', border: '1px solid rgba(59,130,246,0.18)', color: '#93bbfd', letterSpacing: '0.08em'}}>
             <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse inline-block"></span>
             {i.badge}
           </div>
 
-          <h1 className="font-bold mb-6 tracking-tight leading-[1.05]" style={{fontSize: 'clamp(42px, 6vw, 72px)'}}>
+          <h1 className="font-bold mb-5 sm:mb-6 tracking-tight leading-[1.05]" style={{fontSize: 'clamp(30px, 5vw, 72px)'}}>
             <span className="text-gray-100">{i.hero1}</span><br />
             <span
               onMouseMove={(e) => {
@@ -273,16 +305,17 @@ export default function Home() {
             <span className="text-gray-100">{i.hero3}</span>
           </h1>
 
-          <p className="text-gray-400 max-w-lg mx-auto leading-relaxed mb-8" style={{fontSize: '17px'}}>{i.subtitle}</p>
+          <p className="text-gray-400 max-w-lg mx-auto leading-relaxed mb-8 sm:mb-10 px-2 sm:px-0" style={{fontSize: 'clamp(15px, 2vw, 17px)'}}>{i.subtitle}</p>
 
-          <div className="mb-2">
+          {/* Platform selector */}
+          <div>
             <p className="text-[11px] text-gray-500 uppercase tracking-widest mb-4">{i.choose_platform}</p>
             <div className="flex items-center justify-center gap-2 flex-wrap mb-4">
               {Object.entries(PLATFORM_CONFIGS).map(([key, p]) => (
                 <button
                   key={key}
                   onClick={() => setSelectedPlatform(key)}
-                  className="flex items-center gap-2 px-4 py-2 rounded-xl text-[13px] font-medium transition-all duration-200"
+                  className="flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl text-[12px] sm:text-[13px] font-medium transition-all duration-200"
                   style={{
                     background: selectedPlatform === key ? `${p.color}18` : 'rgba(255,255,255,0.03)',
                     border: selectedPlatform === key ? `1px solid ${p.color}55` : '1px solid rgba(255,255,255,0.07)',
@@ -309,141 +342,158 @@ export default function Home() {
               )}
             </div>
           </div>
-        </div>
+        </Reveal>
 
-        <div
-          onDrop={handleDrop}
-          onDragOver={(e) => { e.preventDefault(); setDragging(true) }}
-          onDragLeave={() => setDragging(false)}
-          className="rounded-2xl transition-all duration-300 mb-4"
-          style={{
-            background: dragging ? 'rgba(59,130,246,0.06)' : 'rgba(255,255,255,0.025)',
-            border: dragging ? '1.5px solid rgba(99,102,241,0.5)' : '1.5px dashed rgba(255,255,255,0.08)',
-            boxShadow: dragging ? '0 0 0 4px rgba(99,102,241,0.08)' : 'none',
-            padding: '56px 40px',
-            textAlign: 'center',
-          }}
-        >
-          {files.length === 0 ? (
-            <>
-              <div className="w-14 h-14 rounded-2xl mx-auto mb-5 flex items-center justify-center" style={{background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)'}}>
-                <IconUpload />
-              </div>
-              <p className="text-white font-semibold text-lg mb-2">{i.drop}</p>
-              <p className="text-gray-500 text-sm mb-8">{i.drop_sub}</p>
-              <label {...glowHandlers} className="inline-flex items-center gap-2 px-7 py-3 rounded-xl text-sm font-semibold text-white cursor-pointer" style={glowStyle}>
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
-                {i.select}
-                <input type="file" multiple accept="image/*" className="hidden" onChange={handleFiles} />
-              </label>
-            </>
-          ) : (
-            <>
-              <div className="flex flex-wrap gap-2 justify-center mb-8 max-h-36 overflow-y-auto">
-                {files.map((f, idx) => (
-                  <div key={idx} className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs" style={{background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)'}}>
-                    <IconFile />
-                    <span className="text-gray-300 max-w-[120px] truncate">{f.name}</span>
-                    <span className="text-gray-600">{(f.size/1024).toFixed(0)}kb</span>
-                  </div>
-                ))}
-              </div>
-              <div className="flex items-center justify-center gap-3">
-                <button onClick={processImages} disabled={processing} {...glowHandlers} className="inline-flex items-center gap-2.5 px-9 py-3.5 rounded-xl text-sm font-semibold text-white disabled:opacity-40" style={glowStyle}>
-                  {processing ? <><IconSpin />{i.processing}</> : <><IconDownload />{i.process}</>}
-                </button>
-                <button onClick={() => { setFiles([]); setDone(false) }} className="px-4 py-3.5 text-xs text-gray-500 hover:text-gray-300 transition-colors tracking-wide">{i.clear}</button>
-              </div>
-              {done && (
-                <div className="mt-6 inline-flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-medium" style={{background: 'rgba(34,197,94,0.08)', border: '1px solid rgba(34,197,94,0.18)', color: '#86efac'}}>
-                  <IconCheck />{files.length} {i.success}
+        {/* Upload zone */}
+        <Reveal y={12}>
+          <div
+            onDrop={handleDrop}
+            onDragOver={(e) => { e.preventDefault(); setDragging(true) }}
+            onDragLeave={() => setDragging(false)}
+            className="rounded-2xl transition-all duration-300 mb-4 px-5 py-10 sm:px-10 sm:py-14"
+            style={{
+              background: dragging ? 'rgba(59,130,246,0.06)' : 'rgba(255,255,255,0.025)',
+              border: dragging ? '1.5px solid rgba(99,102,241,0.5)' : '1.5px dashed rgba(255,255,255,0.08)',
+              boxShadow: dragging ? '0 0 0 4px rgba(99,102,241,0.08)' : 'none',
+              textAlign: 'center',
+            }}
+          >
+            {files.length === 0 ? (
+              <>
+                <div className="w-14 h-14 rounded-2xl mx-auto mb-5 flex items-center justify-center" style={{background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)'}}>
+                  <IconUpload />
                 </div>
-              )}
-            </>
-          )}
-        </div>
+                <p className="text-white font-semibold text-lg mb-2">{i.drop}</p>
+                <p className="text-gray-500 text-sm mb-8">{i.drop_sub}</p>
+                <label {...glowHandlers} className="inline-flex items-center gap-2 px-7 py-3 rounded-xl text-sm font-semibold text-white cursor-pointer" style={glowStyle}>
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
+                  {i.select}
+                  <input type="file" multiple accept="image/*" className="hidden" onChange={handleFiles} />
+                </label>
+              </>
+            ) : (
+              <>
+                <div className="flex flex-wrap gap-2 justify-center mb-8 max-h-36 overflow-y-auto">
+                  {files.map((f, idx) => (
+                    <div key={idx} className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs" style={{background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)'}}>
+                      <IconFile />
+                      <span className="text-gray-300 max-w-[120px] truncate">{f.name}</span>
+                      <span className="text-gray-600">{(f.size/1024).toFixed(0)}kb</span>
+                    </div>
+                  ))}
+                </div>
+                <div className="flex items-center justify-center gap-3 flex-wrap">
+                  <button onClick={processImages} disabled={processing} {...glowHandlers} className="inline-flex items-center gap-2.5 px-7 sm:px-9 py-3.5 rounded-xl text-sm font-semibold text-white disabled:opacity-40" style={glowStyle}>
+                    {processing ? <><IconSpin />{i.processing}</> : <><IconDownload />{i.process}</>}
+                  </button>
+                  <button onClick={() => { setFiles([]); setDone(false) }} className="px-4 py-3.5 text-xs text-gray-500 hover:text-gray-300 transition-colors tracking-wide">{i.clear}</button>
+                </div>
+                {done && (
+                  <div className="mt-6 inline-flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-medium" style={{background: 'rgba(34,197,94,0.08)', border: '1px solid rgba(34,197,94,0.18)', color: '#86efac'}}>
+                    <IconCheck />{files.length} {i.success}
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        </Reveal>
 
-        <p className="text-center text-[11px] text-gray-600 mb-24 tracking-wide">{i.stats}</p>
+        {/* Stats */}
+        <Reveal>
+          <p className="text-center text-[11px] text-gray-600 mb-20 sm:mb-24 tracking-wide">{i.stats}</p>
+        </Reveal>
 
-        <div id="features" className="grid grid-cols-3 gap-4 mb-28">
+        {/* Feature cards */}
+        <div id="features" className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-20 sm:mb-28">
           {features.map(({ Icon, title, desc, sub, accent, href }, idx) => (
-            <div
-              key={idx}
-              className="rounded-2xl p-7 flex flex-col transition-all duration-300 hover:scale-[1.02]"
-              onMouseMove={(e) => {
-                const rect = e.currentTarget.getBoundingClientRect()
-                const x = ((e.clientX - rect.left) / rect.width * 100).toFixed(1)
-                const y = ((e.clientY - rect.top) / rect.height * 100).toFixed(1)
-                e.currentTarget.style.background = `radial-gradient(circle at ${x}% ${y}%, ${accent}12 0%, rgba(255,255,255,0.02) 65%)`
-                e.currentTarget.style.borderColor = `${accent}40`
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = 'rgba(255,255,255,0.02)'
-                e.currentTarget.style.borderColor = 'rgba(255,255,255,0.06)'
-              }}
-              style={{background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)'}}
-            >
-              <div className="w-11 h-11 rounded-2xl flex items-center justify-center mb-5" style={{background: `${accent}15`, color: accent}}>
-                <Icon />
+            <Reveal key={idx} delay={idx * 90} className="flex flex-col">
+              <div
+                className="rounded-2xl p-6 sm:p-7 flex flex-col flex-1 transition-all duration-300 hover:scale-[1.02]"
+                onMouseMove={(e) => {
+                  const rect = e.currentTarget.getBoundingClientRect()
+                  const x = ((e.clientX - rect.left) / rect.width * 100).toFixed(1)
+                  const y = ((e.clientY - rect.top) / rect.height * 100).toFixed(1)
+                  e.currentTarget.style.background = `radial-gradient(circle at ${x}% ${y}%, ${accent}12 0%, rgba(255,255,255,0.02) 65%)`
+                  e.currentTarget.style.borderColor = `${accent}40`
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'rgba(255,255,255,0.02)'
+                  e.currentTarget.style.borderColor = 'rgba(255,255,255,0.06)'
+                }}
+                style={{background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)'}}
+              >
+                <div className="w-11 h-11 rounded-2xl flex items-center justify-center mb-5" style={{background: `${accent}15`, color: accent}}>
+                  <Icon />
+                </div>
+                <p className="font-bold text-[16px] text-white mb-3 tracking-tight">{title}</p>
+                <p className="text-gray-400 text-[13px] leading-relaxed mb-4">{desc}</p>
+                <div className="px-3 py-2 rounded-lg mb-5" style={{background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)'}}>
+                  <p className="text-[11px] tracking-wide font-medium" style={{color: accent}}>{sub}</p>
+                </div>
+                <div className="mt-auto">
+                  <Link href={href} className="text-[12px] font-medium transition-colors hover:opacity-80" style={{color: accent}}>
+                    {i.know_more}
+                  </Link>
+                </div>
               </div>
-              <p className="font-bold text-[16px] text-white mb-3 tracking-tight">{title}</p>
-              <p className="text-gray-400 text-[13px] leading-relaxed mb-4">{desc}</p>
-              <div className="px-3 py-2 rounded-lg mb-5" style={{background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)'}}>
-                <p className="text-[11px] tracking-wide font-medium" style={{color: accent}}>{sub}</p>
-              </div>
-              <div className="mt-auto">
-                <a href={href} className="text-[12px] font-medium transition-colors hover:opacity-80" style={{color: accent}}>
-                  {i.know_more}
-                </a>
-              </div>
-            </div>
+            </Reveal>
           ))}
         </div>
 
+        {/* Pricing */}
         <div id="pricing">
-          <p className="text-center text-[11px] text-gray-500 uppercase tracking-widest mb-3 font-medium">Pricing</p>
-          <h2 className="text-center text-3xl font-bold tracking-tight mb-12">Simple, transparent pricing</h2>
+          <Reveal>
+            <p className="text-center text-[11px] text-gray-500 uppercase tracking-widest mb-3 font-medium">Pricing</p>
+            <h2 className="text-center text-2xl sm:text-3xl font-bold tracking-tight mb-10 sm:mb-12">Simple, transparent pricing</h2>
+          </Reveal>
 
-          <div className="grid grid-cols-2 gap-4 max-w-lg mx-auto">
-            <div className="rounded-2xl p-7 flex flex-col" style={{background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.07)'}}>
-              <p className="text-[11px] text-gray-500 uppercase tracking-widest font-medium mb-4">{i.free}</p>
-              <div className="flex items-baseline gap-1 mb-1">
-                <span className="text-4xl font-bold">€0</span>
-                <span className="text-gray-500 text-sm">/mo</span>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-lg mx-auto">
+            <Reveal delay={0} className="flex flex-col">
+              <div className="rounded-2xl p-6 sm:p-7 flex flex-col flex-1" style={{background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.07)'}}>
+                <p className="text-[11px] text-gray-500 uppercase tracking-widest font-medium mb-4">{i.free}</p>
+                <div className="flex items-baseline gap-1 mb-1">
+                  <span className="text-4xl font-bold">€0</span>
+                  <span className="text-gray-500 text-sm">/mo</span>
+                </div>
+                <p className="text-gray-500 text-[13px] mb-6">{i.free_desc}</p>
+                <div className="mt-auto">
+                  <Link href="/login" className="block w-full py-2.5 rounded-xl text-[13px] font-medium text-center text-gray-300 transition-colors hover:text-white" style={{border: '1px solid rgba(255,255,255,0.1)'}}>
+                    {i.free_sub}
+                  </Link>
+                </div>
               </div>
-              <p className="text-gray-500 text-[13px] mb-6">{i.free_desc}</p>
-              <div className="mt-auto">
-                <Link href="/login" className="block w-full py-2.5 rounded-xl text-[13px] font-medium text-center text-gray-300 transition-colors hover:text-white" style={{border: '1px solid rgba(255,255,255,0.1)'}}>
-                  {i.free_sub}
-                </Link>
-              </div>
-            </div>
+            </Reveal>
 
-            <div className="rounded-2xl p-7 relative overflow-hidden flex flex-col" style={{background: 'linear-gradient(145deg, rgba(37,99,235,0.15), rgba(79,70,229,0.2))', border: '1px solid rgba(99,102,241,0.35)', boxShadow: '0 0 40px rgba(79,70,229,0.1)'}}>
-              <div className="absolute top-0 right-0 left-0 h-px" style={{background: 'linear-gradient(90deg, transparent, rgba(99,102,241,0.6), transparent)'}} />
-              <p className="text-[11px] uppercase tracking-widest font-medium mb-4" style={{color: '#818cf8'}}>{i.pro_sub}</p>
-              <div className="flex items-baseline gap-1 mb-1">
-                <span className="text-4xl font-bold">€9</span>
-                <span className="text-gray-400 text-sm">/mo</span>
+            <Reveal delay={100} className="flex flex-col">
+              <div className="rounded-2xl p-6 sm:p-7 relative overflow-hidden flex flex-col flex-1" style={{background: 'linear-gradient(145deg, rgba(37,99,235,0.15), rgba(79,70,229,0.2))', border: '1px solid rgba(99,102,241,0.35)', boxShadow: '0 0 40px rgba(79,70,229,0.1)'}}>
+                <div className="absolute top-0 right-0 left-0 h-px" style={{background: 'linear-gradient(90deg, transparent, rgba(99,102,241,0.6), transparent)'}} />
+                <p className="text-[11px] uppercase tracking-widest font-medium mb-4" style={{color: '#818cf8'}}>{i.pro_sub}</p>
+                <div className="flex items-baseline gap-1 mb-1">
+                  <span className="text-4xl font-bold">€9</span>
+                  <span className="text-gray-400 text-sm">/mo</span>
+                </div>
+                <p className="text-gray-300 text-[13px] mb-6">{i.pro_desc}</p>
+                <div className="mt-auto">
+                  <Link href="/login" {...glowHandlers} className="block w-full py-2.5 rounded-xl text-[13px] font-semibold text-center text-white" style={glowStyle}>
+                    {i.nav_cta}
+                  </Link>
+                </div>
               </div>
-              <p className="text-gray-300 text-[13px] mb-6">{i.pro_desc}</p>
-              <div className="mt-auto">
-                <Link href="/login" {...glowHandlers} className="block w-full py-2.5 rounded-xl text-[13px] font-semibold text-center text-white" style={glowStyle}>
-                  {i.nav_cta}
-                </Link>
-              </div>
-            </div>
+            </Reveal>
           </div>
         </div>
 
-        <footer className="mt-24 pt-8 border-t border-white/5 flex items-center justify-between">
-          <Logo />
-          <div className="flex items-center gap-6 text-[12px] text-gray-500">
-            <Link href="/privacy" className="hover:text-gray-300 transition-colors">Privacy Policy</Link>
-            <Link href="/terms" className="hover:text-gray-300 transition-colors">Terms of Service</Link>
-            <span>© 2025 MetaClean</span>
-          </div>
-        </footer>
+        {/* Footer */}
+        <Reveal>
+          <footer className="mt-16 sm:mt-24 pt-8 border-t border-white/5 flex flex-col sm:flex-row items-center sm:justify-between gap-4 sm:gap-0">
+            <Logo />
+            <div className="flex items-center gap-4 sm:gap-6 text-[12px] text-gray-500">
+              <Link href="/privacy" className="hover:text-gray-300 transition-colors">Privacy Policy</Link>
+              <Link href="/terms" className="hover:text-gray-300 transition-colors">Terms of Service</Link>
+              <span>© 2025 MetaClean</span>
+            </div>
+          </footer>
+        </Reveal>
 
       </div>
     </main>
