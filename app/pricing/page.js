@@ -125,19 +125,32 @@ export default function Pricing() {
     { text: '10 images per day', ok: true },
     { text: 'Metadata removal', ok: true },
     { text: 'JPG, PNG, WEBP support', ok: true },
+    { text: 'AI Autocrop', ok: true },
     { text: 'All ad formats', ok: false },
     { text: 'Bulk processing', ok: false },
     { text: 'Priority processing', ok: false },
-    { text: 'API access', ok: false },
+    { text: 'AI Outpainting', ok: false },
+    { text: 'Auto Ad Copy', ok: false },
   ]
   const pro = [
     { text: 'Unlimited images', ok: true },
     { text: 'Metadata removal', ok: true },
     { text: 'JPG, PNG, WEBP support', ok: true },
     { text: 'All ad formats (5 sizes)', ok: true },
+    { text: 'AI Autocrop', ok: true },
     { text: 'Bulk processing', ok: true },
     { text: 'Priority processing', ok: true },
-    { text: 'API access (coming soon)', ok: true },
+    { text: 'AI Outpainting', ok: false },
+    { text: 'Auto Ad Copy', ok: false },
+  ]
+  const ai = [
+    { text: 'Everything in Pro', ok: true },
+    { text: 'Unlimited images', ok: true },
+    { text: 'All ad formats (5 sizes)', ok: true },
+    { text: 'AI Autocrop', ok: true },
+    { text: 'Priority processing', ok: true },
+    { text: 'AI Outpainting', ok: true },
+    { text: 'Auto Ad Copy', ok: true },
   ]
 
   const faqs = [
@@ -146,6 +159,7 @@ export default function Pricing() {
     { q: 'Can I cancel anytime?', a: 'Yes. No contracts, no lock-in. Cancel directly from your account settings and you will not be charged again.' },
     { q: 'What does "Priority processing" mean?', a: 'Pro users have their images processed first in the queue. During high traffic periods, free users may experience slight delays.' },
     { q: 'Is there an API?', a: 'API access is currently in development and will be available to Pro users first. If you need early access, contact us.' },
+    { q: 'What is the AI Studio plan?', a: 'AI Studio is our upcoming tier that adds AI Outpainting (background expansion instead of cropping) and Automatic Ad Copy (AI-generated headlines and descriptions per platform). Pricing is not yet set — join the waitlist to lock in founding pricing.' },
   ]
 
   return (
@@ -169,7 +183,7 @@ export default function Pricing() {
         </div>
       </nav>
 
-      <div className="relative z-10 max-w-3xl mx-auto px-4 sm:px-6 pt-12 sm:pt-20 pb-24 sm:pb-32">
+      <div className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 pt-12 sm:pt-20 pb-24 sm:pb-32">
 
         {/* Header */}
         <div className="text-center mb-12 sm:mb-16" style={en(60)}>
@@ -181,14 +195,14 @@ export default function Pricing() {
         </div>
 
         {/* Pricing cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5 mb-12 sm:mb-16">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-5 mb-12 sm:mb-16">
 
           {/* Free */}
           <Reveal delay={80} className="flex flex-col">
             <div
               className="rounded-2xl p-6 sm:p-8 flex flex-col flex-1 transition-all duration-300"
               onMouseMove={(e) => {
-                const r = e.currentTarget.getBoundingClientRect()
+               const r = e.currentTarget.getBoundingClientRect()
                 const x = ((e.clientX - r.left) / r.width * 100).toFixed(1)
                 const y = ((e.clientY - r.top) / r.height * 100).toFixed(1)
                 e.currentTarget.style.background = `radial-gradient(circle at ${x}% ${y}%, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.02) 60%)`
@@ -248,8 +262,8 @@ export default function Pricing() {
               <div className="space-y-2.5 mb-8">
                 {pro.map((item, idx) => (
                   <div key={idx} className="flex items-center gap-3">
-                    <span style={{color: '#6366f1'}}><Check /></span>
-                    <span className="text-[13px] text-gray-300">{item.text}</span>
+                    <span style={{color: item.ok ? '#6366f1' : undefined}}>{item.ok ? <Check /> : <Cross />}</span>
+                    <span className={`text-[13px] ${item.ok ? 'text-gray-300' : 'text-gray-600'}`}>{item.text}</span>
                   </div>
                 ))}
               </div>
@@ -257,6 +271,47 @@ export default function Pricing() {
                 <Link href="/login" {...glowHandlers} className="block w-full py-3 rounded-xl text-[13px] font-semibold text-center text-white" style={glowStyle}>
                   Get started
                 </Link>
+              </div>
+            </div>
+          </Reveal>
+
+          {/* AI Studio */}
+          <Reveal delay={200} className="flex flex-col">
+            <div
+              className="rounded-2xl p-6 sm:p-8 relative overflow-hidden flex flex-col flex-1 transition-all duration-300"
+              style={{background: 'rgba(255,255,255,0.015)', border: '1px solid rgba(139,92,246,0.25)'}}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(139,92,246,0.45)'; e.currentTarget.style.boxShadow = '0 0 40px rgba(139,92,246,0.1)' }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(139,92,246,0.25)'; e.currentTarget.style.boxShadow = 'none' }}
+            >
+              <div className="absolute inset-0 pointer-events-none" style={{background: 'radial-gradient(ellipse at 50% 0%, rgba(139,92,246,0.08) 0%, transparent 60%)'}} />
+              <div className="absolute top-0 right-0 left-0 h-px" style={{background: 'linear-gradient(90deg, transparent, rgba(139,92,246,0.5), transparent)'}} />
+              <div className="flex items-center justify-between mb-5">
+                <p className="text-[11px] uppercase tracking-widest font-medium" style={{color: '#c084fc'}}>AI Studio</p>
+                <span className="text-[10px] font-semibold px-2 py-1 rounded-md" style={{background: 'rgba(192,132,252,0.12)', color: '#c084fc', border: '1px solid rgba(192,132,252,0.25)'}}>Coming soon</span>
+              </div>
+              <div className="flex items-baseline gap-1 mb-1">
+                <span className="text-4xl sm:text-5xl font-bold" style={{color: 'rgba(255,255,255,0.3)'}}>€?</span>
+                <span className="text-gray-600">/mo</span>
+              </div>
+              <p className="text-gray-600 text-[13px] mb-7">Pro features plus AI-powered creative automation.</p>
+              <div className="space-y-2.5 mb-8">
+                {ai.map((item, idx) => (
+                  <div key={idx} className="flex items-center gap-3">
+                    <span style={{color: '#8b5cf6'}}><Check /></span>
+                    <span className="text-[13px] text-gray-400">{item.text}</span>
+                  </div>
+                ))}
+              </div>
+              <div className="mt-auto">
+                <a
+                  href="mailto:hello@metaclean.pro?subject=AI%20Waitlist"
+                  className="block w-full py-3 rounded-xl text-[13px] font-medium text-center transition-colors"
+                  style={{border: '1px solid rgba(139,92,246,0.35)', color: '#c084fc', background: 'rgba(139,92,246,0.08)'}}
+                  onMouseEnter={e => { e.currentTarget.style.background = 'rgba(139,92,246,0.18)'; e.currentTarget.style.borderColor = 'rgba(139,92,246,0.55)' }}
+                  onMouseLeave={e => { e.currentTarget.style.background = 'rgba(139,92,246,0.08)'; e.currentTarget.style.borderColor = 'rgba(139,92,246,0.35)' }}
+                >
+                  Join the waitlist
+                </a>
               </div>
             </div>
           </Reveal>
@@ -288,7 +343,7 @@ export default function Pricing() {
       </div>
 
       {/* Footer */}
-      <footer className="relative z-10 border-t border-white/5 px-4 sm:px-8 py-6 flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-0 max-w-3xl mx-auto">
+      <footer className="relative z-10 border-t border-white/5 px-4 sm:px-8 py-6 flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-0 max-w-4xl mx-auto">
         <Logo />
         <div className="flex items-center gap-5 text-[12px] text-gray-500">
           <Link href="/privacy" className="hover:text-gray-300 transition-colors">Privacy</Link>

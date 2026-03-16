@@ -178,7 +178,7 @@ export default function Features() {
         <Reveal y={10} className="mb-12 sm:mb-16">
           <div className="flex gap-2 flex-wrap p-3.5 sm:p-4 rounded-2xl" style={{background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)'}}>
             <p className="text-[10px] text-gray-600 uppercase tracking-widest w-full mb-2 font-medium">Jump to</p>
-            {[['#metadata', 'Metadata removal', '#3b82f6'], ['#formats', 'Ad formats', '#8b5cf6'], ['#bulk', 'Bulk processing', '#6366f1']].map(([href, label, color]) => (
+            {[['#metadata', 'Metadata removal', '#3b82f6'], ['#formats', 'Ad formats', '#8b5cf6'], ['#bulk', 'Bulk processing', '#6366f1'], ['#ai-autocrop', 'AI Autocrop', '#6366f1'], ['#ai-outpainting', 'AI Outpainting ✦', '#8b5cf6'], ['#ai-copy', 'Auto Ad Copy ✦', '#6366f1']].map(([href, label, color]) => (
               <a
                 key={href}
                 href={href}
@@ -247,6 +247,75 @@ export default function Features() {
             { title: 'Filename handling', desc: 'Output files are prefixed with metaclean_ so you can identify them instantly.' },
           ]}
           note="Free plan: up to 10 images per day. Pro plan: unlimited."
+        />
+
+        <Reveal><div className="h-px mb-20 sm:mb-28" style={{background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.06), transparent)'}} /></Reveal>
+
+        <Section
+          id="ai-autocrop"
+          badgeColor="#6366f1"
+          badge="Feature 04"
+          icon={<svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9m5.25 11.25h-4.5m4.5 0v-4.5m0 4.5L15 15" /></svg>}
+          title="AI Autocrop"
+          intro="When resizing to a different aspect ratio, MetaClean uses Sharp's content-aware attention strategy to detect the most visually important area of the image and keep it centred. No subject gets cut off without your input."
+          items={[
+            { title: 'Content-aware detection', desc: 'The attention model analyses the full image and scores regions by visual saliency — faces, products, and high-contrast areas score highest.' },
+            { title: 'Zero manual input required', desc: 'Just toggle autocrop on and process. No drag, no coordinates — the algorithm places the crop box automatically.' },
+            { title: 'Manual override available', desc: 'If you want to fine-tune, switch to manual crop mode and drag the box to exactly where you want it.' },
+            { title: 'Per-format control', desc: 'Autocrop is set independently per format. You can use it on 9:16 but override manually for 1:1 on the same image.' },
+            { title: 'Approximate preview', desc: 'The dashboard shows a dashed preview of the autocrop region so you can verify before processing.' },
+          ]}
+          note="AI Autocrop is available on all plans including Free."
+        />
+
+        <Reveal><div className="h-px mb-20 sm:mb-28" style={{background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.06), transparent)'}} /></Reveal>
+
+        {/* AI coming soon banner */}
+        <Reveal>
+          <div className="flex items-center gap-3 mb-10 px-5 py-3.5 rounded-2xl" style={{background: 'linear-gradient(135deg, rgba(99,102,241,0.07), rgba(139,92,246,0.07))', border: '1px solid rgba(139,92,246,0.2)'}}>
+            <span className="w-2 h-2 rounded-full bg-violet-400 animate-pulse shrink-0" />
+            <p className="text-[13px] text-gray-300 font-medium">AI features below are <span style={{color: '#c084fc'}}>coming soon</span> — available in the upcoming AI Studio tier.</p>
+            <a href="mailto:hello@metaclean.pro?subject=AI%20Waitlist" className="ml-auto shrink-0 text-[12px] font-medium px-3 py-1.5 rounded-lg transition-colors" style={{background: 'rgba(139,92,246,0.15)', border: '1px solid rgba(139,92,246,0.3)', color: '#c084fc'}}
+              onMouseEnter={e => e.currentTarget.style.background = 'rgba(139,92,246,0.25)'}
+              onMouseLeave={e => e.currentTarget.style.background = 'rgba(139,92,246,0.15)'}
+            >Join waitlist →</a>
+          </div>
+        </Reveal>
+
+        <Section
+          id="ai-outpainting"
+          badgeColor="#8b5cf6"
+          badge="Coming soon · AI Studio"
+          icon={<svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9m5.25 11.25h-4.5m4.5 0v-4.5m0 4.5L15 15" /></svg>}
+          title="AI Outpainting"
+          intro="Instead of cropping your image when resizing to a different ad format, AI expands the background to fill the frame. Your product, face, or focal point stays intact — no content is ever lost."
+          items={[
+            { title: 'Zero cropping', desc: 'Switching from 4:5 to 9:16 no longer cuts off your product. AI fills what is missing.' },
+            { title: 'Background generation', desc: 'The expanded area is generated to match the style, colour, and texture of the original background.' },
+            { title: 'Works across all formats', desc: 'Outpainting runs automatically for each selected ad format when the crop would otherwise clip the subject.' },
+            { title: 'Subject detection', desc: 'AI identifies the key subject and protects it — the generated area never touches the main content.' },
+            { title: 'Natural-looking results', desc: 'Outputs are indistinguishable from natively composed images for the vast majority of ad creatives.' },
+          ]}
+          note="AI Outpainting will be available exclusively in the AI Studio plan. Join the waitlist for early access and founding pricing."
+        />
+
+        <Reveal><div className="h-px mb-20 sm:mb-28" style={{background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.06), transparent)'}} /></Reveal>
+
+        <Section
+          id="ai-copy"
+          badgeColor="#6366f1"
+          badge="Coming soon · AI Studio"
+          icon={<svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 01.865-.501 48.172 48.172 0 003.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z" /></svg>}
+          title="Automatic Ad Copy"
+          intro="Upload your image and receive ready-to-use ad copy for every platform you target. The AI reads the visual content and generates headlines, descriptions, and CTAs tailored to each platform's tone and character limits."
+          items={[
+            { title: 'Image-aware generation', desc: 'The AI analyses your creative — product type, style, and context — before writing a single word.' },
+            { title: 'Platform-specific tone', desc: "Meta copy is punchy and direct. Google copy is keyword-rich. TikTok copy is casual. Each platform gets what it needs." },
+            { title: 'Character limit compliance', desc: 'Every output respects the exact character limits for headlines, descriptions, and CTAs on each platform.' },
+            { title: 'Multi-platform in one click', desc: 'One image upload generates ready-to-paste copy for Meta, Google, TikTok, and Snapchat simultaneously.' },
+            { title: 'Editable outputs', desc: 'All generated copy is editable inline before you copy it — tweak tone, swap words, adjust CTA.' },
+          ]}
+          note="Automatic Ad Copy will be available exclusively in the AI Studio plan. Join the waitlist for early access and founding pricing."
         />
 
       </div>

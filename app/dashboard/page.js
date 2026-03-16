@@ -89,47 +89,47 @@ const PLATFORM_CONFIGS = {
   meta: {
     name: 'Meta Ads', color: '#1877f2',
     formats: [
-      { label: 'meta_1x1_1080x1080',   display: '1:1',    size: '1080×1080' },
-      { label: 'meta_4x5_1080x1350',   display: '4:5',    size: '1080×1350' },
-      { label: 'meta_9x16_1080x1920',  display: '9:16',   size: '1080×1920' },
-      { label: 'meta_1.91x1_1200x628', display: '1.91:1', size: '1200×628'  },
+      { label: 'meta_1x1_1080x1080',   display: '1:1',    size: '1080×1080', width: 1080, height: 1080 },
+      { label: 'meta_4x5_1080x1350',   display: '4:5',    size: '1080×1350', width: 1080, height: 1350 },
+      { label: 'meta_9x16_1080x1920',  display: '9:16',   size: '1080×1920', width: 1080, height: 1920 },
+      { label: 'meta_1.91x1_1200x628', display: '1.91:1', size: '1200×628',  width: 1200, height: 628  },
     ],
   },
   google: {
     name: 'Google Ads', color: '#4285f4',
     formats: [
-      { label: 'google_1.91x1_1200x628', display: '1.91:1', size: '1200×628'  },
-      { label: 'google_1x1_1200x1200',   display: '1:1',    size: '1200×1200' },
-      { label: 'google_4x5_1200x1500',   display: '4:5',    size: '1200×1500' },
+      { label: 'google_1.91x1_1200x628', display: '1.91:1', size: '1200×628',  width: 1200, height: 628  },
+      { label: 'google_1x1_1200x1200',   display: '1:1',    size: '1200×1200', width: 1200, height: 1200 },
+      { label: 'google_4x5_1200x1500',   display: '4:5',    size: '1200×1500', width: 1200, height: 1500 },
     ],
   },
   tiktok: {
     name: 'TikTok Ads', color: '#ff0050',
     formats: [
-      { label: 'tiktok_9x16_1080x1920', display: '9:16', size: '1080×1920' },
-      { label: 'tiktok_1x1_1080x1080',  display: '1:1',  size: '1080×1080' },
+      { label: 'tiktok_9x16_1080x1920', display: '9:16', size: '1080×1920', width: 1080, height: 1920 },
+      { label: 'tiktok_1x1_1080x1080',  display: '1:1',  size: '1080×1080', width: 1080, height: 1080 },
     ],
     safeZone: { topPct: 6.77, bottomPct: 13.02 },
   },
   snapchat: {
     name: 'Snapchat', color: '#fffc00',
     formats: [
-      { label: 'snapchat_9x16_1080x1920', display: '9:16', size: '1080×1920' },
+      { label: 'snapchat_9x16_1080x1920', display: '9:16', size: '1080×1920', width: 1080, height: 1920 },
     ],
     safeZone: { topPct: 8.85, bottomPct: 8.85 },
   },
   pinterest: {
     name: 'Pinterest', color: '#e60023',
     formats: [
-      { label: 'pinterest_2x3_1000x1500', display: '2:3', size: '1000×1500' },
-      { label: 'pinterest_1x1_1000x1000', display: '1:1', size: '1000×1000' },
+      { label: 'pinterest_2x3_1000x1500', display: '2:3', size: '1000×1500', width: 1000, height: 1500 },
+      { label: 'pinterest_1x1_1000x1000', display: '1:1', size: '1000×1000', width: 1000, height: 1000 },
     ],
   },
   linkedin: {
     name: 'LinkedIn', color: '#0a66c2',
     formats: [
-      { label: 'linkedin_1.91x1_1200x628', display: '1.91:1', size: '1200×628'  },
-      { label: 'linkedin_1x1_1200x1200',   display: '1:1',    size: '1200×1200' },
+      { label: 'linkedin_1.91x1_1200x628', display: '1.91:1', size: '1200×628',  width: 1200, height: 628  },
+      { label: 'linkedin_1x1_1200x1200',   display: '1:1',    size: '1200×1200', width: 1200, height: 1200 },
     ],
   },
 }
@@ -210,6 +210,301 @@ function SafeZoneOverlay({ platform, i }) {
   )
 }
 
+// ─── CropEditor ───────────────────────────────────────────────────────────────
+function CropEditor({ files, selectedFormats, platformCfg, onProcess, onBack, processing }) {
+  const formats = platformCfg.formats.filter(f => selectedFormats.has(f.label))
+  const [currentIdx, setCurrentIdx] = useState(0)
+  const [activeFormat, setActiveFormat] = useState(() => formats[0]?.label ?? null)
+  const [cropState, setCropState] = useState({})
+  const [imageURLs, setImageURLs] = useState([])
+  const [imageDims, setImageDims] = useState([])
+  const dragRef = useRef(null)
+
+  useEffect(() => {
+    const urls = files.map(f => URL.createObjectURL(f))
+    setImageURLs(urls)
+    let cancelled = false
+    Promise.all(urls.map(url => new Promise(res => {
+      const img = new Image()
+      img.onload = () => res({ w: img.naturalWidth || 1, h: img.naturalHeight || 1 })
+      img.onerror = () => res({ w: 4, h: 3 })
+      img.src = url
+    }))).then(dims => { if (!cancelled) setImageDims(dims) })
+    return () => { cancelled = true; urls.forEach(u => URL.revokeObjectURL(u)) }
+  }, [files]) // eslint-disable-line
+
+  const getCrop = (fi, fmt) => cropState[fi]?.[fmt] ?? { xPct: 0.5, yPct: 0.5, autocrop: false }
+
+  const updateCrop = (fi, fmt, patch) => setCropState(prev => {
+    const cur = prev[fi]?.[fmt] ?? { xPct: 0.5, yPct: 0.5, autocrop: false }
+    return { ...prev, [fi]: { ...prev[fi], [fmt]: { ...cur, ...patch } } }
+  })
+
+  const applyToAll = () => {
+    const c = getCrop(currentIdx, activeFormat)
+    formats.forEach(f => {
+      if (f.label !== activeFormat) {
+        // Copy position only — intentionally does NOT copy autocrop flag
+        updateCrop(currentIdx, f.label, { xPct: c.xPct, yPct: c.yPct })
+      }
+    })
+  }
+
+  const handleProcessAll = () => {
+    const result = {}
+    files.forEach((_, fi) => {
+      result[fi] = {}
+      formats.forEach(fmt => { result[fi][fmt.label] = getCrop(fi, fmt.label) })
+    })
+    onProcess(result)
+  }
+
+  // ── Geometry (all % so container is responsive) ───────────────────────────
+  const imgContainerRef = useRef(null)
+  const MAX_ASPECT = 500 / 200 // widest container aspect ratio we allow
+
+  const imgDim = imageDims[currentIdx]
+  // aspect ratio of the image (w:h). Default 4:3 while loading.
+  const imgAspect = (imgDim && imgDim.w > 0 && imgDim.h > 0) ? imgDim.w / imgDim.h : 4 / 3
+
+  const activeFmtObj = formats.find(f => f.label === activeFormat)
+  // aspect ratio of the selected ad format
+  const fmtAspect = activeFmtObj ? activeFmtObj.width / activeFmtObj.height : imgAspect
+
+  // crop box covers the largest area of the format ratio within the image
+  // expressed as fractions of image dimensions (0–1)
+  let cropWFrac = 1, cropHFrac = 1
+  if (fmtAspect > imgAspect) { cropWFrac = 1; cropHFrac = imgAspect / fmtAspect }
+  else { cropHFrac = 1; cropWFrac = fmtAspect / imgAspect }
+
+  const fmtLabel = activeFormat || formats[0]?.label
+  const c = fmtLabel ? getCrop(currentIdx, fmtLabel) : { xPct: 0.5, yPct: 0.5, autocrop: false }
+
+  // crop box CSS % values (left/top = upper-left corner of box, width/height = box size)
+  const boxWidthPct = cropWFrac * 100
+  const boxHeightPct = cropHFrac * 100
+  const minXPct = cropWFrac / 2
+  const minYPct = cropHFrac / 2
+  const clampX = Math.max(minXPct, Math.min(1 - minXPct, c.xPct))
+  const clampY = Math.max(minYPct, Math.min(1 - minYPct, c.yPct))
+  const boxLeftPct = (clampX - cropWFrac / 2) * 100
+  const boxTopPct = (clampY - cropHFrac / 2) * 100
+
+  // ── Drag (uses getBoundingClientRect for true rendered px) ────────────────
+  const handlePointerDown = (e) => {
+    if (c.autocrop) return
+    e.preventDefault()
+    e.currentTarget.setPointerCapture(e.pointerId)
+    const rect = e.currentTarget.getBoundingClientRect()
+    dragRef.current = { startX: e.clientX, startY: e.clientY, startXPct: clampX, startYPct: clampY, rW: rect.width, rH: rect.height }
+  }
+  const handlePointerMove = (e) => {
+    if (!dragRef.current) return
+    const dx = e.clientX - dragRef.current.startX
+    const dy = e.clientY - dragRef.current.startY
+    const newX = Math.max(minXPct, Math.min(1 - minXPct, dragRef.current.startXPct + dx / dragRef.current.rW))
+    const newY = Math.max(minYPct, Math.min(1 - minYPct, dragRef.current.startYPct + dy / dragRef.current.rH))
+    updateCrop(currentIdx, fmtLabel, { xPct: newX, yPct: newY })
+  }
+  const handlePointerUp = () => { dragRef.current = null }
+
+  if (formats.length === 0) return null
+
+  return (
+    <div className="rounded-2xl mb-6" style={{background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)'}}>
+
+      {/* Header */}
+      <div className="flex items-center justify-between px-5 py-3.5" style={{borderBottom: '1px solid rgba(255,255,255,0.05)'}}>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={onBack}
+            disabled={processing}
+            className="text-[12px] text-gray-500 hover:text-gray-300 transition-colors flex items-center gap-1.5 disabled:opacity-40"
+          >
+            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
+            Back
+          </button>
+          <span className="text-[13px] font-semibold text-white">Edit crops</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            disabled={currentIdx === 0}
+            onClick={() => setCurrentIdx(idx => idx - 1)}
+            className="w-7 h-7 rounded-lg flex items-center justify-center text-gray-500 hover:text-gray-300 disabled:opacity-30 transition-colors"
+            style={{background: 'rgba(255,255,255,0.04)'}}
+          >
+            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
+          </button>
+          <span className="text-[12px] text-gray-500 tabular-nums">{currentIdx + 1} / {files.length}</span>
+          <button
+            disabled={currentIdx === files.length - 1}
+            onClick={() => setCurrentIdx(idx => idx + 1)}
+            className="w-7 h-7 rounded-lg flex items-center justify-center text-gray-500 hover:text-gray-300 disabled:opacity-30 transition-colors"
+            style={{background: 'rgba(255,255,255,0.04)'}}
+          >
+            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+          </button>
+          <span className="text-[11px] text-gray-600 ml-1 max-w-[140px] truncate">{files[currentIdx]?.name}</span>
+        </div>
+      </div>
+
+      {/* Format tabs */}
+      <div className="flex gap-1.5 px-5 pt-4 pb-1" style={{overflowX: 'auto', scrollbarWidth: 'none'}}>
+        {formats.map(fmt => {
+          const fmtCrop = getCrop(currentIdx, fmt.label)
+          return (
+            <button
+              key={fmt.label}
+              onClick={() => setActiveFormat(fmt.label)}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium whitespace-nowrap transition-all shrink-0"
+              style={{
+                background: activeFormat === fmt.label ? 'rgba(99,102,241,0.15)' : 'rgba(255,255,255,0.03)',
+                border: activeFormat === fmt.label ? '1px solid rgba(99,102,241,0.4)' : '1px solid rgba(255,255,255,0.07)',
+                color: activeFormat === fmt.label ? '#a5b4fc' : 'rgba(255,255,255,0.4)',
+              }}
+            >
+              {fmtCrop.autocrop && <div className="w-1.5 h-1.5 rounded-full bg-indigo-400 shrink-0" />}
+              {fmt.display}
+              <span className="text-[10px] opacity-50">{fmt.size}</span>
+            </button>
+          )
+        })}
+      </div>
+
+      {/* Image + crop overlay */}
+      <div className="py-4 px-5">
+        {/* Container: full width up to max, aspect-ratio locks the height */}
+        <div
+          ref={imgContainerRef}
+          onPointerDown={handlePointerDown}
+          onPointerMove={handlePointerMove}
+          onPointerUp={handlePointerUp}
+          style={{
+            position: 'relative',
+            width: '100%',
+            maxWidth: 560,
+            margin: '0 auto',
+            aspectRatio: `${imgAspect}`,
+            overflow: 'hidden',
+            borderRadius: 10,
+            background: '#0a0a12',
+            cursor: c.autocrop ? 'default' : 'grab',
+            userSelect: 'none',
+            touchAction: 'none',
+          }}
+        >
+          {/* Image */}
+          {imageURLs[currentIdx] && (
+            <img
+              src={imageURLs[currentIdx]}
+              alt=""
+              draggable={false}
+              style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'fill', display: 'block', pointerEvents: 'none' }}
+            />
+          )}
+
+          {/* Loading spinner */}
+          {!imgDim && (
+            <div style={{position:'absolute',inset:0,display:'flex',alignItems:'center',justifyContent:'center'}}>
+              <div className="w-5 h-5 rounded-full border-2 border-indigo-500 border-t-transparent animate-spin" />
+            </div>
+          )}
+
+          {/* ── SVG mask overlay — punches a hole where the crop box is ── */}
+          <svg style={{position:'absolute',inset:0,width:'100%',height:'100%',pointerEvents:'none'}} viewBox="0 0 100 100" preserveAspectRatio="none">
+            <defs>
+              <mask id="metaclean-crop-mask">
+                <rect width="100" height="100" fill="white" />
+                <rect x={boxLeftPct} y={boxTopPct} width={boxWidthPct} height={boxHeightPct} fill="black" />
+              </mask>
+            </defs>
+            <rect width="100" height="100" fill="rgba(0,0,0,0.65)" mask="url(#metaclean-crop-mask)" />
+          </svg>
+
+          {/* ── Crop box border ── */}
+          <div
+            style={{
+              position: 'absolute',
+              left: `${boxLeftPct}%`,
+              top: `${boxTopPct}%`,
+              width: `${boxWidthPct}%`,
+              height: `${boxHeightPct}%`,
+              border: c.autocrop ? '2px dashed rgba(99,102,241,0.75)' : '1.5px solid rgba(255,255,255,0.85)',
+              borderRadius: 2,
+              pointerEvents: 'none',
+            }}
+          >
+            {/* Rule of thirds */}
+            <div style={{position:'absolute',inset:0,pointerEvents:'none'}}>
+              <div style={{position:'absolute',top:0,bottom:0,left:'33.33%',borderLeft:'1px solid rgba(255,255,255,0.15)'}} />
+              <div style={{position:'absolute',top:0,bottom:0,left:'66.66%',borderLeft:'1px solid rgba(255,255,255,0.15)'}} />
+              <div style={{position:'absolute',left:0,right:0,top:'33.33%',borderTop:'1px solid rgba(255,255,255,0.15)'}} />
+              <div style={{position:'absolute',left:0,right:0,top:'66.66%',borderTop:'1px solid rgba(255,255,255,0.15)'}} />
+            </div>
+
+            {/* Corner handles */}
+            {[{top:-3,left:-3},{top:-3,right:-3},{bottom:-3,left:-3},{bottom:-3,right:-3}].map((pos, hIdx) => (
+              <div key={hIdx} style={{position:'absolute',width:7,height:7,background: c.autocrop ? '#a5b4fc' : 'white',borderRadius:1,...pos}} />
+            ))}
+
+            {/* Autocrop label inside box */}
+            {c.autocrop && (
+              <div style={{position:'absolute',inset:0,display:'flex',alignItems:'center',justifyContent:'center',pointerEvents:'none'}}>
+                <div className="text-center px-3 py-2 rounded-lg" style={{background:'rgba(6,6,9,0.8)',border:'1px solid rgba(99,102,241,0.3)'}}>
+                  <div className="text-[11px] font-semibold text-indigo-300">AI autocrop</div>
+                  <div className="text-[10px] text-indigo-400/55 mt-0.5">approx. preview</div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Hint */}
+        <p className="text-center text-[11px] text-gray-600 mt-2.5">
+          {c.autocrop ? 'Sharp attention strategy · preview is approximate' : 'Drag to reposition crop · stays within image bounds'}
+        </p>
+      </div>
+
+      {/* Controls */}
+      <div className="px-5 pb-5 flex items-center justify-between gap-4 flex-wrap" style={{borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '1rem'}}>
+        <div className="flex items-center gap-4 flex-wrap">
+          {/* Autocrop toggle */}
+          <div
+            className="flex items-center gap-2.5 cursor-pointer"
+            onClick={() => fmtLabel && updateCrop(currentIdx, fmtLabel, { autocrop: !c.autocrop })}
+          >
+            <div className="relative w-8 h-4 rounded-full transition-colors" style={{background: c.autocrop ? '#6366f1' : 'rgba(255,255,255,0.1)'}}>
+              <div className="absolute top-0.5 w-3 h-3 rounded-full bg-white transition-all duration-200" style={{left: c.autocrop ? 18 : 2}} />
+            </div>
+            <span className="text-[12px] text-gray-400 select-none">Content-aware autocrop</span>
+          </div>
+
+          {/* Apply to all */}
+          {!c.autocrop && formats.length > 1 && (
+            <button
+              onClick={applyToAll}
+              className="text-[11px] text-gray-500 hover:text-gray-300 transition-colors px-2.5 py-1 rounded-lg"
+              style={{border: '1px solid rgba(255,255,255,0.08)'}}
+            >
+              Apply to all formats
+            </button>
+          )}
+        </div>
+
+        <button
+          onClick={handleProcessAll}
+          disabled={processing}
+          {...glowHandlers}
+          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-[13px] font-semibold text-white disabled:opacity-40"
+          style={glowStyle}
+        >
+          {processing ? <><IconSpin /> Processing…</> : <><IconDownload /> Process all</>}
+        </button>
+      </div>
+    </div>
+  )
+}
+
 // ─── Main component ───────────────────────────────────────────────────────────
 export default function Dashboard() {
   return (
@@ -243,17 +538,21 @@ function DashboardInner() {
   const [done, setDone] = useState(false)
   const [limitReached, setLimitReached] = useState(false)
   const [upgradedNotice, setUpgradedNotice] = useState(false)
+  const [step, setStep] = useState('upload') // 'upload' | 'crop'
+  const [rejectedFiles, setRejectedFiles] = useState([]) // non-image files dropped
+  const [hoveredPlatform, setHoveredPlatform] = useState(null)
+  const [hoveredFormat, setHoveredFormat] = useState(null)
+  const [fileWarning, setFileWarning] = useState('')
   const fileInputRef = useRef(null)
 
   const i = t[lang]
 
-  // Init formats when platform changes
+  // Init formats when platform changes — only first format selected by default
   useEffect(() => {
-    const fmts = PLATFORM_CONFIGS[selectedPlatform].formats.map(f => f.label)
-    setSelectedFormats(new Set(fmts))
+    setSelectedFormats(new Set([PLATFORM_CONFIGS[selectedPlatform].formats[0].label]))
   }, [selectedPlatform])
 
-  // Auth check
+  // Auth check + restore any files saved before login
   useEffect(() => {
     supabase.auth.getSession().then(async ({ data }) => {
       if (!data.session) { router.replace('/login'); return }
@@ -263,6 +562,24 @@ function DashboardInner() {
       setLoading(false)
       setTimeout(() => setLoaded(true), 40)
       if (searchParams.get('upgraded') === '1') setUpgradedNotice(true)
+
+      // Restore files dropped on landing page before auth
+      try {
+        const raw = sessionStorage.getItem('metaclean_pending')
+        if (raw) {
+          sessionStorage.removeItem('metaclean_pending')
+          const stored = JSON.parse(raw)
+          const restored = stored.map(({ name, type, data: dataUrl }) => {
+            const arr = dataUrl.split(',')[1]
+            const bytes = atob(arr)
+            const buf = new Uint8Array(bytes.length)
+            for (let i = 0; i < bytes.length; i++) buf[i] = bytes.charCodeAt(i)
+            return new File([buf], name, { type })
+          })
+          const images = restored.filter(f => f.type.startsWith('image/'))
+          if (images.length > 0) setFiles(images)
+        }
+      } catch {}
     })
   }, [router, searchParams])
 
@@ -299,29 +616,52 @@ function DashboardInner() {
     })
   }
 
-  const handleFiles = (e) => { setFiles(Array.from(e.target.files)); setDone(false); setLimitReached(false) }
+  const splitByType = (raw) => {
+    const images = raw.filter(f => f.type.startsWith('image/'))
+    const rejected = raw.filter(f => !f.type.startsWith('image/'))
+    return { images, rejected }
+  }
+  const applyFiles = (raw) => {
+    const { images, rejected } = splitByType(raw)
+    const MAX = 50
+    let warning = ''
+    let finalImages = images
+    if (images.length > MAX) {
+      finalImages = images.slice(0, MAX)
+      warning = `Too many images — only the first ${MAX} were loaded. Processing more at once may cause timeouts.`
+    }
+    setFiles(finalImages); setRejectedFiles(rejected); setDone(false); setLimitReached(false); setFileWarning(warning)
+  }
+  const handleFiles = (e) => applyFiles(Array.from(e.target.files))
   const handleDrop = (e) => {
     e.preventDefault()
     setDragging(false)
-    setFiles(Array.from(e.dataTransfer.files))
-    setDone(false)
-    setLimitReached(false)
+    applyFiles(Array.from(e.dataTransfer.files))
   }
 
-  const processImages = async () => {
+  // cropData: { [fileIndex]: { [formatLabel]: { xPct, yPct, autocrop } } }
+  const processImages = async (cropData = {}) => {
     if (selectedFormats.size === 0 || files.length === 0) return
     setProcessing(true)
     setLimitReached(false)
 
     const { data } = await supabase.auth.getSession()
     const token = data.session?.access_token
+    let hitLimit = false
 
-    for (const file of files) {
+    // Collect all results, then decide how to download
+    const results = [] // { blob, filename, isZip }
+
+    for (let fileIndex = 0; fileIndex < files.length; fileIndex++) {
+      const file = files[fileIndex]
       const formData = new FormData()
       formData.append('image', file)
       formData.append('platform', selectedPlatform)
       formData.append('name', file.name)
       formData.append('formats', JSON.stringify([...selectedFormats]))
+      if (cropData[fileIndex]) {
+        formData.append('cropData', JSON.stringify(cropData[fileIndex]))
+      }
 
       const res = await fetch('/api/process', {
         method: 'POST',
@@ -331,16 +671,49 @@ function DashboardInner() {
 
       if (!res.ok) {
         const err = await res.json().catch(() => ({}))
-        if (err.limitReached) { setLimitReached(true); break }
+        if (err.limitReached) { setLimitReached(true); hitLimit = true; break }
         continue
       }
 
+      const contentType = res.headers.get('Content-Type') || ''
       const blob = await res.blob()
-      const url = URL.createObjectURL(blob)
+      const base = file.name.replace(/\.[^.]+$/, '')
+      const isZip = contentType.includes('zip')
+      results.push({
+        blob,
+        filename: isZip
+          ? `metaclean_${base}_${selectedPlatform}.zip`
+          : `metaclean_${base}_${[...selectedFormats][0]}.jpg`,
+        isZip,
+      })
+    }
+
+    // Download: single JPG → direct, everything else → one combined zip
+    if (results.length === 1 && !results[0].isZip) {
+      const url = URL.createObjectURL(results[0].blob)
       const a = document.createElement('a')
-      a.href = url
-      a.download = `metaclean_${file.name.replace(/\.[^.]+$/, '')}_${selectedPlatform}.zip`
-      a.click()
+      a.href = url; a.download = results[0].filename; a.click()
+      URL.revokeObjectURL(url)
+    } else if (results.length > 0) {
+      const JSZip = (await import('jszip')).default
+      const zip = new JSZip()
+      for (const { blob, filename, isZip } of results) {
+        if (isZip) {
+          // Unpack inner zip and add files flat into the outer zip
+          const inner = await JSZip.loadAsync(blob)
+          await Promise.all(Object.keys(inner.files).map(async (name) => {
+            if (!inner.files[name].dir) {
+              zip.file(name, await inner.files[name].async('blob'))
+            }
+          }))
+        } else {
+          zip.file(filename, blob)
+        }
+      }
+      const zipBlob = await zip.generateAsync({ type: 'blob', compression: 'DEFLATE' })
+      const url = URL.createObjectURL(zipBlob)
+      const a = document.createElement('a')
+      a.href = url; a.download = `metaclean_${selectedPlatform}_batch.zip`; a.click()
       URL.revokeObjectURL(url)
     }
 
@@ -351,7 +724,8 @@ function DashboardInner() {
     }
 
     setProcessing(false)
-    if (!limitReached) setDone(true)
+    setStep('upload')
+    if (!hitLimit) setDone(true)
   }
 
   const handleUpgrade = async () => {
@@ -511,28 +885,46 @@ function DashboardInner() {
         )}
 
         {/* ─── Processing tool ─── */}
-        <div className="rounded-2xl mb-6" style={{background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', ...anim(60)}}>
+        {step === 'crop' ? (
+          <CropEditor
+            files={files}
+            selectedFormats={selectedFormats}
+            platformCfg={platformCfg}
+            onProcess={processImages}
+            onBack={() => setStep('upload')}
+            processing={processing}
+          />
+        ) : null}
+        <div className="rounded-2xl mb-6" style={{display: step === 'crop' ? 'none' : undefined, background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', ...anim(60)}}>
           <div className="p-5 sm:p-6" style={{borderBottom: '1px solid rgba(255,255,255,0.05)'}}>
 
             {/* Platform selector */}
             <p className="text-[10px] text-gray-500 uppercase tracking-widest mb-3 font-medium">{i.choose_platform}</p>
             <div className="flex flex-wrap gap-2 mb-5">
-              {Object.entries(PLATFORM_CONFIGS).map(([key, p]) => (
-                <button
-                  key={key}
-                  onClick={() => setSelectedPlatform(key)}
-                  className="flex items-center gap-2 px-3 py-1.5 rounded-xl text-[12px] font-medium transition-all duration-200"
-                  style={{
-                    background: selectedPlatform === key ? `${p.color}18` : 'rgba(255,255,255,0.03)',
-                    border: selectedPlatform === key ? `1px solid ${p.color}55` : '1px solid rgba(255,255,255,0.07)',
-                    color: selectedPlatform === key ? 'white' : 'rgba(255,255,255,0.4)',
-                    transform: selectedPlatform === key ? 'scale(1.03)' : 'scale(1)',
-                  }}
-                >
-                  <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{background: p.color}} />
-                  {p.name}
-                </button>
-              ))}
+              {Object.entries(PLATFORM_CONFIGS).map(([key, p]) => {
+                const active = selectedPlatform === key
+                const hovered = hoveredPlatform === key
+                return (
+                  <button
+                    key={key}
+                    onClick={() => setSelectedPlatform(key)}
+                    onMouseEnter={() => setHoveredPlatform(key)}
+                    onMouseLeave={() => setHoveredPlatform(null)}
+                    className="flex items-center gap-2 px-3 py-1.5 rounded-xl text-[12px] font-medium"
+                    style={{
+                      background: active ? `${p.color}18` : hovered ? `${p.color}0d` : 'rgba(255,255,255,0.03)',
+                      border: active ? `1px solid ${p.color}55` : hovered ? `1px solid ${p.color}33` : '1px solid rgba(255,255,255,0.07)',
+                      color: active ? 'white' : hovered ? 'rgba(255,255,255,0.7)' : 'rgba(255,255,255,0.4)',
+                      transform: active ? 'scale(1.03)' : hovered ? 'scale(1.01)' : 'scale(1)',
+                      boxShadow: active ? `0 0 12px ${p.color}22` : hovered ? `0 0 8px ${p.color}15` : 'none',
+                      transition: 'all 0.18s ease',
+                    }}
+                  >
+                    <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{background: p.color}} />
+                    {p.name}
+                  </button>
+                )
+              })}
             </div>
 
             {/* Format toggles */}
@@ -541,20 +933,25 @@ function DashboardInner() {
               <div className="flex flex-wrap gap-2">
                 {platformCfg.formats.map((fmt) => {
                   const active = selectedFormats.has(fmt.label)
+                  const hov = hoveredFormat === fmt.label
                   return (
                     <button
                       key={fmt.label}
                       onClick={() => toggleFormat(fmt.label)}
-                      className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-[12px] font-medium transition-all duration-150"
+                      onMouseEnter={() => setHoveredFormat(fmt.label)}
+                      onMouseLeave={() => setHoveredFormat(null)}
+                      className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-[12px] font-medium"
                       style={{
-                        background: active ? 'rgba(99,102,241,0.12)' : 'rgba(255,255,255,0.03)',
-                        border: active ? '1px solid rgba(99,102,241,0.35)' : '1px solid rgba(255,255,255,0.07)',
-                        color: active ? '#a5b4fc' : 'rgba(255,255,255,0.3)',
+                        background: active ? 'rgba(99,102,241,0.14)' : hov ? 'rgba(255,255,255,0.06)' : 'rgba(255,255,255,0.03)',
+                        border: active ? '1px solid rgba(99,102,241,0.4)' : hov ? '1px solid rgba(255,255,255,0.15)' : '1px solid rgba(255,255,255,0.07)',
+                        color: active ? '#a5b4fc' : hov ? 'rgba(255,255,255,0.6)' : 'rgba(255,255,255,0.3)',
+                        transform: hov && !active ? 'translateY(-1px)' : 'none',
+                        transition: 'all 0.15s ease',
                       }}
                     >
                       <div
-                        className="w-3 h-3 rounded flex items-center justify-center shrink-0 transition-colors"
-                        style={{background: active ? 'rgba(99,102,241,0.3)' : 'rgba(255,255,255,0.05)', border: active ? '1px solid rgba(99,102,241,0.5)' : '1px solid rgba(255,255,255,0.1)'}}
+                        className="w-3 h-3 rounded flex items-center justify-center shrink-0"
+                        style={{background: active ? 'rgba(99,102,241,0.35)' : 'rgba(255,255,255,0.05)', border: active ? '1px solid rgba(99,102,241,0.55)' : '1px solid rgba(255,255,255,0.1)', transition: 'all 0.15s ease'}}
                       >
                         {active && <svg className="w-2 h-2 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3.5} d="M4.5 12.75l6 6 9-13.5" /></svg>}
                       </div>
@@ -577,6 +974,38 @@ function DashboardInner() {
               )}
             </div>
           </div>
+
+          {/* Too-many-files warning */}
+          {fileWarning && (
+            <div className="px-5 pb-2">
+              <div className="flex items-start gap-2.5 px-4 py-3 rounded-xl" style={{background: 'rgba(245,158,11,0.06)', border: '1px solid rgba(245,158,11,0.2)'}}>
+                <svg className="w-3.5 h-3.5 shrink-0 mt-0.5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" /></svg>
+                <p className="text-[12px] text-amber-300 leading-relaxed">{fileWarning}</p>
+              </div>
+            </div>
+          )}
+
+          {/* Rejected files */}
+          {rejectedFiles.length > 0 && (
+            <div className="px-5 pb-4">
+              <div className="flex items-start justify-between gap-3 px-4 py-3 rounded-xl" style={{background: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.18)'}}>
+                <div className="min-w-0">
+                  <p className="text-[12px] font-semibold text-red-300 mb-1.5 flex items-center gap-1.5">
+                    <svg className="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" /></svg>
+                    {rejectedFiles.length} file{rejectedFiles.length > 1 ? 's' : ''} skipped — images only
+                  </p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {rejectedFiles.map((f, idx) => (
+                      <span key={idx} className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] text-red-400/70" style={{background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.15)'}}>
+                        {f.name}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+                <button onClick={() => setRejectedFiles([])} className="text-red-400/50 hover:text-red-400 transition-colors text-lg leading-none shrink-0 mt-0.5">×</button>
+              </div>
+            </div>
+          )}
 
           {/* Upload zone */}
           <div className="p-4 sm:p-5">
@@ -611,12 +1040,23 @@ function DashboardInner() {
                 </div>
               ) : (
                 <div className="relative z-10">
-                  <div className="flex flex-wrap gap-2 justify-center mb-6 max-h-28 overflow-y-auto">
+                  <div className="flex flex-wrap gap-2 justify-center mb-6 max-h-32 overflow-y-auto">
                     {files.map((f, idx) => (
-                      <div key={idx} className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs" style={{background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)'}}>
+                      <div
+                        key={idx}
+                        className="group flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs transition-all duration-150"
+                        style={{background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)'}}
+                        onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.07)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.12)' }}
+                        onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.07)' }}
+                      >
                         <IconFile />
                         <span className="text-gray-300 max-w-[100px] truncate">{f.name}</span>
                         <span className="text-gray-600">{(f.size/1024).toFixed(0)}kb</span>
+                        <button
+                          onClick={() => setFiles(prev => prev.filter((_, i) => i !== idx))}
+                          className="text-gray-700 hover:text-red-400 transition-colors ml-0.5"
+                          title="Remove"
+                        >×</button>
                       </div>
                     ))}
                   </div>
@@ -632,15 +1072,16 @@ function DashboardInner() {
                   ) : (
                     <div className="flex items-center justify-center gap-3 flex-wrap">
                       <button
-                        onClick={processImages}
-                        disabled={processing || selectedFormats.size === 0}
+                        onClick={() => setStep('crop')}
+                        disabled={selectedFormats.size === 0}
                         {...glowHandlers}
                         className="inline-flex items-center gap-2.5 px-7 py-3 rounded-xl text-sm font-semibold text-white disabled:opacity-40"
                         style={glowStyle}
                       >
-                        {processing ? <><IconSpin />{i.processing}</> : <><IconDownload />{i.process}</>}
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                        Edit crops →
                       </button>
-                      <button onClick={() => { setFiles([]); setDone(false); setLimitReached(false); if (fileInputRef.current) fileInputRef.current.value = '' }} className="px-4 py-3 text-xs text-gray-500 hover:text-gray-300 transition-colors">{i.clear}</button>
+                      <button onClick={() => { setFiles([]); setDone(false); setLimitReached(false); setStep('upload'); if (fileInputRef.current) fileInputRef.current.value = '' }} className="px-4 py-3 text-xs text-gray-500 hover:text-gray-300 transition-colors">{i.clear}</button>
                     </div>
                   )}
 

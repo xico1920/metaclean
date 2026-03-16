@@ -81,13 +81,49 @@ const PLATFORMS = {
 
 const FREE_LIMIT = 10
 
-async function processFormat(inputBuffer, width, height, quality, maxSizeKB) {
-  const make = (q) =>
-    sharp(inputBuffer)
-      .resize(width, height, { fit: 'cover', position: 'centre' })
-      .withMetadata(false)
-      .jpeg({ quality: q })
-      .toBuffer()
+// cropInfo: { xPct, yPct, autocrop } — optional
+// If autocrop: use Sharp attention strategy
+// If xPct/yPct provided: extract crop region then resize
+// Otherwise: center crop (default)
+async function processFormat(inputBuffer, width, height, quality, maxSizeKB, cropInfo) {
+  let extractParams = null
+
+  if (cropInfo && !cropInfo.autocrop && cropInfo.xPct !== undefined) {
+    const meta = await sharp(inputBuffer).metadata()
+    const imgW = meta.width
+    const imgH = meta.height
+    const fmtRatio = width / height
+    const imgRatio = imgW / imgH
+
+    let cropW, cropH
+    if (fmtRatio > imgRatio) {
+      cropW = imgW
+      cropH = Math.round(imgW / fmtRatio)
+    } else {
+      cropH = imgH
+      cropW = Math.round(imgH * fmtRatio)
+    }
+
+    const centerX = cropInfo.xPct * imgW
+    const centerY = cropInfo.yPct * imgH
+    let left = Math.round(centerX - cropW / 2)
+    let top = Math.round(centerY - cropH / 2)
+    left = Math.max(0, Math.min(left, imgW - cropW))
+    top = Math.max(0, Math.min(top, imgH - cropH))
+    extractParams = { left, top, width: cropW, height: cropH }
+  }
+
+  const make = (q) => {
+    let pipeline = sharp(inputBuffer)
+    if (cropInfo?.autocrop) {
+      pipeline = pipeline.resize(width, height, { fit: 'cover', position: 'attention' })
+    } else if (extractParams) {
+      pipeline = pipeline.extract(extractParams).resize(width, height)
+    } else {
+      pipeline = pipeline.resize(width, height, { fit: 'cover', position: 'centre' })
+    }
+    return pipeline.withMetadata(false).jpeg({ quality: q }).toBuffer()
+  }
 
   if (!maxSizeKB) return make(quality)
 
@@ -152,6 +188,10 @@ export async function POST(request) {
     const formatsParam = formData.get('formats')
     const selectedFormats = formatsParam ? JSON.parse(formatsParam) : null
 
+    // cropData: { [formatLabel]: { xPct, yPct, autocrop } }
+    const cropDataParam = formData.get('cropData')
+    const cropData = cropDataParam ? JSON.parse(cropDataParam) : {}
+
     if (!file) {
       return NextResponse.json({ error: 'No image provided' }, { status: 400 })
     }
@@ -160,19 +200,22 @@ export async function POST(request) {
     const inputBuffer = Buffer.from(await file.arrayBuffer())
     const baseName = originalName.replace(/\.[^.]+$/, '')
 
-    const zip = new JSZip()
-    const processedFormats = []
+    const processedFiles = []
 
     for (const fmt of config.formats) {
       if (selectedFormats && !selectedFormats.includes(fmt.label)) continue
-      const processed = await processFormat(
-        inputBuffer, fmt.width, fmt.height, config.quality, config.maxSizeKB
+      const cropInfo = cropData[fmt.label] || null
+      const buffer = await processFormat(
+        inputBuffer, fmt.width, fmt.height, config.quality, config.maxSizeKB, cropInfo
       )
-      zip.file(`metaclean_${baseName}_${fmt.label}.jpg`, processed)
-      processedFormats.push(fmt.label)
+      processedFiles.push({ label: fmt.label, buffer, filename: `metaclean_${baseName}_${fmt.label}.jpg` })
     }
 
-    const zipBuffer = await zip.generateAsync({ type: 'nodebuffer', compression: 'DEFLATE' })
+    if (processedFiles.length === 0) {
+      return NextResponse.json({ error: 'No formats processed' }, { status: 400 })
+    }
+
+    const processedFormats = processedFiles.map(f => f.label)
 
     // ── Update usage + log history ────────────────────────────────────────────
     await supabase
@@ -186,6 +229,21 @@ export async function POST(request) {
       platform,
       formats: processedFormats,
     })
+
+    // Single format → return image directly (no zip)
+    if (processedFiles.length === 1) {
+      return new NextResponse(processedFiles[0].buffer, {
+        headers: {
+          'Content-Type': 'image/jpeg',
+          'Content-Disposition': `attachment; filename="${processedFiles[0].filename}"`,
+        },
+      })
+    }
+
+    // Multiple formats → zip
+    const zip = new JSZip()
+    for (const f of processedFiles) zip.file(f.filename, f.buffer)
+    const zipBuffer = await zip.generateAsync({ type: 'nodebuffer', compression: 'DEFLATE' })
 
     return new NextResponse(zipBuffer, {
       headers: {
