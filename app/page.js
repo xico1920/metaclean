@@ -20,6 +20,9 @@ const t = {
     free: 'Free', free_sub: 'Get started', free_desc: '10 images per day',
     pro: 'Pro', pro_sub: 'Most popular', pro_desc: 'Unlimited images · All formats · Priority processing',
     platforms: 'Works with',
+    choose_platform: 'Choose your platform',
+    formats_label: 'Formats generated',
+    tiktok_note: 'auto-compressed → 500KB',
   },
   pt: {
     nav_features: 'Funcionalidades', nav_pricing: 'Preços', nav_cta: 'Começar',
@@ -38,6 +41,9 @@ const t = {
     free: 'Grátis', free_sub: 'Começar', free_desc: '10 imagens por dia',
     pro: 'Pro', pro_sub: 'Mais popular', pro_desc: 'Imagens ilimitadas · Todos os formatos · Processamento prioritário',
     platforms: 'Funciona com',
+    choose_platform: 'Escolhe a tua plataforma',
+    formats_label: 'Formatos gerados',
+    tiktok_note: 'comprimido automaticamente → 500KB',
   },
   es: {
     nav_features: 'Funciones', nav_pricing: 'Precios', nav_cta: 'Empezar',
@@ -56,6 +62,9 @@ const t = {
     free: 'Gratis', free_sub: 'Empezar', free_desc: '10 imágenes por día',
     pro: 'Pro', pro_sub: 'Más popular', pro_desc: 'Imágenes ilimitadas · Todos los formatos · Procesamiento prioritario',
     platforms: 'Funciona con',
+    choose_platform: 'Elige tu plataforma',
+    formats_label: 'Formatos generados',
+    tiktok_note: 'comprimido automáticamente → 500KB',
   },
 }
 
@@ -148,13 +157,13 @@ function Logo() {
   )
 }
 
-function PlatformBadge({ name, color }) {
-  return (
-    <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg" style={{background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)'}}>
-      <div className="w-2 h-2 rounded-full" style={{background: color}}></div>
-      <span className="text-[12px] text-gray-400 font-medium">{name}</span>
-    </div>
-  )
+const PLATFORM_CONFIGS = {
+  meta:      { name: 'Meta Ads',   color: '#1877f2', formats: ['1:1 · 1080×1080', '4:5 · 1080×1350', '9:16 · 1080×1920', '1.91:1 · 1200×628'] },
+  google:    { name: 'Google Ads', color: '#4285f4', formats: ['1:1 · 1080×1080', '1.91:1 · 1200×628', '4:5 · 1080×1350'] },
+  tiktok:    { name: 'TikTok Ads', color: '#ff0050', formats: ['9:16 · 1080×1920', '1:1 · 1080×1080'] },
+  snapchat:  { name: 'Snapchat',   color: '#fffc00', formats: ['9:16 · 1080×1920'] },
+  pinterest: { name: 'Pinterest',  color: '#e60023', formats: ['2:3 · 1000×1500', '1:1 · 1000×1000'] },
+  linkedin:  { name: 'LinkedIn',   color: '#0a66c2', formats: ['1.91:1 · 1200×627', '1:1 · 1080×1080'] },
 }
 
 export default function Home() {
@@ -164,6 +173,7 @@ export default function Home() {
   const [dragging, setDragging] = useState(false)
   const [lang, setLang] = useState('en')
   const [langOpen, setLangOpen] = useState(false)
+  const [selectedPlatform, setSelectedPlatform] = useState('meta')
   const i = t[lang]
 
   const handleFiles = (e) => { setFiles(Array.from(e.target.files)); setDone(false) }
@@ -174,13 +184,17 @@ export default function Home() {
     for (const file of files) {
       const formData = new FormData()
       formData.append('image', file)
+      formData.append('platform', selectedPlatform)
+      formData.append('name', file.name)
       const res = await fetch('/api/process', { method: 'POST', body: formData })
       const blob = await res.blob()
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
-      a.download = `metaclean_${file.name}`
+      const baseName = file.name.replace(/\.[^.]+$/, '')
+      a.download = `metaclean_${baseName}_${selectedPlatform}.zip`
       a.click()
+      URL.revokeObjectURL(url)
     }
     setProcessing(false)
     setDone(true)
@@ -261,13 +275,39 @@ export default function Home() {
 
           <p className="text-gray-400 max-w-lg mx-auto leading-relaxed mb-8" style={{fontSize: '17px'}}>{i.subtitle}</p>
 
-          <div className="flex items-center justify-center gap-2 flex-wrap">
-            <span className="text-[11px] text-gray-600 uppercase tracking-widest mr-1">{i.platforms}</span>
-            <PlatformBadge name="Meta Ads" color="#1877f2" />
-            <PlatformBadge name="Google Ads" color="#4285f4" />
-            <PlatformBadge name="TikTok Ads" color="#ff0050" />
-            <PlatformBadge name="Pinterest" color="#e60023" />
-            <PlatformBadge name="Snapchat" color="#fffc00" />
+          <div className="mb-2">
+            <p className="text-[11px] text-gray-500 uppercase tracking-widest mb-4">{i.choose_platform}</p>
+            <div className="flex items-center justify-center gap-2 flex-wrap mb-4">
+              {Object.entries(PLATFORM_CONFIGS).map(([key, p]) => (
+                <button
+                  key={key}
+                  onClick={() => setSelectedPlatform(key)}
+                  className="flex items-center gap-2 px-4 py-2 rounded-xl text-[13px] font-medium transition-all duration-200"
+                  style={{
+                    background: selectedPlatform === key ? `${p.color}18` : 'rgba(255,255,255,0.03)',
+                    border: selectedPlatform === key ? `1px solid ${p.color}55` : '1px solid rgba(255,255,255,0.07)',
+                    color: selectedPlatform === key ? 'white' : 'rgba(255,255,255,0.45)',
+                    transform: selectedPlatform === key ? 'scale(1.04)' : 'scale(1)',
+                  }}
+                >
+                  <div className="w-2 h-2 rounded-full shrink-0" style={{background: p.color}} />
+                  {p.name}
+                </button>
+              ))}
+            </div>
+            <div className="flex items-center justify-center gap-2 flex-wrap">
+              <span className="text-[11px] text-gray-600 uppercase tracking-widest">{i.formats_label}:</span>
+              {PLATFORM_CONFIGS[selectedPlatform].formats.map((f, idx) => (
+                <span key={idx} className="text-[11px] px-2.5 py-1 rounded-md font-medium" style={{background: 'rgba(99,102,241,0.08)', border: '1px solid rgba(99,102,241,0.18)', color: '#a5b4fc'}}>
+                  {f}
+                </span>
+              ))}
+              {selectedPlatform === 'tiktok' && (
+                <span className="text-[11px] px-2.5 py-1 rounded-md font-medium" style={{background: 'rgba(255,80,0,0.08)', border: '1px solid rgba(255,80,0,0.25)', color: '#fb923c'}}>
+                  {i.tiktok_note}
+                </span>
+              )}
+            </div>
           </div>
         </div>
 
