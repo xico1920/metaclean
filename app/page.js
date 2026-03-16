@@ -1,10 +1,12 @@
 'use client'
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+import { supabase } from '@/lib/supabase'
 
 const t = {
   en: {
-    nav_features: 'Features', nav_pricing: 'Pricing', nav_cta: 'Get started',
+    nav_features: 'Features', nav_pricing: 'Pricing', nav_cta: 'Get started', nav_dashboard: 'Dashboard',
     badge: 'Trusted by 500+ advertisers',
     hero1: 'Your ads keep getting', hero2: 'rejected.',
     hero3: "We fix that.",
@@ -23,9 +25,17 @@ const t = {
     choose_platform: 'Choose your platform',
     formats_label: 'Formats generated',
     tiktok_note: 'auto-compressed → 500KB',
+    gate_title: 'Your images are ready to be cleaned',
+    gate_sub: 'Free plan includes 10 images per day',
+    gate_signup: 'Create free account',
+    gate_signin: 'Sign in',
+    gate_b1: 'Platform-specific ad formats',
+    gate_b2: 'Metadata stripped automatically',
+    gate_b3: 'Bulk processing up to 50 files',
+    gate_b4: 'Dashboard with conversion history',
   },
   pt: {
-    nav_features: 'Funcionalidades', nav_pricing: 'Preços', nav_cta: 'Começar',
+    nav_features: 'Funcionalidades', nav_pricing: 'Preços', nav_cta: 'Começar', nav_dashboard: 'Dashboard',
     badge: 'Usado por +500 anunciantes',
     hero1: 'Os teus anúncios continuam', hero2: 'a ser rejeitados.',
     hero3: 'Nós resolvemos isso.',
@@ -44,9 +54,17 @@ const t = {
     choose_platform: 'Escolhe a tua plataforma',
     formats_label: 'Formatos gerados',
     tiktok_note: 'comprimido automaticamente → 500KB',
+    gate_title: 'As tuas imagens estão prontas para serem limpas',
+    gate_sub: 'O plano gratuito inclui 10 imagens por dia',
+    gate_signup: 'Criar conta gratuita',
+    gate_signin: 'Entrar',
+    gate_b1: 'Formatos de anúncio por plataforma',
+    gate_b2: 'Metadata removida automaticamente',
+    gate_b3: 'Processamento em massa até 50 ficheiros',
+    gate_b4: 'Dashboard com histórico de conversões',
   },
   es: {
-    nav_features: 'Funciones', nav_pricing: 'Precios', nav_cta: 'Empezar',
+    nav_features: 'Funciones', nav_pricing: 'Precios', nav_cta: 'Empezar', nav_dashboard: 'Dashboard',
     badge: 'Usado por +500 anunciantes',
     hero1: 'Tus anuncios siguen siendo', hero2: 'rechazados.',
     hero3: 'Nosotros lo solucionamos.',
@@ -65,6 +83,14 @@ const t = {
     choose_platform: 'Elige tu plataforma',
     formats_label: 'Formatos generados',
     tiktok_note: 'comprimido automáticamente → 500KB',
+    gate_title: 'Tus imágenes están listas para limpiar',
+    gate_sub: 'El plan gratuito incluye 10 imágenes por día',
+    gate_signup: 'Crear cuenta gratis',
+    gate_signin: 'Iniciar sesión',
+    gate_b1: 'Formatos de anuncio por plataforma',
+    gate_b2: 'Metadatos eliminados automáticamente',
+    gate_b3: 'Procesamiento masivo hasta 50 archivos',
+    gate_b4: 'Dashboard con historial de conversiones',
   },
 }
 
@@ -188,11 +214,75 @@ function Logo() {
 
 const PLATFORM_CONFIGS = {
   meta:      { name: 'Meta Ads',   color: '#1877f2', formats: ['1:1 · 1080×1080', '4:5 · 1080×1350', '9:16 · 1080×1920', '1.91:1 · 1200×628'] },
-  google:    { name: 'Google Ads', color: '#4285f4', formats: ['1:1 · 1080×1080', '1.91:1 · 1200×628', '4:5 · 1080×1350'] },
+  google:    { name: 'Google Ads', color: '#4285f4', formats: ['1.91:1 · 1200×628', '1:1 · 1200×1200', '4:5 · 1200×1500'] },
   tiktok:    { name: 'TikTok Ads', color: '#ff0050', formats: ['9:16 · 1080×1920', '1:1 · 1080×1080'] },
   snapchat:  { name: 'Snapchat',   color: '#fffc00', formats: ['9:16 · 1080×1920'] },
   pinterest: { name: 'Pinterest',  color: '#e60023', formats: ['2:3 · 1000×1500', '1:1 · 1000×1000'] },
-  linkedin:  { name: 'LinkedIn',   color: '#0a66c2', formats: ['1.91:1 · 1200×627', '1:1 · 1080×1080'] },
+  linkedin:  { name: 'LinkedIn',   color: '#0a66c2', formats: ['1.91:1 · 1200×628', '1:1 · 1200×1200'] },
+}
+
+function AuthGateModal({ onClose, lang }) {
+  const i = t[lang]
+  const router = useRouter()
+  const benefits = [i.gate_b1, i.gate_b2, i.gate_b3, i.gate_b4]
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center px-4"
+      style={{background: 'rgba(6,6,9,0.85)', backdropFilter: 'blur(12px)'}}
+      onClick={(e) => { if (e.target === e.currentTarget) onClose() }}
+    >
+      <div
+        className="w-full max-w-md rounded-2xl p-8"
+        style={{
+          background: 'linear-gradient(145deg, #0d0d18, #0a0a14)',
+          border: '1px solid rgba(99,102,241,0.2)',
+          boxShadow: '0 0 60px rgba(99,102,241,0.12), 0 40px 80px rgba(0,0,0,0.5)',
+        }}
+      >
+        {/* Glow line top */}
+        <div className="absolute top-0 left-8 right-8 h-px rounded-full" style={{background: 'linear-gradient(90deg, transparent, rgba(99,102,241,0.5), transparent)'}} />
+
+        <div className="text-center mb-7">
+          <div className="inline-flex w-12 h-12 rounded-2xl items-center justify-center mb-4" style={{background: 'rgba(99,102,241,0.12)', border: '1px solid rgba(99,102,241,0.2)'}}>
+            <svg className="w-5 h-5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+          </div>
+          <h2 className="text-xl font-bold tracking-tight mb-2">{i.gate_title}</h2>
+        </div>
+
+        <ul className="space-y-2.5 mb-7">
+          {benefits.map((b, idx) => (
+            <li key={idx} className="flex items-center gap-3 text-[13px] text-gray-300">
+              <div className="w-4 h-4 rounded-full flex items-center justify-center shrink-0" style={{background: 'rgba(99,102,241,0.15)', border: '1px solid rgba(99,102,241,0.3)'}}>
+                <svg className="w-2.5 h-2.5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M4.5 12.75l6 6 9-13.5" /></svg>
+              </div>
+              {b}
+            </li>
+          ))}
+        </ul>
+
+        <div className="space-y-2.5">
+          <button
+            {...glowHandlers}
+            onClick={() => router.push('/login?mode=signup')}
+            className="w-full py-3 rounded-xl text-[13px] font-semibold text-white"
+            style={glowStyle}
+          >
+            {i.gate_signup}
+          </button>
+          <button
+            onClick={() => router.push('/login')}
+            className="w-full py-3 rounded-xl text-[13px] font-medium text-gray-300 hover:text-white transition-colors"
+            style={{border: '1px solid rgba(255,255,255,0.08)'}}
+          >
+            {i.gate_signin}
+          </button>
+        </div>
+
+        <p className="text-center text-[11px] text-gray-600 mt-4">{i.gate_sub}</p>
+      </div>
+    </div>
+  )
 }
 
 export default function Home() {
@@ -203,19 +293,50 @@ export default function Home() {
   const [lang, setLang] = useState('en')
   const [langOpen, setLangOpen] = useState(false)
   const [selectedPlatform, setSelectedPlatform] = useState('meta')
+  const [session, setSession] = useState(null)
+  const [showGate, setShowGate] = useState(false)
+  const fileInputRef = useRef(null)
   const i = t[lang]
 
-  const handleFiles = (e) => { setFiles(Array.from(e.target.files)); setDone(false) }
-  const handleDrop = (e) => { e.preventDefault(); setDragging(false); setFiles(Array.from(e.dataTransfer.files)); setDone(false) }
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => setSession(data.session))
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_, s) => setSession(s))
+    return () => subscription.unsubscribe()
+  }, [])
+
+  const interceptFiles = (incomingFiles) => {
+    if (!session) {
+      setShowGate(true)
+      if (fileInputRef.current) fileInputRef.current.value = ''
+      return
+    }
+    setFiles(incomingFiles)
+    setDone(false)
+  }
+
+  const handleFiles = (e) => interceptFiles(Array.from(e.target.files))
+  const handleDrop = (e) => {
+    e.preventDefault()
+    setDragging(false)
+    interceptFiles(Array.from(e.dataTransfer.files))
+  }
 
   const processImages = async () => {
+    if (!session) { setShowGate(true); return }
     setProcessing(true)
+    const { data } = await supabase.auth.getSession()
+    const token = data.session?.access_token
     for (const file of files) {
       const formData = new FormData()
       formData.append('image', file)
       formData.append('platform', selectedPlatform)
       formData.append('name', file.name)
-      const res = await fetch('/api/process', { method: 'POST', body: formData })
+      const res = await fetch('/api/process', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` },
+        body: formData,
+      })
+      if (!res.ok) continue
       const blob = await res.blob()
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
@@ -237,6 +358,8 @@ export default function Home() {
 
   return (
     <main className="min-h-screen bg-[#060609] text-white overflow-x-hidden" style={{fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'}}>
+
+      {showGate && <AuthGateModal onClose={() => setShowGate(false)} lang={lang} />}
 
       {/* Background glows */}
       <div className="fixed inset-0 pointer-events-none">
@@ -268,9 +391,15 @@ export default function Home() {
               </div>
             )}
           </div>
-          <Link href="/login" {...glowHandlers} className="px-3.5 sm:px-5 py-2 rounded-lg text-[13px] font-medium text-white whitespace-nowrap" style={glowStyle}>
-            {i.nav_cta}
-          </Link>
+          {session ? (
+            <Link href="/dashboard" {...glowHandlers} className="px-3.5 sm:px-5 py-2 rounded-lg text-[13px] font-medium text-white whitespace-nowrap" style={glowStyle}>
+              {i.nav_dashboard}
+            </Link>
+          ) : (
+            <Link href="/login" {...glowHandlers} className="px-3.5 sm:px-5 py-2 rounded-lg text-[13px] font-medium text-white whitespace-nowrap" style={glowStyle}>
+              {i.nav_cta}
+            </Link>
+          )}
         </div>
       </nav>
 
@@ -368,7 +497,7 @@ export default function Home() {
                 <label {...glowHandlers} className="inline-flex items-center gap-2 px-7 py-3 rounded-xl text-sm font-semibold text-white cursor-pointer" style={glowStyle}>
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
                   {i.select}
-                  <input type="file" multiple accept="image/*" className="hidden" onChange={handleFiles} />
+                  <input ref={fileInputRef} type="file" multiple accept="image/*" className="hidden" onChange={handleFiles} />
                 </label>
               </>
             ) : (

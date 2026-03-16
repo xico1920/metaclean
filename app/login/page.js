@@ -1,6 +1,8 @@
 'use client'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { supabase } from '@/lib/supabase'
 
 function Logo() {
   return (
@@ -48,9 +50,51 @@ const glowHandlers = {
 }
 
 export default function Login() {
+  const router = useRouter()
   const [mode, setMode] = useState('login')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [checkingSession, setCheckingSession] = useState(true)
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => {
+      if (data.session) router.replace('/dashboard')
+      else setCheckingSession(false)
+    })
+  }, [router])
+
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    if (!email || !password) { setError('Please fill in all fields.'); return }
+    setError('')
+    setLoading(true)
+
+    try {
+      if (mode === 'login') {
+        const { error: signInError } = await supabase.auth.signInWithPassword({ email, password })
+        if (signInError) throw signInError
+      } else {
+        const { data, error: signUpError } = await supabase.auth.signUp({ email, password })
+        if (signUpError) throw signUpError
+        if (data.user) {
+          await supabase.from('profiles').upsert({
+            id: data.user.id,
+            email,
+            plan: 'free',
+            images_used_today: 0,
+            last_reset_date: new Date().toISOString().split('T')[0],
+          })
+        }
+      }
+      router.push('/dashboard')
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const inputStyle = {
     width: '100%',
@@ -63,6 +107,14 @@ export default function Login() {
     outline: 'none',
     transition: 'border-color 0.2s',
     fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+  }
+
+  if (checkingSession) {
+    return (
+      <main className="min-h-screen bg-[#060609] flex items-center justify-center">
+        <div className="w-5 h-5 rounded-full border-2 border-indigo-500 border-t-transparent animate-spin" />
+      </main>
+    )
   }
 
   return (
@@ -92,7 +144,7 @@ export default function Login() {
 
             <div className="flex rounded-xl p-1 mb-6" style={{background: 'rgba(255,255,255,0.04)'}}>
               <button
-                onClick={() => setMode('login')}
+                onClick={() => { setMode('login'); setError('') }}
                 className="flex-1 py-2 rounded-lg text-[13px] font-medium transition-all"
                 style={{
                   background: mode === 'login' ? 'rgba(255,255,255,0.08)' : 'transparent',
@@ -102,7 +154,7 @@ export default function Login() {
                 Sign in
               </button>
               <button
-                onClick={() => setMode('signup')}
+                onClick={() => { setMode('signup'); setError('') }}
                 className="flex-1 py-2 rounded-lg text-[13px] font-medium transition-all"
                 style={{
                   background: mode === 'signup' ? 'rgba(255,255,255,0.08)' : 'transparent',
@@ -113,46 +165,50 @@ export default function Login() {
               </button>
             </div>
 
-            <div className="space-y-3 mb-6">
-              <div>
-                <label className="block text-[12px] text-gray-400 mb-1.5 font-medium">Email</label>
-                <input
-                  type="email"
-                  placeholder="you@example.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  style={inputStyle}
-                  onFocus={(e) => e.target.style.borderColor = 'rgba(99,102,241,0.5)'}
-                  onBlur={(e) => e.target.style.borderColor = 'rgba(255,255,255,0.08)'}
-                />
+            <form onSubmit={handleSubmit}>
+              <div className="space-y-3 mb-6">
+                <div>
+                  <label className="block text-[12px] text-gray-400 mb-1.5 font-medium">Email</label>
+                  <input
+                    type="email"
+                    placeholder="you@example.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    style={inputStyle}
+                    onFocus={(e) => e.target.style.borderColor = 'rgba(99,102,241,0.5)'}
+                    onBlur={(e) => e.target.style.borderColor = 'rgba(255,255,255,0.08)'}
+                  />
+                </div>
+                <div>
+                  <label className="block text-[12px] text-gray-400 mb-1.5 font-medium">Password</label>
+                  <input
+                    type="password"
+                    placeholder="••••••••"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    style={inputStyle}
+                    onFocus={(e) => e.target.style.borderColor = 'rgba(99,102,241,0.5)'}
+                    onBlur={(e) => e.target.style.borderColor = 'rgba(255,255,255,0.08)'}
+                  />
+                </div>
               </div>
-              <div>
-                <label className="block text-[12px] text-gray-400 mb-1.5 font-medium">Password</label>
-                <input
-                  type="password"
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  style={inputStyle}
-                  onFocus={(e) => e.target.style.borderColor = 'rgba(99,102,241,0.5)'}
-                  onBlur={(e) => e.target.style.borderColor = 'rgba(255,255,255,0.08)'}
-                />
-              </div>
-            </div>
 
-            {mode === 'login' && (
-              <div className="text-right mb-4">
-                <a href="#" className="text-[12px] text-gray-500 hover:text-gray-300 transition-colors">Forgot password?</a>
-              </div>
-            )}
+              {error && (
+                <div className="mb-4 px-3.5 py-2.5 rounded-xl text-[12px] text-red-300" style={{background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)'}}>
+                  {error}
+                </div>
+              )}
 
-            <button
-              {...glowHandlers}
-              className="w-full py-3 rounded-xl text-[13px] font-semibold text-white"
-              style={glowStyle}
-            >
-              {mode === 'login' ? 'Sign in' : 'Create account'}
-            </button>
+              <button
+                type="submit"
+                disabled={loading}
+                {...glowHandlers}
+                className="w-full py-3 rounded-xl text-[13px] font-semibold text-white disabled:opacity-50"
+                style={glowStyle}
+              >
+                {loading ? 'Please wait…' : mode === 'login' ? 'Sign in' : 'Create account'}
+              </button>
+            </form>
 
             {mode === 'signup' && (
               <p className="text-center text-[11px] text-gray-600 mt-4 leading-relaxed">
