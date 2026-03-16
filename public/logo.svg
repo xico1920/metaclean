@@ -1,0 +1,17 @@
+<svg width="340" height="60" viewBox="0 0 340 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect x="0" y="2" width="56" height="56" rx="13" fill="#4338ca"/>
+  <circle cx="14" cy="20" r="5" fill="rgba(255,255,255,0.9)"/>
+  <polygon points="6,54 22,28 38,54" fill="rgba(255,255,255,0.9)"/>
+  <polygon points="24,54 36,36 50,54" fill="rgba(255,255,255,0.7)"/>
+  <polygon points="34,2 56,2 56,26" fill="#4338ca"/>
+  <line x1="34" y1="2" x2="56" y2="26" stroke="#a5b4fc" stroke-width="1.5" stroke-linecap="round"/>
+  <text x="72" y="46"
+    font-family="-apple-system,BlinkMacSystemFont,'Helvetica Neue',sans-serif"
+    font-size="42" font-weight="800" letter-spacing="-2.5"
+    fill="white">meta</text>
+  <text x="194" y="46"
+    font-family="-apple-system,BlinkMacSystemFont,'Helvetica Neue',sans-serif"
+    font-size="42" font-weight="200" letter-spacing="-2"
+    fill="rgba(255,255,255,0.38)">clean</text>
+  <line x1="194" y1="56" x2="338" y2="56" stroke="#6366f1" stroke-width="2.2" stroke-linecap="round"/>
+</svg>
