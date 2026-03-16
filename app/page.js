@@ -1,5 +1,6 @@
 'use client'
 import { useState } from 'react'
+import Link from 'next/link'
 
 const t = {
   en: {
@@ -202,8 +203,8 @@ export default function Home() {
       <nav className="relative z-20 flex items-center justify-between px-8 py-5" style={{borderBottom: '1px solid rgba(255,255,255,0.05)'}}>
         <Logo />
         <div className="flex items-center gap-8">
-          <a href="#features" className="text-[13px] text-gray-400 hover:text-gray-200 transition-colors tracking-wide">{i.nav_features}</a>
-          <a href="#pricing" className="text-[13px] text-gray-400 hover:text-gray-200 transition-colors tracking-wide">{i.nav_pricing}</a>
+          <Link href="/features" className="text-[13px] text-gray-400 hover:text-gray-200 transition-colors tracking-wide">{i.nav_features}</Link>
+          <Link href="/pricing" className="text-[13px] text-gray-400 hover:text-gray-200 transition-colors tracking-wide">{i.nav_pricing}</Link>
           <div className="relative">
             <button onClick={() => setLangOpen(!langOpen)} className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-[12px] text-gray-400 hover:text-gray-200 transition-colors" style={{border: '1px solid rgba(255,255,255,0.07)'}}>
               <img src={flags[lang]} alt={lang} style={{width:'16px', height:'11px', objectFit:'cover', borderRadius:'2px'}} />
@@ -222,9 +223,9 @@ export default function Home() {
               </div>
             )}
           </div>
-          <button {...glowHandlers} className="px-5 py-2 rounded-lg text-[13px] font-medium text-white" style={glowStyle}>
+          <Link href="/login" {...glowHandlers} className="px-5 py-2 rounded-lg text-[13px] font-medium text-white" style={glowStyle}>
             {i.nav_cta}
-          </button>
+          </Link>
         </div>
       </nav>
 
@@ -372,9 +373,9 @@ export default function Home() {
               </div>
               <p className="text-gray-500 text-[13px] mb-6">{i.free_desc}</p>
               <div className="mt-auto">
-                <button className="w-full py-2.5 rounded-xl text-[13px] font-medium text-gray-300 transition-colors hover:text-white" style={{border: '1px solid rgba(255,255,255,0.1)'}}>
+                <Link href="/login" className="block w-full py-2.5 rounded-xl text-[13px] font-medium text-center text-gray-300 transition-colors hover:text-white" style={{border: '1px solid rgba(255,255,255,0.1)'}}>
                   {i.free_sub}
-                </button>
+                </Link>
               </div>
             </div>
 
@@ -387,9 +388,9 @@ export default function Home() {
               </div>
               <p className="text-gray-300 text-[13px] mb-6">{i.pro_desc}</p>
               <div className="mt-auto">
-                <button {...glowHandlers} className="w-full py-2.5 rounded-xl text-[13px] font-semibold text-white" style={glowStyle}>
+                <Link href="/login" {...glowHandlers} className="block w-full py-2.5 rounded-xl text-[13px] font-semibold text-center text-white" style={glowStyle}>
                   {i.nav_cta}
-                </button>
+                </Link>
               </div>
             </div>
           </div>
@@ -398,8 +399,8 @@ export default function Home() {
         <footer className="mt-24 pt-8 border-t border-white/5 flex items-center justify-between">
           <Logo />
           <div className="flex items-center gap-6 text-[12px] text-gray-500">
-            <a href="/privacy" className="hover:text-gray-300 transition-colors">Privacy Policy</a>
-            <a href="/terms" className="hover:text-gray-300 transition-colors">Terms of Service</a>
+            <Link href="/privacy" className="hover:text-gray-300 transition-colors">Privacy Policy</Link>
+            <Link href="/terms" className="hover:text-gray-300 transition-colors">Terms of Service</Link>
             <span>© 2025 MetaClean</span>
           </div>
         </footer>
