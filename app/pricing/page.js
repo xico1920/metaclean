@@ -113,6 +113,7 @@ function FaqItem({ q, a, delay }) {
 
 export default function Pricing() {
   const [mounted, setMounted] = useState(false)
+  const [menuOpen, setMenuOpen] = useState(false)
   useEffect(() => { const t = setTimeout(() => setMounted(true), 30); return () => clearTimeout(t) }, [])
 
   const en = (d = 0) => ({
@@ -172,15 +173,31 @@ export default function Pricing() {
       </div>
 
       {/* Nav */}
-      <nav className="relative z-20 flex items-center justify-between px-4 sm:px-8 py-4 sm:py-5" style={{borderBottom: '1px solid rgba(255,255,255,0.05)', ...en(0)}}>
-        <Logo />
-        <div className="flex items-center gap-2 sm:gap-5">
-          <Link href="/features" className="hidden sm:block text-[13px] text-gray-400 hover:text-gray-200 transition-colors">Features</Link>
-          <Link href="/login" className="hidden sm:block text-[13px] text-gray-400 hover:text-gray-200 transition-colors">Login</Link>
-          <Link href="/" {...glowHandlers} className="px-4 sm:px-5 py-2 rounded-lg text-[13px] font-semibold text-white" style={glowStyle}>
-            Get started
-          </Link>
+      <nav className="relative z-20" style={{borderBottom: '1px solid rgba(255,255,255,0.05)', ...en(0)}}>
+        <div className="flex items-center justify-between px-4 sm:px-8 py-4 sm:py-5">
+          <Logo />
+          <div className="flex items-center gap-2 sm:gap-5">
+            <Link href="/features" className="hidden sm:block text-[13px] text-gray-400 hover:text-gray-200 transition-colors">Features</Link>
+            <Link href="/login" className="hidden sm:block text-[13px] text-gray-400 hover:text-gray-200 transition-colors">Login</Link>
+            <button onClick={() => setMenuOpen(o => !o)} className="sm:hidden p-1.5 rounded-lg text-gray-400 hover:text-gray-200 transition-colors" style={{border: '1px solid rgba(255,255,255,0.08)'}}>
+              {menuOpen
+                ? <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                : <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>
+              }
+            </button>
+            <Link href="/" {...glowHandlers} className="px-4 sm:px-5 py-2 rounded-lg text-[13px] font-semibold text-white" style={glowStyle}>
+              Get started
+            </Link>
+          </div>
         </div>
+        {menuOpen && (
+          <div className="sm:hidden pb-2" style={{background: 'rgba(6,6,9,0.98)', backdropFilter: 'blur(12px)', borderTop: '1px solid rgba(255,255,255,0.05)', animation: 'fadeInDown 0.2s cubic-bezier(0.16,1,0.3,1) both'}}>
+            <div className="px-4 py-2 space-y-1">
+              <Link href="/features" onClick={() => setMenuOpen(false)} className="block px-3 py-2.5 rounded-lg text-[13px] text-gray-400 hover:text-gray-200 hover:bg-white/5 transition-colors">Features</Link>
+              <Link href="/login" onClick={() => setMenuOpen(false)} className="block px-3 py-2.5 rounded-lg text-[13px] text-gray-400 hover:text-gray-200 hover:bg-white/5 transition-colors">Login</Link>
+            </div>
+          </div>
+        )}
       </nav>
 
       <div className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 pt-12 sm:pt-20 pb-24 sm:pb-32">

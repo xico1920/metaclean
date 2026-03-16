@@ -31,6 +31,12 @@ const t = {
     tiktok_note: 'auto-compressed → 500KB',
     upgraded: 'Welcome to Pro! Your plan has been upgraded.',
     formats_select: 'Select formats',
+    mode_ad: 'Ad formats', mode_clean: 'Metadata only',
+    clean_drop: 'Drop any files here', clean_drop_sub: 'Images · PDFs · Any format',
+    clean_select: 'Choose files', clean_process: 'Strip & Download', clean_processing: 'Stripping...',
+    clean_desc: 'Strip metadata from any file. Images, PDFs and more — no resizing, no cropping.',
+    clean_success: (n) => `${n} file${n === 1 ? '' : 's'} cleaned`,
+    history_clean: 'Metadata only',
   },
   pt: {
     plan_free: 'Grátis', plan_pro: 'Pro',
@@ -55,6 +61,12 @@ const t = {
     tiktok_note: 'comprimido → 500KB',
     upgraded: 'Bem-vindo ao Pro! O teu plano foi atualizado.',
     formats_select: 'Selecionar formatos',
+    mode_ad: 'Formatos de anúncio', mode_clean: 'Apenas metadados',
+    clean_drop: 'Arrasta qualquer ficheiro', clean_drop_sub: 'Imagens · PDFs · Qualquer formato',
+    clean_select: 'Escolher ficheiros', clean_process: 'Limpar e Descarregar', clean_processing: 'A limpar...',
+    clean_desc: 'Remove metadados de qualquer ficheiro. Imagens, PDFs e mais — sem redimensionar.',
+    clean_success: (n) => `${n} ficheiro${n === 1 ? '' : 's'} limpo${n === 1 ? '' : 's'}`,
+    history_clean: 'Apenas metadados',
   },
   es: {
     plan_free: 'Gratis', plan_pro: 'Pro',
@@ -79,6 +91,12 @@ const t = {
     tiktok_note: 'comprimido → 500KB',
     upgraded: 'Bienvenido a Pro! Tu plan ha sido actualizado.',
     formats_select: 'Seleccionar formatos',
+    mode_ad: 'Formatos de anuncio', mode_clean: 'Solo metadatos',
+    clean_drop: 'Arrastra cualquier archivo', clean_drop_sub: 'Imágenes · PDFs · Cualquier formato',
+    clean_select: 'Elegir archivos', clean_process: 'Limpiar y Descargar', clean_processing: 'Limpiando...',
+    clean_desc: 'Elimina metadatos de cualquier archivo. Imágenes, PDFs y más — sin redimensionar.',
+    clean_success: (n) => `${n} archivo${n === 1 ? '' : 's'} limpiado${n === 1 ? '' : 's'}`,
+    history_clean: 'Solo metadatos',
   },
 }
 
@@ -544,6 +562,14 @@ function DashboardInner() {
   const [hoveredFormat, setHoveredFormat] = useState(null)
   const [fileWarning, setFileWarning] = useState('')
   const fileInputRef = useRef(null)
+  // Dashboard mode + mobile nav
+  const [dashMode, setDashMode] = useState('ad') // 'ad' | 'clean'
+  const [cleanFiles, setCleanFiles] = useState([])
+  const [cleanDragging, setCleanDragging] = useState(false)
+  const [cleanProcessing, setCleanProcessing] = useState(false)
+  const [cleanDone, setCleanDone] = useState(false)
+  const [menuOpen, setMenuOpen] = useState(false)
+  const cleanFileInputRef = useRef(null)
 
   const i = t[lang]
 
@@ -637,6 +663,75 @@ function DashboardInner() {
     e.preventDefault()
     setDragging(false)
     applyFiles(Array.from(e.dataTransfer.files))
+  }
+
+  const switchDashMode = (newMode) => {
+    if (newMode === dashMode) return
+    setDashMode(newMode)
+    setFiles([]); setCleanFiles([])
+    setDone(false); setCleanDone(false)
+    setLimitReached(false); setRejectedFiles([])
+    setFileWarning(''); setStep('upload')
+  }
+
+  const handleCleanFiles = (e) => setCleanFiles(prev => [...prev, ...Array.from(e.target.files)])
+  const handleCleanDrop = (e) => {
+    e.preventDefault()
+    setCleanDragging(false)
+    setCleanFiles(prev => [...prev, ...Array.from(e.dataTransfer.files)])
+  }
+
+  const processClean = async () => {
+    if (cleanFiles.length === 0) return
+    setCleanProcessing(true)
+    setLimitReached(false)
+
+    const { data } = await supabase.auth.getSession()
+    const token = data.session?.access_token
+    const results = []
+
+    for (const file of cleanFiles) {
+      const formData = new FormData()
+      formData.append('file', file)
+      formData.append('name', file.name)
+
+      const res = await fetch('/api/clean', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` },
+        body: formData,
+      })
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}))
+        if (err.limitReached) { setLimitReached(true); break }
+        continue
+      }
+
+      const blob = await res.blob()
+      const ext = file.name.split('.').pop() || 'bin'
+      const base = file.name.replace(/\.[^.]+$/, '')
+      results.push({ blob, filename: `metaclean_${base}_clean.${ext}` })
+    }
+
+    if (results.length === 1) {
+      const url = URL.createObjectURL(results[0].blob)
+      const a = document.createElement('a')
+      a.href = url; a.download = results[0].filename; a.click()
+      URL.revokeObjectURL(url)
+    } else if (results.length > 0) {
+      const JSZip = (await import('jszip')).default
+      const zip = new JSZip()
+      for (const { blob, filename } of results) zip.file(filename, blob)
+      const zipBlob = await zip.generateAsync({ type: 'blob', compression: 'DEFLATE' })
+      const url = URL.createObjectURL(zipBlob)
+      const a = document.createElement('a')
+      a.href = url; a.download = 'metaclean_clean_batch.zip'; a.click()
+      URL.revokeObjectURL(url)
+    }
+
+    if (user) { await loadProfile(user.id); await loadHistory(user.id) }
+    setCleanProcessing(false)
+    setCleanDone(true)
   }
 
   // cropData: { [fileIndex]: { [formatLabel]: { xPct, yPct, autocrop } } }
@@ -792,9 +887,9 @@ function DashboardInner() {
       {/* Nav */}
       <nav className="relative z-20 flex items-center justify-between px-4 sm:px-8 py-4" style={{borderBottom: '1px solid rgba(255,255,255,0.05)', ...animNav}}>
         <Logo />
-        <div className="flex items-center gap-3 sm:gap-4">
+        <div className="flex items-center gap-2 sm:gap-4">
 
-          {/* Usage pill */}
+          {/* Usage pill — desktop only */}
           <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg text-[12px]" style={{background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)'}}>
             {isPro ? (
               <span style={{color: '#a5b4fc'}}>∞ Unlimited</span>
@@ -809,7 +904,7 @@ function DashboardInner() {
           </div>
 
           {/* Plan badge */}
-          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-semibold uppercase tracking-wider" style={{
+          <div className="flex items-center gap-1.5 px-2 sm:px-2.5 py-1 rounded-lg text-[11px] font-semibold uppercase tracking-wider" style={{
             background: isPro ? 'rgba(99,102,241,0.12)' : 'rgba(255,255,255,0.04)',
             border: isPro ? '1px solid rgba(99,102,241,0.3)' : '1px solid rgba(255,255,255,0.07)',
             color: isPro ? '#a5b4fc' : 'rgba(255,255,255,0.4)',
@@ -820,9 +915,9 @@ function DashboardInner() {
 
           {/* Language */}
           <div className="relative">
-            <button onClick={() => setLangOpen(!langOpen)} className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[12px] text-gray-400 hover:text-gray-200 transition-colors" style={{border: '1px solid rgba(255,255,255,0.07)'}}>
+            <button onClick={() => setLangOpen(!langOpen)} className="flex items-center gap-1.5 px-2 sm:px-2.5 py-1.5 rounded-lg text-[12px] text-gray-400 hover:text-gray-200 transition-colors" style={{border: '1px solid rgba(255,255,255,0.07)'}}>
               <img src={flags[lang]} alt={lang} style={{width:'14px', height:'10px', objectFit:'cover', borderRadius:'2px'}} />
-              <span className="uppercase font-medium tracking-wider text-[11px]">{lang}</span>
+              <span className="uppercase font-medium tracking-wider text-[11px] hidden sm:inline">{lang}</span>
             </button>
             {langOpen && (
               <div className="absolute right-0 mt-1.5 w-28 rounded-xl overflow-hidden z-30" style={{background: '#0d0d14', border: '1px solid rgba(255,255,255,0.08)', boxShadow: '0 20px 40px rgba(0,0,0,0.5)'}}>
@@ -836,10 +931,52 @@ function DashboardInner() {
             )}
           </div>
 
-          <button onClick={handleSignOut} className="text-[12px] text-gray-500 hover:text-gray-300 transition-colors px-2 py-1.5">
+          {/* Sign out — desktop only */}
+          <button onClick={handleSignOut} className="hidden sm:block text-[12px] text-gray-500 hover:text-gray-300 transition-colors px-2 py-1.5">
             {i.signout}
           </button>
+
+          {/* Hamburger — mobile only */}
+          <button
+            onClick={() => setMenuOpen(o => !o)}
+            className="sm:hidden p-1.5 rounded-lg text-gray-400 hover:text-gray-200 transition-colors"
+            style={{border: '1px solid rgba(255,255,255,0.08)'}}
+          >
+            {menuOpen
+              ? <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+              : <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>
+            }
+          </button>
         </div>
+
+        {/* Mobile menu */}
+        {menuOpen && (
+          <div className="sm:hidden absolute top-full left-0 right-0 z-40 pb-2" style={{background: 'rgba(6,6,9,0.98)', backdropFilter: 'blur(12px)', borderBottom: '1px solid rgba(255,255,255,0.07)', animation: 'fadeInDown 0.2s cubic-bezier(0.16,1,0.3,1) both'}}>
+            {/* Usage on mobile */}
+            {!isPro && (
+              <div className="px-4 pt-3 pb-2">
+                <div className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl" style={{background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)'}}>
+                  <div className="flex-1">
+                    <p className="text-[11px] text-gray-500 mb-1">Daily usage</p>
+                    <div className="w-full h-1 rounded-full overflow-hidden" style={{background: 'rgba(255,255,255,0.08)'}}>
+                      <div className="h-full rounded-full transition-all" style={{width: `${usagePct}%`, background: usagePct >= 90 ? '#f87171' : '#6366f1'}} />
+                    </div>
+                  </div>
+                  <span className="text-[12px] text-gray-400 shrink-0">{imagesUsed}/{FREE_LIMIT}</span>
+                </div>
+              </div>
+            )}
+            <div className="px-4 py-1">
+              <button
+                onClick={() => { handleSignOut(); setMenuOpen(false) }}
+                className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-[13px] text-gray-400 hover:text-white hover:bg-white/[0.04] transition-all text-left"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9" /></svg>
+                {i.signout}
+              </button>
+            </div>
+          </div>
+        )}
       </nav>
 
       <div className="relative z-10 max-w-3xl mx-auto px-4 sm:px-6 py-8 sm:py-12" style={anim(0)}>
@@ -898,6 +1035,39 @@ function DashboardInner() {
           </div>
         ) : null}
         <div className="rounded-2xl mb-6" style={{display: step === 'crop' ? 'none' : undefined, background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', ...anim(60)}}>
+
+          {/* ── Mode toggle ── */}
+          <div className="p-3 sm:p-4" style={{borderBottom: '1px solid rgba(255,255,255,0.05)'}}>
+            <div className="flex rounded-xl p-1" style={{background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)'}}>
+              <button
+                onClick={() => switchDashMode('ad')}
+                className="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-[12px] font-medium transition-all duration-200"
+                style={{
+                  background: dashMode === 'ad' ? 'rgba(255,255,255,0.09)' : 'transparent',
+                  color: dashMode === 'ad' ? 'white' : 'rgba(255,255,255,0.4)',
+                  boxShadow: dashMode === 'ad' ? '0 1px 3px rgba(0,0,0,0.3)' : 'none',
+                }}
+              >
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9m5.25 11.25h-4.5m4.5 0v-4.5m0 4.5L15 15" /></svg>
+                {i.mode_ad}
+              </button>
+              <button
+                onClick={() => switchDashMode('clean')}
+                className="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-[12px] font-medium transition-all duration-200"
+                style={{
+                  background: dashMode === 'clean' ? 'rgba(255,255,255,0.09)' : 'transparent',
+                  color: dashMode === 'clean' ? 'white' : 'rgba(255,255,255,0.4)',
+                  boxShadow: dashMode === 'clean' ? '0 1px 3px rgba(0,0,0,0.3)' : 'none',
+                }}
+              >
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" /></svg>
+                {i.mode_clean}
+              </button>
+            </div>
+          </div>
+
+          {/* ── Ad mode: platform + format selectors ── */}
+          {dashMode === 'ad' && (
           <div className="p-5 sm:p-6" style={{borderBottom: '1px solid rgba(255,255,255,0.05)'}}>
 
             {/* Platform selector */}
@@ -976,6 +1146,14 @@ function DashboardInner() {
               )}
             </div>
           </div>
+          )} {/* end dashMode === 'ad' selectors */}
+
+          {/* ── Clean mode description ── */}
+          {dashMode === 'clean' && (
+            <div className="px-5 pt-4 pb-2">
+              <p className="text-[12px] text-gray-500 leading-relaxed">{i.clean_desc}</p>
+            </div>
+          )}
 
           {/* Too-many-files warning */}
           {fileWarning && (
@@ -1009,7 +1187,8 @@ function DashboardInner() {
             </div>
           )}
 
-          {/* Upload zone */}
+          {/* ── Ad mode: upload zone ── */}
+          {dashMode === 'ad' && (
           <div className="p-4 sm:p-5">
             <div
               onDrop={handleDrop}
@@ -1026,7 +1205,6 @@ function DashboardInner() {
               }}
             >
               <SafeZoneOverlay platform={selectedPlatform} i={i} />
-
               {files.length === 0 ? (
                 <div className="relative z-10">
                   <div className="w-12 h-12 rounded-2xl mx-auto mb-4 flex items-center justify-center" style={{background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)'}}>
@@ -1044,9 +1222,7 @@ function DashboardInner() {
                 <div className="relative z-10">
                   <div className="flex flex-wrap gap-2 justify-center mb-6 max-h-32 overflow-y-auto">
                     {files.map((f, idx) => (
-                      <div
-                        key={idx}
-                        className="group flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs transition-all duration-150"
+                      <div key={idx} className="group flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs transition-all duration-150"
                         style={{background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)'}}
                         onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.07)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.12)' }}
                         onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.07)' }}
@@ -1054,39 +1230,25 @@ function DashboardInner() {
                         <IconFile />
                         <span className="text-gray-300 max-w-[100px] truncate">{f.name}</span>
                         <span className="text-gray-600">{(f.size/1024).toFixed(0)}kb</span>
-                        <button
-                          onClick={() => setFiles(prev => prev.filter((_, i) => i !== idx))}
-                          className="text-gray-700 hover:text-red-400 transition-colors ml-0.5"
-                          title="Remove"
-                        >×</button>
+                        <button onClick={() => setFiles(prev => prev.filter((_, i) => i !== idx))} className="text-gray-700 hover:text-red-400 transition-colors ml-0.5" title="Remove">×</button>
                       </div>
                     ))}
                   </div>
-
                   {limitReached ? (
                     <div className="mb-4 px-4 py-3 rounded-xl text-[13px]" style={{background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)'}}>
                       <p className="text-red-300 font-semibold mb-1">{i.limit_title}</p>
                       <p className="text-red-400/70 text-[12px] mb-3">{i.limit_sub}</p>
-                      <button onClick={handleUpgrade} {...glowHandlers} className="px-4 py-2 rounded-xl text-[12px] font-semibold text-white" style={glowStyle}>
-                        {i.upgrade_cta}
-                      </button>
+                      <button onClick={handleUpgrade} {...glowHandlers} className="px-4 py-2 rounded-xl text-[12px] font-semibold text-white" style={glowStyle}>{i.upgrade_cta}</button>
                     </div>
                   ) : (
                     <div className="flex items-center justify-center gap-3 flex-wrap">
-                      <button
-                        onClick={() => setStep('crop')}
-                        disabled={selectedFormats.size === 0}
-                        {...glowHandlers}
-                        className="inline-flex items-center gap-2.5 px-7 py-3 rounded-xl text-sm font-semibold text-white disabled:opacity-40"
-                        style={glowStyle}
-                      >
+                      <button onClick={() => setStep('crop')} disabled={selectedFormats.size === 0} {...glowHandlers} className="inline-flex items-center gap-2.5 px-7 py-3 rounded-xl text-sm font-semibold text-white disabled:opacity-40" style={glowStyle}>
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
                         Edit crops →
                       </button>
                       <button onClick={() => { setFiles([]); setDone(false); setLimitReached(false); setStep('upload'); if (fileInputRef.current) fileInputRef.current.value = '' }} className="px-4 py-3 text-xs text-gray-500 hover:text-gray-300 transition-colors">{i.clear}</button>
                     </div>
                   )}
-
                   {done && !limitReached && (
                     <div className="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-medium" style={{background: 'rgba(34,197,94,0.08)', border: '1px solid rgba(34,197,94,0.18)', color: '#86efac'}}>
                       <IconCheck />{i.success(files.length)}
@@ -1096,6 +1258,84 @@ function DashboardInner() {
               )}
             </div>
           </div>
+          )} {/* end dashMode === 'ad' upload */}
+
+          {/* ── Clean mode: upload zone ── */}
+          {dashMode === 'clean' && (
+          <div className="p-4 sm:p-5">
+            <div
+              onDrop={handleCleanDrop}
+              onDragOver={(e) => { e.preventDefault(); setCleanDragging(true) }}
+              onDragLeave={() => setCleanDragging(false)}
+              className="relative rounded-xl transition-all duration-300"
+              style={{
+                background: cleanDragging ? 'rgba(99,102,241,0.06)' : 'rgba(255,255,255,0.02)',
+                border: cleanDragging ? '1.5px solid rgba(99,102,241,0.5)' : '1.5px dashed rgba(255,255,255,0.08)',
+                boxShadow: cleanDragging ? '0 0 0 3px rgba(99,102,241,0.08)' : 'none',
+                textAlign: 'center',
+                padding: '2.5rem 1.5rem',
+                minHeight: '160px',
+              }}
+            >
+              {cleanFiles.length === 0 ? (
+                <div>
+                  <div className="w-12 h-12 rounded-2xl mx-auto mb-4 flex items-center justify-center" style={{background: 'rgba(99,102,241,0.1)', border: '1px solid rgba(99,102,241,0.2)'}}>
+                    <svg className="w-6 h-6" style={{color: '#a5b4fc'}} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" /></svg>
+                  </div>
+                  <p className="text-white font-semibold mb-1.5">{i.clean_drop}</p>
+                  <p className="text-gray-500 text-sm mb-6">{i.clean_drop_sub}</p>
+                  <label {...glowHandlers} className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-semibold text-white cursor-pointer" style={glowStyle}>
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
+                    {i.clean_select}
+                    <input ref={cleanFileInputRef} type="file" multiple className="hidden" onChange={handleCleanFiles} />
+                  </label>
+                </div>
+              ) : (
+                <div>
+                  <div className="flex flex-wrap gap-2 justify-center mb-6 max-h-32 overflow-y-auto">
+                    {cleanFiles.map((f, idx) => (
+                      <div key={idx} className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs transition-all duration-150"
+                        style={{background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)'}}
+                        onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.07)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.12)' }}
+                        onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.07)' }}
+                      >
+                        <svg className="w-3.5 h-3.5 text-indigo-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" /></svg>
+                        <span className="text-gray-300 max-w-[120px] truncate">{f.name}</span>
+                        <span className="text-gray-600">{(f.size/1024).toFixed(0)}kb</span>
+                        <button onClick={() => setCleanFiles(prev => prev.filter((_, i) => i !== idx))} className="text-gray-700 hover:text-red-400 transition-colors ml-0.5" title="Remove">×</button>
+                      </div>
+                    ))}
+                  </div>
+                  {limitReached ? (
+                    <div className="mb-4 px-4 py-3 rounded-xl text-[13px]" style={{background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)'}}>
+                      <p className="text-red-300 font-semibold mb-1">{i.limit_title}</p>
+                      <p className="text-red-400/70 text-[12px] mb-3">{i.limit_sub}</p>
+                      <button onClick={handleUpgrade} {...glowHandlers} className="px-4 py-2 rounded-xl text-[12px] font-semibold text-white" style={glowStyle}>{i.upgrade_cta}</button>
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-center gap-3 flex-wrap">
+                      <button onClick={processClean} disabled={cleanProcessing || cleanFiles.length === 0} {...glowHandlers} className="inline-flex items-center gap-2.5 px-7 py-3 rounded-xl text-sm font-semibold text-white disabled:opacity-40" style={glowStyle}>
+                        {cleanProcessing ? <><IconSpin />{i.clean_processing}</> : <><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" /></svg>{i.clean_process}</>}
+                      </button>
+                      <label className="inline-flex items-center gap-1.5 px-4 py-3 text-xs text-gray-500 hover:text-gray-300 transition-colors cursor-pointer">
+                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
+                        Add more
+                        <input type="file" multiple className="hidden" onChange={handleCleanFiles} />
+                      </label>
+                      <button onClick={() => { setCleanFiles([]); setCleanDone(false); setLimitReached(false); if (cleanFileInputRef.current) cleanFileInputRef.current.value = '' }} className="px-4 py-3 text-xs text-gray-500 hover:text-gray-300 transition-colors">{i.clear}</button>
+                    </div>
+                  )}
+                  {cleanDone && !limitReached && (
+                    <div className="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-medium" style={{background: 'rgba(34,197,94,0.08)', border: '1px solid rgba(34,197,94,0.18)', color: '#86efac'}}>
+                      <IconCheck />{i.clean_success(cleanFiles.length)}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+          )} {/* end dashMode === 'clean' upload */}
+
         </div>
 
         {/* ─── Conversion history ─── */}
@@ -1108,7 +1348,8 @@ function DashboardInner() {
           ) : (
             <div className="rounded-xl overflow-hidden" style={{border: '1px solid rgba(255,255,255,0.06)'}}>
               {history.map((entry, idx) => {
-                const platformCfgEntry = PLATFORM_CONFIGS[entry.platform]
+                const isClean = entry.platform === 'clean'
+                const platformCfgEntry = isClean ? null : PLATFORM_CONFIGS[entry.platform]
                 const ts = new Date(entry.created_at)
                 const timeStr = ts.toLocaleDateString(lang === 'pt' ? 'pt-PT' : lang === 'es' ? 'es-ES' : 'en-GB', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
                 return (
@@ -1126,12 +1367,12 @@ function DashboardInner() {
                     }}
                   >
                     <div className="flex items-center gap-3 min-w-0">
-                      <div className="w-2 h-2 rounded-full shrink-0" style={{background: platformCfgEntry?.color || '#6366f1'}} />
+                      <div className="w-2 h-2 rounded-full shrink-0" style={{background: isClean ? '#6366f1' : (platformCfgEntry?.color || '#6366f1')}} />
                       <span className="text-gray-300 truncate max-w-[140px]">{entry.filename}</span>
-                      <span className="text-gray-600 shrink-0">{platformCfgEntry?.name || entry.platform}</span>
+                      <span className="text-gray-600 shrink-0">{isClean ? i.history_clean : (platformCfgEntry?.name || entry.platform)}</span>
                     </div>
                     <div className="flex items-center gap-3 shrink-0">
-                      <span className="text-gray-600">{entry.formats?.length || 0} {i.history_formats}</span>
+                      {!isClean && <span className="text-gray-600">{entry.formats?.length || 0} {i.history_formats}</span>}
                       <span className="text-gray-700">{timeStr}</span>
                     </div>
                   </div>
