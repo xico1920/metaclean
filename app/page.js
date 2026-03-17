@@ -410,6 +410,10 @@ export default function Home() {
     const saved = localStorage.getItem('metaclean_lang')
     if (saved && ['en', 'pt', 'es'].includes(saved)) setLang(saved)
 
+    if (new URLSearchParams(window.location.search).get('error')) {
+      window.history.replaceState({}, '', window.location.pathname)
+    }
+
     supabase.auth.getSession().then(({ data }) => {
       if (data.session) { router.replace('/dashboard'); return }
       setSession(data.session)
