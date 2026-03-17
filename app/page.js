@@ -289,7 +289,7 @@ function PlatformIcon({ platform }) {
 function Logo() {
   return (
     <div style={{display:'flex', alignItems:'center', gap:'10px'}}>
-      <svg width="32" height="32" viewBox="0 0 56 56" fill="none">
+      <svg width="30" height="30" viewBox="0 0 56 56" fill="none">
         <defs>
           <clipPath id="iconClip">
             <rect width="56" height="56" rx="13"/>
@@ -304,7 +304,7 @@ function Logo() {
           <line x1="34" y1="0" x2="56" y2="24" stroke="#a5b4fc" strokeWidth="2" strokeLinecap="round"/>
         </g>
       </svg>
-      <span style={{fontFamily:'-apple-system,BlinkMacSystemFont,"Helvetica Neue",sans-serif', fontSize:'20px', letterSpacing:'-0.8px', lineHeight:1}}>
+      <span style={{fontFamily:'-apple-system,BlinkMacSystemFont,"Helvetica Neue",sans-serif', fontSize:'19px', letterSpacing:'-0.7px', lineHeight:1}}>
         <span style={{fontWeight:800, color:'white'}}>meta</span>
         <span style={{fontWeight:200, color:'rgba(255,255,255,0.45)'}}>clean</span>
       </span>
@@ -407,6 +407,9 @@ export default function Home() {
   const i = t[lang]
 
   useEffect(() => {
+    const saved = localStorage.getItem('metaclean_lang')
+    if (saved && ['en', 'pt', 'es'].includes(saved)) setLang(saved)
+
     supabase.auth.getSession().then(({ data }) => {
       if (data.session) { router.replace('/dashboard'); return }
       setSession(data.session)
@@ -563,7 +566,7 @@ export default function Home() {
             {langOpen && (
               <div className="absolute right-0 mt-1.5 w-32 rounded-xl overflow-hidden z-30" style={{background: '#0d0d14', border: '1px solid rgba(255,255,255,0.08)', boxShadow: '0 20px 40px rgba(0,0,0,0.5)'}}>
                 {Object.keys(t).map((l) => (
-                  <button key={l} onClick={() => { setLang(l); setLangOpen(false) }} className="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-[12px] hover:bg-white/5 transition-colors">
+                  <button key={l} onClick={() => { setLang(l); localStorage.setItem('metaclean_lang', l); setLangOpen(false) }} className="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-[12px] hover:bg-white/5 transition-colors">
                     <img src={flags[l]} alt={l} style={{width:'16px', height:'11px', objectFit:'cover', borderRadius:'2px'}} />
                     <span className={`uppercase font-medium tracking-wider ${lang === l ? 'text-blue-400' : 'text-gray-400'}`}>{l}</span>
                     {lang === l && <svg className="w-3 h-3 text-blue-400 ml-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4.5 12.75l6 6 9-13.5" /></svg>}
@@ -1127,19 +1130,20 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Footer */}
-        <Reveal>
-          <footer className="mt-16 sm:mt-24 pt-8 border-t border-white/5 flex flex-col sm:flex-row items-center sm:justify-between gap-4 sm:gap-0">
-            <Logo />
-            <div className="flex items-center gap-4 sm:gap-6 text-[12px] text-gray-500">
-              <Link href="/privacy" className="hover:text-gray-300 transition-colors">Privacy Policy</Link>
-              <Link href="/terms" className="hover:text-gray-300 transition-colors">Terms of Service</Link>
-              <span>© 2025 MetaClean</span>
-            </div>
-          </footer>
-        </Reveal>
 
       </div>
+
+      {/* Footer */}
+      <footer className="relative z-10 border-t border-white/5 px-4 sm:px-8 py-6 flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-0">
+        <Logo />
+        <div className="flex items-center gap-5 text-[12px] text-gray-500">
+          <Link href="/features" className="hover:text-gray-300 transition-colors">Features</Link>
+          <Link href="/pricing" className="hover:text-gray-300 transition-colors">Pricing</Link>
+          <Link href="/privacy" className="hover:text-gray-300 transition-colors">Privacy</Link>
+          <Link href="/terms" className="hover:text-gray-300 transition-colors">Terms</Link>
+          <span>© 2025 MetaClean</span>
+        </div>
+      </footer>
     </main>
   )
 }

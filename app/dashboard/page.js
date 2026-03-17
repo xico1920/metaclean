@@ -226,7 +226,7 @@ const IconCheck = () => <svg className="w-4 h-4" fill="none" stroke="currentColo
 function Logo() {
   return (
     <Link href="/" style={{display:'flex', alignItems:'center', gap:'10px', textDecoration:'none'}}>
-      <svg width="28" height="28" viewBox="0 0 56 56" fill="none">
+      <svg width="30" height="30" viewBox="0 0 56 56" fill="none">
         <defs><clipPath id="dashClip"><rect width="56" height="56" rx="13"/></clipPath></defs>
         <rect width="56" height="56" rx="13" fill="#4338ca"/>
         <g clipPath="url(#dashClip)">
@@ -237,7 +237,7 @@ function Logo() {
           <line x1="34" y1="0" x2="56" y2="24" stroke="#a5b4fc" strokeWidth="2" strokeLinecap="round"/>
         </g>
       </svg>
-      <span style={{fontFamily:'-apple-system,BlinkMacSystemFont,"Helvetica Neue",sans-serif', fontSize:'18px', letterSpacing:'-0.7px', lineHeight:1}}>
+      <span style={{fontFamily:'-apple-system,BlinkMacSystemFont,"Helvetica Neue",sans-serif', fontSize:'19px', letterSpacing:'-0.7px', lineHeight:1}}>
         <span style={{fontWeight:800, color:'white'}}>meta</span>
         <span style={{fontWeight:200, color:'rgba(255,255,255,0.45)'}}>clean</span>
       </span>
@@ -619,6 +619,9 @@ function DashboardInner() {
 
   // Auth check + restore any files saved before login
   useEffect(() => {
+    const saved = localStorage.getItem('metaclean_lang')
+    if (saved && ['en', 'pt', 'es'].includes(saved)) setLang(saved)
+
     supabase.auth.getSession().then(async ({ data }) => {
       if (!data.session) { router.replace('/login'); return }
       setUser(data.session.user)
@@ -961,7 +964,7 @@ function DashboardInner() {
             {langOpen && (
               <div className="absolute right-0 mt-1.5 w-28 rounded-xl overflow-hidden z-30" style={{background: '#0d0d14', border: '1px solid rgba(255,255,255,0.08)', boxShadow: '0 20px 40px rgba(0,0,0,0.5)'}}>
                 {Object.keys(t).map((l) => (
-                  <button key={l} onClick={() => { setLang(l); setLangOpen(false) }} className="w-full flex items-center gap-2 px-3 py-2.5 text-[12px] hover:bg-white/5 transition-colors">
+                  <button key={l} onClick={() => { setLang(l); localStorage.setItem('metaclean_lang', l); setLangOpen(false) }} className="w-full flex items-center gap-2 px-3 py-2.5 text-[12px] hover:bg-white/5 transition-colors">
                     <img src={flags[l]} alt={l} style={{width:'14px', height:'10px', objectFit:'cover', borderRadius:'2px'}} />
                     <span className={`uppercase font-medium tracking-wider ${lang === l ? 'text-blue-400' : 'text-gray-400'}`}>{l}</span>
                   </button>
@@ -1425,6 +1428,19 @@ function DashboardInner() {
         </div>
 
       </div>
+
+      {/* Footer */}
+      <footer className="relative z-10 border-t border-white/5 px-4 sm:px-8 py-6 flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-0">
+        <Logo />
+        <div className="flex items-center gap-5 text-[12px] text-gray-500">
+          <Link href="/features" className="hover:text-gray-300 transition-colors">Features</Link>
+          <Link href="/pricing" className="hover:text-gray-300 transition-colors">Pricing</Link>
+          <Link href="/privacy" className="hover:text-gray-300 transition-colors">Privacy</Link>
+          <Link href="/terms" className="hover:text-gray-300 transition-colors">Terms</Link>
+          <span>© 2025 MetaClean</span>
+        </div>
+      </footer>
+
     </main>
   )
 }

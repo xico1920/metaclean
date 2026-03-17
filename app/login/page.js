@@ -7,7 +7,7 @@ import { supabase } from '@/lib/supabase'
 function Logo() {
   return (
     <Link href="/" style={{display:'flex', alignItems:'center', gap:'10px', textDecoration:'none'}}>
-      <svg width="32" height="32" viewBox="0 0 56 56" fill="none">
+      <svg width="30" height="30" viewBox="0 0 56 56" fill="none">
         <defs><clipPath id="loginClip"><rect width="56" height="56" rx="13"/></clipPath></defs>
         <rect width="56" height="56" rx="13" fill="#4338ca"/>
         <g clipPath="url(#loginClip)">
@@ -18,7 +18,7 @@ function Logo() {
           <line x1="34" y1="0" x2="56" y2="24" stroke="#a5b4fc" strokeWidth="2" strokeLinecap="round"/>
         </g>
       </svg>
-      <span style={{fontFamily:'-apple-system,BlinkMacSystemFont,"Helvetica Neue",sans-serif', fontSize:'20px', letterSpacing:'-0.8px', lineHeight:1}}>
+      <span style={{fontFamily:'-apple-system,BlinkMacSystemFont,"Helvetica Neue",sans-serif', fontSize:'19px', letterSpacing:'-0.7px', lineHeight:1}}>
         <span style={{fontWeight:800, color:'white'}}>meta</span>
         <span style={{fontWeight:200, color:'rgba(255,255,255,0.45)'}}>clean</span>
       </span>
@@ -76,6 +76,19 @@ const benefits = [
   },
 ]
 
+const flags = { en: 'https://flagcdn.com/w20/gb.png', pt: 'https://flagcdn.com/w20/pt.png', es: 'https://flagcdn.com/w20/es.png' }
+
+const pwdRules = [
+  { label: 'At least 8 characters', test: p => p.length >= 8 },
+  { label: 'Uppercase letter', test: p => /[A-Z]/.test(p) },
+  { label: 'Lowercase letter', test: p => /[a-z]/.test(p) },
+  { label: 'Number', test: p => /[0-9]/.test(p) },
+]
+
+function getPwdStrength(p) {
+  return pwdRules.filter(r => r.test(p)).length
+}
+
 export default function Login() {
   const router = useRouter()
   const [mode, setMode] = useState('login')
@@ -86,6 +99,8 @@ export default function Login() {
   const [checkingSession, setCheckingSession] = useState(true)
   const [mounted, setMounted] = useState(false)
   const [transitioning, setTransitioning] = useState(false)
+  const [lang, setLang] = useState('en')
+  const [langOpen, setLangOpen] = useState(false)
 
   const switchMode = (newMode) => {
     if (newMode === mode || transitioning) return
@@ -98,6 +113,9 @@ export default function Login() {
     // Read mode from URL
     const params = new URLSearchParams(window.location.search)
     if (params.get('mode') === 'signup') setMode('signup')
+
+    const saved = localStorage.getItem('metaclean_lang')
+    if (saved && ['en', 'pt', 'es'].includes(saved)) setLang(saved)
 
     supabase.auth.getSession().then(({ data }) => {
       if (data.session) router.replace('/dashboard')
@@ -119,8 +137,14 @@ export default function Login() {
         const { error: signInError } = await supabase.auth.signInWithPassword({ email, password })
         if (signInError) throw signInError
       } else {
+        const unmet = pwdRules.filter(r => !r.test(password))
+        if (unmet.length > 0) { setError(`Password must include: ${unmet.map(r => r.label.toLowerCase()).join(', ')}.`); setLoading(false); return }
         const { data, error: signUpError } = await supabase.auth.signUp({ email, password })
         if (signUpError) throw signUpError
+        // Supabase returns a fake user instead of an error for duplicate emails
+        if (data.user && data.user.identities?.length === 0) {
+          throw new Error('An account with this email already exists. Please log in instead.')
+        }
         if (data.user) {
           await supabase.from('profiles').upsert({
             id: data.user.id,
@@ -236,6 +260,46 @@ export default function Login() {
         {/* Mobile nav */}
         <div className="lg:hidden flex items-center justify-between px-5 py-4" style={{borderBottom: '1px solid rgba(255,255,255,0.05)', ...fadeIn(0)}}>
           <Logo />
+          <div className="relative">
+            <button onClick={() => setLangOpen(o => !o)} className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[12px] text-gray-400 hover:text-gray-200 transition-colors" style={{border: '1px solid rgba(255,255,255,0.07)'}}>
+              <img src={flags[lang]} alt={lang} style={{width:'16px', height:'11px', objectFit:'cover', borderRadius:'2px'}} />
+              <span className="uppercase font-medium tracking-wider">{lang}</span>
+              <svg className="w-3 h-3 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+            </button>
+            {langOpen && (
+              <div className="absolute right-0 mt-1.5 w-32 rounded-xl overflow-hidden z-30" style={{background: '#0d0d14', border: '1px solid rgba(255,255,255,0.08)', boxShadow: '0 20px 40px rgba(0,0,0,0.5)'}}>
+                {['en','pt','es'].map((l) => (
+                  <button key={l} onClick={() => { setLang(l); localStorage.setItem('metaclean_lang', l); setLangOpen(false) }} className="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-[12px] hover:bg-white/5 transition-colors">
+                    <img src={flags[l]} alt={l} style={{width:'16px', height:'11px', objectFit:'cover', borderRadius:'2px'}} />
+                    <span className={`uppercase font-medium tracking-wider ${lang === l ? 'text-blue-400' : 'text-gray-400'}`}>{l}</span>
+                    {lang === l && <svg className="w-3 h-3 text-blue-400 ml-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4.5 12.75l6 6 9-13.5" /></svg>}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Desktop lang selector */}
+        <div className="hidden lg:flex justify-end px-8 pt-5 relative z-10" style={fadeIn(0)}>
+          <div className="relative">
+            <button onClick={() => setLangOpen(o => !o)} className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[12px] text-gray-400 hover:text-gray-200 transition-colors" style={{border: '1px solid rgba(255,255,255,0.07)'}}>
+              <img src={flags[lang]} alt={lang} style={{width:'16px', height:'11px', objectFit:'cover', borderRadius:'2px'}} />
+              <span className="uppercase font-medium tracking-wider">{lang}</span>
+              <svg className="w-3 h-3 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+            </button>
+            {langOpen && (
+              <div className="absolute right-0 mt-1.5 w-32 rounded-xl overflow-hidden z-30" style={{background: '#0d0d14', border: '1px solid rgba(255,255,255,0.08)', boxShadow: '0 20px 40px rgba(0,0,0,0.5)'}}>
+                {['en','pt','es'].map((l) => (
+                  <button key={l} onClick={() => { setLang(l); localStorage.setItem('metaclean_lang', l); setLangOpen(false) }} className="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-[12px] hover:bg-white/5 transition-colors">
+                    <img src={flags[l]} alt={l} style={{width:'16px', height:'11px', objectFit:'cover', borderRadius:'2px'}} />
+                    <span className={`uppercase font-medium tracking-wider ${lang === l ? 'text-blue-400' : 'text-gray-400'}`}>{l}</span>
+                    {lang === l && <svg className="w-3 h-3 text-blue-400 ml-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4.5 12.75l6 6 9-13.5" /></svg>}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
 
         <div className="flex-1 flex items-center justify-center px-5 sm:px-8 py-10">
@@ -329,6 +393,31 @@ export default function Login() {
                       onFocus={(e) => { e.target.style.borderColor = 'rgba(99,102,241,0.55)'; e.target.style.background = 'rgba(255,255,255,0.06)' }}
                       onBlur={(e) => { e.target.style.borderColor = 'rgba(255,255,255,0.09)'; e.target.style.background = 'rgba(255,255,255,0.04)' }}
                     />
+                    {mode === 'signup' && password.length > 0 && (() => {
+                      const strength = getPwdStrength(password)
+                      const labels = ['', 'Weak', 'Fair', 'Good', 'Strong']
+                      const colors = ['', '#ef4444', '#f59e0b', '#22c55e', '#10b981']
+                      return (
+                        <div className="mt-2">
+                          <div className="flex gap-1 mb-1.5">
+                            {[1,2,3,4].map(i => (
+                              <div key={i} className="h-1 flex-1 rounded-full transition-all duration-300"
+                                style={{background: i <= strength ? colors[strength] : 'rgba(255,255,255,0.08)'}} />
+                            ))}
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <p className="text-[11px] font-medium" style={{color: colors[strength]}}>{labels[strength]}</p>
+                            <div className="flex gap-2">
+                              {pwdRules.map((r, i) => (
+                                <span key={i} className="text-[10px] transition-colors" style={{color: r.test(password) ? '#6ee7b7' : 'rgba(255,255,255,0.2)'}}>
+                                  {r.test(password) ? '✓' : '·'} {i === 0 ? '8+' : i === 1 ? 'A' : i === 2 ? 'a' : '0-9'}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      )
+                    })()}
                   </div>
                 </div>
 
@@ -384,6 +473,17 @@ export default function Login() {
           </div>
         </div>
       </div>
+
+      <footer className="relative z-10 border-t border-white/5 px-4 sm:px-8 py-6 flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-0">
+        <Logo />
+        <div className="flex items-center gap-5 text-[12px] text-gray-500">
+          <Link href="/features" className="hover:text-gray-300 transition-colors">Features</Link>
+          <Link href="/pricing" className="hover:text-gray-300 transition-colors">Pricing</Link>
+          <Link href="/privacy" className="hover:text-gray-300 transition-colors">Privacy</Link>
+          <Link href="/terms" className="hover:text-gray-300 transition-colors">Terms</Link>
+          <span>© 2025 MetaClean</span>
+        </div>
+      </footer>
 
     </main>
   )

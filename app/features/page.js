@@ -135,7 +135,15 @@ function Section({ id, icon, title, badge, badgeColor, intro, items, note }) {
 export default function Features() {
   const [mounted, setMounted] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
-  useEffect(() => { const t = setTimeout(() => setMounted(true), 30); return () => clearTimeout(t) }, [])
+  const [lang, setLang] = useState('en')
+  const [langOpen, setLangOpen] = useState(false)
+  const flags = { en: 'https://flagcdn.com/w20/gb.png', pt: 'https://flagcdn.com/w20/pt.png', es: 'https://flagcdn.com/w20/es.png' }
+  useEffect(() => {
+    const t = setTimeout(() => setMounted(true), 30)
+    const saved = localStorage.getItem('metaclean_lang')
+    if (saved && ['en', 'pt', 'es'].includes(saved)) setLang(saved)
+    return () => clearTimeout(t)
+  }, [])
 
   const entranceStyle = (delay = 0) => ({
     opacity: mounted ? 1 : 0,
@@ -159,6 +167,25 @@ export default function Features() {
           <div className="flex items-center gap-2 sm:gap-5">
             <Link href="/pricing" className="hidden sm:block text-[13px] text-gray-400 hover:text-gray-200 transition-colors">Pricing</Link>
             <Link href="/login" className="hidden sm:block text-[13px] text-gray-400 hover:text-gray-200 transition-colors">Login</Link>
+            {/* Language selector */}
+            <div className="relative">
+              <button onClick={() => setLangOpen(o => !o)} className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[12px] text-gray-400 hover:text-gray-200 transition-colors" style={{border: '1px solid rgba(255,255,255,0.07)'}}>
+                <img src={flags[lang]} alt={lang} style={{width:'16px', height:'11px', objectFit:'cover', borderRadius:'2px'}} />
+                <span className="uppercase font-medium tracking-wider hidden sm:inline">{lang}</span>
+                <svg className="w-3 h-3 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+              </button>
+              {langOpen && (
+                <div className="absolute right-0 mt-1.5 w-32 rounded-xl overflow-hidden z-30" style={{background: '#0d0d14', border: '1px solid rgba(255,255,255,0.08)', boxShadow: '0 20px 40px rgba(0,0,0,0.5)'}}>
+                  {['en','pt','es'].map((l) => (
+                    <button key={l} onClick={() => { setLang(l); localStorage.setItem('metaclean_lang', l); setLangOpen(false) }} className="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-[12px] hover:bg-white/5 transition-colors">
+                      <img src={flags[l]} alt={l} style={{width:'16px', height:'11px', objectFit:'cover', borderRadius:'2px'}} />
+                      <span className={`uppercase font-medium tracking-wider ${lang === l ? 'text-blue-400' : 'text-gray-400'}`}>{l}</span>
+                      {lang === l && <svg className="w-3 h-3 text-blue-400 ml-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4.5 12.75l6 6 9-13.5" /></svg>}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
             <button onClick={() => setMenuOpen(o => !o)} className="sm:hidden p-1.5 rounded-lg text-gray-400 hover:text-gray-200 transition-colors" style={{border: '1px solid rgba(255,255,255,0.08)'}}>
               {menuOpen
                 ? <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
@@ -357,9 +384,11 @@ export default function Features() {
       </div>
 
       {/* Footer */}
-      <footer className="relative z-10 border-t border-white/5 px-4 sm:px-8 py-6 flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-0 max-w-3xl mx-auto">
+      <footer className="relative z-10 border-t border-white/5 px-4 sm:px-8 py-6 flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-0">
         <Logo />
         <div className="flex items-center gap-5 text-[12px] text-gray-500">
+          <Link href="/features" className="hover:text-gray-300 transition-colors">Features</Link>
+          <Link href="/pricing" className="hover:text-gray-300 transition-colors">Pricing</Link>
           <Link href="/privacy" className="hover:text-gray-300 transition-colors">Privacy</Link>
           <Link href="/terms" className="hover:text-gray-300 transition-colors">Terms</Link>
           <span>© 2025 MetaClean</span>
