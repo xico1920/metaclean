@@ -195,7 +195,7 @@ export default function Features() {
         <Reveal y={10} className="mb-12 sm:mb-16">
           <div className="flex gap-2 flex-wrap p-3.5 sm:p-4 rounded-2xl" style={{background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)'}}>
             <p className="text-[10px] text-gray-600 uppercase tracking-widest w-full mb-2 font-medium">Jump to</p>
-            {[['#metadata', 'Metadata removal', '#3b82f6'], ['#formats', 'Ad formats', '#8b5cf6'], ['#bulk', 'Bulk processing', '#6366f1'], ['#ai-autocrop', 'AI Autocrop', '#6366f1'], ['#ai-outpainting', 'AI Outpainting ✦', '#8b5cf6'], ['#ai-copy', 'Auto Ad Copy ✦', '#6366f1']].map(([href, label, color]) => (
+            {[['#metadata', 'Metadata removal', '#3b82f6'], ['#formats', 'Ad formats', '#8b5cf6'], ['#bulk', 'Bulk processing', '#6366f1'], ['#metadata-clean', 'Metadata only', '#6366f1'], ['#ai-autocrop', 'AI Autocrop', '#6366f1'], ['#ai-outpainting', 'AI Outpainting ✦', '#8b5cf6'], ['#ai-copy', 'Auto Ad Copy ✦', '#6366f1']].map(([href, label, color]) => (
               <a
                 key={href}
                 href={href}
@@ -264,6 +264,25 @@ export default function Features() {
             { title: 'Filename handling', desc: 'Output files are prefixed with metaclean_ so you can identify them instantly.' },
           ]}
           note="Free plan: up to 10 images per day. Pro plan: unlimited."
+        />
+
+        <Reveal><div className="h-px mb-20 sm:mb-28" style={{background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.06), transparent)'}} /></Reveal>
+
+        <Section
+          id="metadata-clean"
+          badgeColor="#6366f1"
+          badge="Feature 03.5"
+          icon={<svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" /></svg>}
+          title="Metadata only mode"
+          intro="Not every file needs resizing. The Metadata only mode strips hidden data from any file type — images, PDFs, or anything else — and returns the clean version instantly, with no changes to dimensions or content."
+          items={[
+            { title: 'Any file type', desc: 'Images (JPG, PNG, WEBP), PDFs, and other file formats are all supported. Non-image files are returned unchanged except for metadata.' },
+            { title: 'PDF metadata removal', desc: 'Title, Author, Subject, Keywords, Producer, and Creator fields in PDF documents are cleared completely.' },
+            { title: 'No resizing or cropping', desc: 'Your file comes back at exactly the same dimensions and quality. Only the hidden metadata layer is touched.' },
+            { title: 'Batch support', desc: 'Drop multiple files of different types at once. All are cleaned and returned as a single zip archive.' },
+            { title: 'Same usage quota', desc: 'Metadata-only processing counts toward the same daily quota as ad format processing. Free plan: 10 files/day.' },
+          ]}
+          note="Metadata only mode is available via the mode toggle in the dashboard and on the homepage upload tool."
         />
 
         <Reveal><div className="h-px mb-20 sm:mb-28" style={{background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.06), transparent)'}} /></Reveal>

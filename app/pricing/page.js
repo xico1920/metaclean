@@ -124,7 +124,7 @@ export default function Pricing() {
 
   const free = [
     { text: '10 images per day', ok: true },
-    { text: 'Metadata removal', ok: true },
+    { text: 'Metadata removal (images + PDFs)', ok: true },
     { text: 'JPG, PNG, WEBP support', ok: true },
     { text: 'AI Autocrop', ok: true },
     { text: 'All ad formats', ok: false },
@@ -135,7 +135,7 @@ export default function Pricing() {
   ]
   const pro = [
     { text: 'Unlimited images', ok: true },
-    { text: 'Metadata removal', ok: true },
+    { text: 'Metadata removal (images + PDFs)', ok: true },
     { text: 'JPG, PNG, WEBP support', ok: true },
     { text: 'All ad formats (5 sizes)', ok: true },
     { text: 'AI Autocrop', ok: true },

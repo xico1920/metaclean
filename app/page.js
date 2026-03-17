@@ -46,6 +46,11 @@ const t = {
     ai_waitlist_cta: 'Join the waitlist',
     ai_waitlist_note: 'Be the first to know when it launches.',
     ai_plan: 'AI Studio', ai_plan_sub: 'Coming soon', ai_plan_desc: 'Everything in Pro · AI Outpainting · Auto Ad Copy',
+    mode_ad: 'Ad formats', mode_clean: 'Metadata only',
+    clean_drop: 'Drop any files here', clean_drop_sub: 'Images · PDFs · Any format',
+    clean_select: 'Choose files', clean_process: 'Strip & Download', clean_processing: 'Stripping...',
+    clean_desc: 'Strip metadata from any file — images, PDFs and more. No resizing.',
+    clean_success: (n) => `${n} file${n === 1 ? '' : 's'} cleaned`,
   },
   pt: {
     nav_features: 'Funcionalidades', nav_pricing: 'Preços', nav_cta: 'Começar', nav_dashboard: 'Dashboard',
@@ -88,6 +93,11 @@ const t = {
     ai_waitlist_cta: 'Entrar na lista de espera',
     ai_waitlist_note: 'Sê o primeiro a saber quando lançar.',
     ai_plan: 'AI Studio', ai_plan_sub: 'Em breve', ai_plan_desc: 'Tudo do Pro · AI Outpainting · Copy Automático',
+    mode_ad: 'Formatos de anúncio', mode_clean: 'Apenas metadados',
+    clean_drop: 'Arrasta qualquer ficheiro', clean_drop_sub: 'Imagens · PDFs · Qualquer formato',
+    clean_select: 'Escolher ficheiros', clean_process: 'Limpar e Descarregar', clean_processing: 'A limpar...',
+    clean_desc: 'Remove metadados de qualquer ficheiro — imagens, PDFs e mais. Sem redimensionar.',
+    clean_success: (n) => `${n} ficheiro${n === 1 ? '' : 's'} limpo${n === 1 ? '' : 's'}`,
   },
   es: {
     nav_features: 'Funciones', nav_pricing: 'Precios', nav_cta: 'Empezar', nav_dashboard: 'Dashboard',
@@ -130,6 +140,11 @@ const t = {
     ai_waitlist_cta: 'Unirse a la lista de espera',
     ai_waitlist_note: 'Sé el primero en saber cuándo lanza.',
     ai_plan: 'AI Studio', ai_plan_sub: 'Próximamente', ai_plan_desc: 'Todo lo de Pro · AI Outpainting · Copy Automático',
+    mode_ad: 'Formatos de anuncio', mode_clean: 'Solo metadatos',
+    clean_drop: 'Arrastra cualquier archivo', clean_drop_sub: 'Imágenes · PDFs · Cualquier formato',
+    clean_select: 'Elegir archivos', clean_process: 'Limpiar y Descargar', clean_processing: 'Limpiando...',
+    clean_desc: 'Elimina metadatos de cualquier archivo — imágenes, PDFs y más. Sin redimensionar.',
+    clean_success: (n) => `${n} archivo${n === 1 ? '' : 's'} limpiado${n === 1 ? '' : 's'}`,
   },
 }
 
@@ -231,6 +246,44 @@ function IconAIExpand() {
 
 function IconAIText() {
   return <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 01.865-.501 48.172 48.172 0 003.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z" /></svg>
+}
+
+function PlatformIcon({ platform }) {
+  const s = { width: 15, height: 15, style: { display: 'block', flexShrink: 0 } }
+  if (platform === 'meta') return (
+    <svg {...s} viewBox="0 0 24 24" fill="none">
+      <path d="M12 9.5c-1.5-2.2-3.2-3.5-5-3.5C4.1 6 2 8.2 2 11c0 1.8.9 3.3 2.3 4.2.9.6 1.8.8 2.7.8 1.8 0 3.5-1.4 5-3.5 1.5 2.1 3.2 3.5 5 3.5.9 0 1.8-.2 2.7-.8C21.1 14.3 22 12.8 22 11c0-2.8-2.1-5-5-5-1.8 0-3.5 1.3-5 3.5z" fill="#1877f2"/>
+    </svg>
+  )
+  if (platform === 'google') return (
+    <svg {...s} viewBox="0 0 24 24">
+      <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+      <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+      <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
+      <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+    </svg>
+  )
+  if (platform === 'tiktok') return (
+    <svg {...s} viewBox="0 0 24 24">
+      <path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.32 6.32 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.33-6.34V8.69a8.18 8.18 0 004.78 1.52V6.78a4.85 4.85 0 01-1.01-.09z" fill="#ff0050"/>
+    </svg>
+  )
+  if (platform === 'snapchat') return (
+    <svg {...s} viewBox="0 0 24 24">
+      <path d="M12.206.793c.99 0 4.347.276 5.93 3.821.529 1.193.403 3.219.317 4.814l-.004.061c-.004.071-.007.141-.01.211.129.06.264.107.4.117a1.104 1.104 0 00.606-.182c.083-.049.156-.063.225-.063.284 0 .573.211.573.508 0 .395-.3.544-.587.665-.064.028-.134.055-.194.085-.48.247-.646.607-.542.905.262.748 1.177 1.21 1.853 1.482l.06.025c.327.13.614.243.8.38.42.306.634.742.627 1.25-.011.664-.423 1.046-.798 1.046-.153 0-.289-.048-.43-.095-.327-.11-.651-.222-.984-.222-.228 0-.443.044-.645.137-.29.133-.516.308-.734.477-.518.403-1.094.851-2.257.851-.062 0-.127-.003-.194-.009-.527-.049-1.006-.195-1.42-.336-.398-.137-.771-.266-1.141-.266-.37 0-.743.129-1.141.266-.414.141-.893.287-1.42.336-.067.006-.132.009-.194.009-1.163 0-1.739-.448-2.257-.851-.218-.169-.444-.344-.734-.477-.202-.093-.417-.137-.645-.137-.333 0-.657.112-.984.222-.141.047-.277.095-.43.095-.375 0-.787-.382-.798-1.046-.007-.508.207-.944.627-1.25.186-.137.473-.25.8-.38l.06-.025c.676-.272 1.591-.734 1.853-1.482.104-.298-.062-.658-.542-.905-.06-.03-.13-.057-.194-.085-.287-.121-.587-.27-.587-.665 0-.297.289-.508.573-.508.069 0 .142.014.225.063a1.1 1.1 0 00.606.182c.136-.01.271-.057.4-.117l-.01-.211-.004-.061c-.086-1.595-.212-3.621.317-4.814C7.859 1.069 11.216.793 12.206.793z" fill="#fffc00"/>
+    </svg>
+  )
+  if (platform === 'pinterest') return (
+    <svg {...s} viewBox="0 0 24 24" fill="#e60023">
+      <path d="M12 0C5.373 0 0 5.373 0 12c0 5.084 3.163 9.426 7.627 11.174-.105-.949-.2-2.405.042-3.441.218-.937 1.407-5.965 1.407-5.965s-.359-.719-.359-1.782c0-1.668.967-2.914 2.171-2.914 1.023 0 1.518.769 1.518 1.69 0 1.029-.655 2.568-.994 3.995-.283 1.194.599 2.169 1.777 2.169 2.133 0 3.772-2.249 3.772-5.495 0-2.873-2.064-4.882-5.012-4.882-3.414 0-5.418 2.561-5.418 5.207 0 1.031.397 2.138.893 2.738a.36.36 0 01.083.345l-.333 1.36c-.053.22-.174.267-.402.161-1.499-.698-2.436-2.889-2.436-4.649 0-3.785 2.75-7.262 7.929-7.262 4.163 0 7.398 2.967 7.398 6.931 0 4.136-2.607 7.464-6.227 7.464-1.216 0-2.359-.632-2.75-1.378l-.748 2.853c-.271 1.043-1.002 2.35-1.492 3.146C9.57 23.812 10.763 24 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0z"/>
+    </svg>
+  )
+  if (platform === 'linkedin') return (
+    <svg {...s} viewBox="0 0 24 24" fill="#0a66c2">
+      <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+    </svg>
+  )
+  return <div style={{width:15,height:15,borderRadius:'50%',background:'#6366f1',flexShrink:0}} />
 }
 
 function Logo() {
@@ -345,6 +398,12 @@ export default function Home() {
   const [showGate, setShowGate] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
   const fileInputRef = useRef(null)
+  const [homeMode, setHomeMode] = useState('ad')
+  const [cleanFiles, setCleanFiles] = useState([])
+  const [cleanDragging, setCleanDragging] = useState(false)
+  const [cleanProcessing, setCleanProcessing] = useState(false)
+  const [cleanDone, setCleanDone] = useState(false)
+  const cleanFileInputRef = useRef(null)
   const i = t[lang]
 
   useEffect(() => {
@@ -422,6 +481,46 @@ export default function Home() {
     }
     setProcessing(false)
     setDone(true)
+  }
+
+  const processCleanHome = async () => {
+    if (!session) { setShowGate(true); return }
+    setCleanProcessing(true)
+    const { data } = await supabase.auth.getSession()
+    const token = data.session?.access_token
+    const results = []
+    for (const file of cleanFiles) {
+      const formData = new FormData()
+      formData.append('file', file)
+      formData.append('name', file.name)
+      const res = await fetch('/api/clean', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` },
+        body: formData,
+      })
+      if (!res.ok) continue
+      const blob = await res.blob()
+      const cd = res.headers.get('Content-Disposition') || ''
+      const nameMatch = cd.match(/filename="(.+?)"/)
+      results.push({ blob, name: nameMatch?.[1] || `clean_${file.name}` })
+    }
+    if (results.length === 1) {
+      const url = URL.createObjectURL(results[0].blob)
+      const a = document.createElement('a')
+      a.href = url; a.download = results[0].name; a.click()
+      URL.revokeObjectURL(url)
+    } else if (results.length > 1) {
+      const JSZip = (await import('jszip')).default
+      const zip = new JSZip()
+      results.forEach(r => zip.file(r.name, r.blob))
+      const zipBlob = await zip.generateAsync({ type: 'blob' })
+      const url = URL.createObjectURL(zipBlob)
+      const a = document.createElement('a')
+      a.href = url; a.download = 'metaclean_cleaned.zip'; a.click()
+      URL.revokeObjectURL(url)
+    }
+    setCleanProcessing(false)
+    setCleanDone(true)
   }
 
   const features = [
@@ -527,7 +626,26 @@ export default function Home() {
 
           <p className="text-gray-400 max-w-lg mx-auto leading-relaxed mb-8 sm:mb-10 px-2 sm:px-0" style={{fontSize: 'clamp(15px, 2vw, 17px)'}}>{i.subtitle}</p>
 
-          {/* Platform selector */}
+          {/* Mode toggle */}
+          <div className="flex justify-center mb-8">
+            <div className="flex items-center gap-1.5 p-1 rounded-xl" style={{background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', display: 'inline-flex'}}>
+              {[['ad', i.mode_ad], ['clean', i.mode_clean]].map(([mode, label]) => (
+                <button
+                  key={mode}
+                  onClick={() => { setHomeMode(mode); setFiles([]); setCleanFiles([]); setDone(false); setCleanDone(false) }}
+                  className="px-4 py-1.5 rounded-lg text-[13px] font-medium transition-all duration-200"
+                  style={{
+                    background: homeMode === mode ? 'rgba(255,255,255,0.08)' : 'transparent',
+                    color: homeMode === mode ? 'white' : 'rgba(255,255,255,0.4)',
+                    border: homeMode === mode ? '1px solid rgba(255,255,255,0.12)' : '1px solid transparent',
+                  }}
+                >{label}</button>
+              ))}
+            </div>
+          </div>
+
+          {/* Platform selector — ad mode only */}
+          {homeMode === 'ad' && (
           <div>
             <p className="text-[11px] text-gray-500 uppercase tracking-widest mb-4">{i.choose_platform}</p>
             <div className="flex items-center justify-center gap-2 flex-wrap mb-4">
@@ -545,7 +663,7 @@ export default function Home() {
                     transform: selectedPlatform === key ? 'scale(1.04)' : 'scale(1)',
                   }}
                 >
-                  <div className="w-2 h-2 rounded-full shrink-0" style={{background: p.color}} />
+                  <PlatformIcon platform={key} />
                   {p.name}
                 </button>
               ))}
@@ -564,10 +682,17 @@ export default function Home() {
               )}
             </div>
           </div>
+          )}
+
+          {/* Clean mode description */}
+          {homeMode === 'clean' && (
+            <p className="text-[13px] text-gray-500 mb-2">{i.clean_desc}</p>
+          )}
         </Reveal>
 
         {/* Upload zone */}
         <Reveal y={12}>
+          {homeMode === 'ad' ? (
           <div
             onDrop={handleDrop}
             onDragOver={(e) => { e.preventDefault(); setDragging(true) }}
@@ -618,6 +743,61 @@ export default function Home() {
               </>
             )}
           </div>
+          ) : (
+          <div
+            onDrop={(e) => { e.preventDefault(); setCleanDragging(false); const f = Array.from(e.dataTransfer.files); if (!session) { storeFilesForAfterAuth(f); setShowGate(true); return }; setCleanFiles(prev => [...prev, ...f]); setCleanDone(false) }}
+            onDragOver={(e) => { e.preventDefault(); setCleanDragging(true) }}
+            onDragLeave={() => setCleanDragging(false)}
+            className="rounded-2xl transition-all duration-300 mb-4 px-5 py-10 sm:px-10 sm:py-14"
+            style={{
+              background: cleanDragging ? 'rgba(99,102,241,0.06)' : 'rgba(255,255,255,0.025)',
+              border: cleanDragging ? '1.5px solid rgba(99,102,241,0.5)' : '1.5px dashed rgba(99,102,241,0.15)',
+              boxShadow: cleanDragging ? '0 0 0 4px rgba(99,102,241,0.08)' : 'none',
+              textAlign: 'center',
+            }}
+          >
+            {cleanFiles.length === 0 ? (
+              <>
+                <div className="w-14 h-14 rounded-2xl mx-auto mb-5 flex items-center justify-center" style={{background: 'rgba(99,102,241,0.08)', border: '1px solid rgba(99,102,241,0.15)'}}>
+                  <svg className="w-6 h-6" style={{color:'#818cf8'}} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" /></svg>
+                </div>
+                <p className="text-white font-semibold text-lg mb-2">{i.clean_drop}</p>
+                <p className="text-gray-500 text-sm mb-8">{i.clean_drop_sub}</p>
+                <label className="inline-flex items-center gap-2 px-7 py-3 rounded-xl text-sm font-semibold cursor-pointer transition-all duration-200" style={{background: 'rgba(99,102,241,0.12)', border: '1px solid rgba(99,102,241,0.3)', color: '#a5b4fc'}}
+                  onMouseEnter={e => e.currentTarget.style.background = 'rgba(99,102,241,0.2)'}
+                  onMouseLeave={e => e.currentTarget.style.background = 'rgba(99,102,241,0.12)'}
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
+                  {i.clean_select}
+                  <input ref={cleanFileInputRef} type="file" multiple className="hidden" onChange={(e) => { const f = Array.from(e.target.files); if (!session) { storeFilesForAfterAuth(f); setShowGate(true); return }; setCleanFiles(prev => [...prev, ...f]); setCleanDone(false) }} />
+                </label>
+              </>
+            ) : (
+              <>
+                <div className="flex flex-wrap gap-2 justify-center mb-8 max-h-36 overflow-y-auto">
+                  {cleanFiles.map((f, idx) => (
+                    <div key={idx} className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs" style={{background: 'rgba(99,102,241,0.06)', border: '1px solid rgba(99,102,241,0.15)'}}>
+                      <IconFile />
+                      <span className="text-gray-300 max-w-[120px] truncate">{f.name}</span>
+                      <span className="text-gray-600">{(f.size/1024).toFixed(0)}kb</span>
+                    </div>
+                  ))}
+                </div>
+                <div className="flex items-center justify-center gap-3 flex-wrap">
+                  <button onClick={processCleanHome} disabled={cleanProcessing} className="inline-flex items-center gap-2.5 px-7 sm:px-9 py-3.5 rounded-xl text-sm font-semibold text-white disabled:opacity-40 transition-all duration-200" style={{background: 'linear-gradient(135deg, #4f46e5, #6366f1)', boxShadow: '0 0 20px rgba(99,102,241,0.3)'}}>
+                    {cleanProcessing ? <><IconSpin />{i.clean_processing}</> : <><IconDownload />{i.clean_process}</>}
+                  </button>
+                  <button onClick={() => { setCleanFiles([]); setCleanDone(false) }} className="px-4 py-3.5 text-xs text-gray-500 hover:text-gray-300 transition-colors tracking-wide">{i.clear}</button>
+                </div>
+                {cleanDone && (
+                  <div className="mt-6 inline-flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-medium" style={{background: 'rgba(34,197,94,0.08)', border: '1px solid rgba(34,197,94,0.18)', color: '#86efac'}}>
+                    <IconCheck />{i.clean_success(cleanFiles.length)}
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+          )}
         </Reveal>
 
         {/* Stats */}
