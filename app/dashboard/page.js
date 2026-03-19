@@ -223,6 +223,180 @@ const IconDownload = () => <svg className="w-4 h-4" fill="none" stroke="currentC
 const IconSpin = () => <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>
 const IconCheck = () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.5 12.75l6 6 9-13.5" /></svg>
 
+function ProcessingOverlay({ progress, current, total, filename, mode }) {
+  const pct = Math.min(progress, 100)
+
+  // Tags distributed left and right of the frame, each with a y% position
+  const leftTags  = [
+    { label: 'GPS · 48.856°N, 2.352°E' , y:  6 },
+    { label: 'f/2.8 · 1/500s · AF-C'   , y: 22 },
+    { label: 'Author · J. Silva'        , y: 38 },
+    { label: 'Canon EOS R5'             , y: 54 },
+    { label: 'Adobe Lightroom 7.3'      , y: 70 },
+    { label: '© All rights reserved'   , y: 86 },
+  ]
+  const rightTags = [
+    { label: 'EXIF 2.31'               , y: 13 },
+    { label: 'ISO · 3200'              , y: 29 },
+    { label: '2024-11-03  14:22:07'    , y: 45 },
+    { label: 'sRGB · 96 dpi'           , y: 61 },
+    { label: 'iPhone 15 Pro · Wide'    , y: 77 },
+    { label: 'Altitude · 84.3 m'       , y: 93 },
+  ]
+
+  const tag = (label, erased, side) => ({
+    fontSize: 10,
+    padding: '3px 8px',
+    borderRadius: 4,
+    whiteSpace: 'nowrap',
+    border: `1px solid ${erased ? 'transparent' : 'rgba(99,102,241,0.28)'}`,
+    background: erased ? 'transparent' : 'rgba(99,102,241,0.07)',
+    color: erased ? 'transparent' : 'rgba(165,180,252,0.7)',
+    opacity: erased ? 0 : 1,
+    transform: erased
+      ? `translateX(${side === 'l' ? -18 : 18}px) scale(0.82) skewX(${side === 'l' ? -4 : 4}deg)`
+      : 'none',
+    filter: erased ? 'blur(3px)' : 'none',
+    transition: 'all 0.5s cubic-bezier(0.4,0,0.2,1)',
+  })
+
+  return (
+    <div className="fixed inset-0 z-50 flex flex-col items-center justify-center"
+      style={{background: 'rgba(6,6,9,0.97)', backdropFilter: 'blur(24px)'}}>
+      <style>{`
+        @keyframes mc-beam {
+          0%,100% { box-shadow: 0 0 0 1px rgba(99,102,241,0.15), 0 0 18px 3px rgba(99,102,241,0.45), 0 0 48px 8px rgba(99,102,241,0.1); }
+          50%     { box-shadow: 0 0 0 1px rgba(139,92,246,0.2),  0 0 28px 5px rgba(139,92,246,0.6),  0 0 70px 12px rgba(139,92,246,0.12); }
+        }
+        @keyframes mc-float {
+          0%,100% { transform: translateY(0px); }
+          50%     { transform: translateY(-3px); }
+        }
+        @keyframes mc-scanline {
+          0%   { opacity: 0.6; }
+          50%  { opacity: 1;   }
+          100% { opacity: 0.6; }
+        }
+      `}</style>
+
+      {/* Faint background glow */}
+      <div style={{position:'absolute',inset:0,pointerEvents:'none',
+        background:'radial-gradient(ellipse 40% 50% at 50% 42%, rgba(99,102,241,0.05) 0%, transparent 70%)'}} />
+
+      {/* ── Scanner stage ── */}
+      <div style={{position:'relative', marginBottom: 36}}>
+
+        {/* Left tags */}
+        <div style={{position:'absolute', right:'calc(100% + 18px)', top:0, bottom:0, width:156}}>
+          {leftTags.map((t, i) => {
+            const erased = t.y < pct
+            return (
+              <div key={i} style={{
+                position:'absolute', right:0, top:`${t.y}%`,
+                ...tag(t.label, erased, 'l'),
+                animation: erased ? 'none' : `mc-float ${3.2 + i * 0.35}s ease-in-out ${i * 0.22}s infinite`,
+              }}>{t.label}</div>
+            )
+          })}
+        </div>
+
+        {/* The image frame */}
+        <div style={{
+          width: 224, height: 298, borderRadius: 10, position:'relative', overflow:'hidden',
+          border:'1px solid rgba(255,255,255,0.07)',
+        }}>
+          {/* Unscanned zone — subtle dot grid (below beam = still dirty) */}
+          <div style={{
+            position:'absolute', top:`${pct}%`, left:0, right:0, bottom:0,
+            backgroundImage:'radial-gradient(circle, rgba(255,255,255,0.06) 1px, transparent 1px)',
+            backgroundSize:'14px 14px',
+            transition:'top 0.8s cubic-bezier(0.4,0,0.2,1)',
+          }} />
+
+          {/* Scanned zone — clean solid (above beam) */}
+          <div style={{
+            position:'absolute', top:0, left:0, right:0, height:`${pct}%`,
+            background:'rgba(6,6,9,0.92)',
+            transition:'height 0.8s cubic-bezier(0.4,0,0.2,1)',
+          }} />
+
+          {/* Scan beam line */}
+          <div style={{
+            position:'absolute', left:0, right:0,
+            top:`calc(${pct}% - 1px)`, height:2,
+            background:'linear-gradient(90deg, transparent 0%, #4f46e5 18%, #a5b4fc 50%, #4f46e5 82%, transparent 100%)',
+            animation:'mc-beam 1.8s ease-in-out infinite',
+            transition:'top 0.8s cubic-bezier(0.4,0,0.2,1)',
+          }} />
+
+          {/* Beam reflection — faint wider glow below beam */}
+          <div style={{
+            position:'absolute', left:0, right:0,
+            top:`calc(${pct}% + 1px)`, height:18,
+            background:'linear-gradient(180deg, rgba(99,102,241,0.08) 0%, transparent 100%)',
+            transition:'top 0.8s cubic-bezier(0.4,0,0.2,1)',
+            pointerEvents:'none',
+          }} />
+
+          {/* Corner brackets */}
+          {[
+            {top:8, left:8,  borderTop:'1px solid rgba(99,102,241,0.55)', borderLeft:'1px solid rgba(99,102,241,0.55)'},
+            {top:8, right:8, borderTop:'1px solid rgba(99,102,241,0.55)', borderRight:'1px solid rgba(99,102,241,0.55)'},
+            {bottom:8, left:8,  borderBottom:'1px solid rgba(99,102,241,0.55)', borderLeft:'1px solid rgba(99,102,241,0.55)'},
+            {bottom:8, right:8, borderBottom:'1px solid rgba(99,102,241,0.55)', borderRight:'1px solid rgba(99,102,241,0.55)'},
+          ].map((s, i) => (
+            <div key={i} style={{position:'absolute', width:13, height:13, ...s}} />
+          ))}
+
+          {/* Center icon fades in as cleaning completes */}
+          <div style={{
+            position:'absolute', inset:0, display:'flex', alignItems:'center', justifyContent:'center',
+            opacity: pct / 120, transition:'opacity 0.6s ease',
+          }}>
+            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="rgba(99,102,241,0.5)" strokeWidth="1.25">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z"/>
+            </svg>
+          </div>
+        </div>
+
+        {/* Right tags */}
+        <div style={{position:'absolute', left:'calc(100% + 18px)', top:0, bottom:0, width:156}}>
+          {rightTags.map((t, i) => {
+            const erased = t.y < pct
+            return (
+              <div key={i} style={{
+                position:'absolute', left:0, top:`${t.y}%`,
+                ...tag(t.label, erased, 'r'),
+                animation: erased ? 'none' : `mc-float ${3 + i * 0.3}s ease-in-out ${i * 0.18}s infinite`,
+              }}>{t.label}</div>
+            )
+          })}
+        </div>
+      </div>
+
+      {/* Counter */}
+      <div style={{textAlign:'center'}}>
+        <div style={{fontSize:10, letterSpacing:'0.18em', textTransform:'uppercase',
+          color:'rgba(255,255,255,0.22)', marginBottom:10}}>
+          {mode === 'clean' ? 'Stripping metadata' : 'Processing images'}
+        </div>
+        <div style={{fontSize:56, fontWeight:800, letterSpacing:'-3px', lineHeight:1,
+          color:'#fff', fontVariantNumeric:'tabular-nums',
+          textShadow:'0 0 40px rgba(99,102,241,0.45)'}}>
+          {Math.round(pct)}<span style={{fontSize:22, fontWeight:300, opacity:0.35, letterSpacing:0}}>%</span>
+        </div>
+        <div style={{fontSize:12, color:'rgba(255,255,255,0.28)', marginTop:10}}>
+          {pct >= 100 ? 'Finalizing download…' : `Image ${Math.min(current + 1, total)} of ${total}`}
+        </div>
+        <div style={{fontSize:10, color:'rgba(255,255,255,0.14)', marginTop:5,
+          maxWidth:300, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap'}}>
+          {filename}
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function Logo() {
   return (
     <Link href="/" style={{display:'flex', alignItems:'center', gap:'10px', textDecoration:'none'}}>
@@ -607,6 +781,9 @@ function DashboardInner() {
   const [cleanDragging, setCleanDragging] = useState(false)
   const [cleanProcessing, setCleanProcessing] = useState(false)
   const [cleanDone, setCleanDone] = useState(false)
+  const [progressCount, setProgressCount] = useState(0)
+  const [progressTotal, setProgressTotal] = useState(0)
+  const [progressFile, setProgressFile] = useState('')
   const [menuOpen, setMenuOpen] = useState(false)
   const cleanFileInputRef = useRef(null)
 
@@ -735,8 +912,13 @@ function DashboardInner() {
     const { data } = await supabase.auth.getSession()
     const token = data.session?.access_token
     const results = []
+    setProgressTotal(cleanFiles.length)
+    setProgressCount(0)
+    setProgressFile('')
 
-    for (const file of cleanFiles) {
+    for (let cleanIdx = 0; cleanIdx < cleanFiles.length; cleanIdx++) {
+      const file = cleanFiles[cleanIdx]
+      setProgressFile(file.name)
       const formData = new FormData()
       formData.append('file', file)
       formData.append('name', file.name)
@@ -757,6 +939,7 @@ function DashboardInner() {
       const ext = file.name.split('.').pop() || 'bin'
       const base = file.name.replace(/\.[^.]+$/, '')
       results.push({ blob, filename: `metaclean_${base}_clean.${ext}` })
+      setProgressCount(cleanIdx + 1)
     }
 
     if (results.length === 1) {
@@ -800,9 +983,13 @@ function DashboardInner() {
 
     // Collect all results, then decide how to download
     const results = [] // { blob, filename, isZip }
+    setProgressTotal(files.length)
+    setProgressCount(0)
+    setProgressFile('')
 
     for (let fileIndex = 0; fileIndex < files.length; fileIndex++) {
       const file = files[fileIndex]
+      setProgressFile(file.name)
       const formData = new FormData()
       formData.append('image', file)
       formData.append('platform', selectedPlatform)
@@ -835,6 +1022,7 @@ function DashboardInner() {
           : `metaclean_${base}_${[...selectedFormats][0]}.jpg`,
         isZip,
       })
+      setProgressCount(fileIndex + 1)
     }
 
     // Download: single JPG → direct, everything else → one combined zip
@@ -920,7 +1108,8 @@ function DashboardInner() {
     )
   }
 
-  const isPro = profile?.plan === 'pro'
+  const isAdmin = user?.email === 'franciscosantanasilva17@gmail.com'
+  const isPro = isAdmin || profile?.plan === 'pro'
   const imagesUsed = profile?.images_used_today ?? 0
   const usageLimit = isPro ? null : FREE_LIMIT
   const usagePct = usageLimit ? Math.min((imagesUsed / usageLimit) * 100, 100) : 0
@@ -938,8 +1127,23 @@ function DashboardInner() {
     transition: 'opacity 0.4s ease 0ms, transform 0.4s ease 0ms',
   }
 
+  const processingActive = processing || cleanProcessing
+  const processingMode = cleanProcessing ? 'clean' : 'ad'
+  const processingProgress = progressTotal > 0 ? (progressCount / progressTotal) * 100 : 0
+
   return (
     <main className="min-h-screen bg-[#060609] text-white" style={{fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'}}>
+
+      {/* Processing overlay */}
+      {processingActive && (
+        <ProcessingOverlay
+          progress={processingProgress}
+          current={progressCount}
+          total={progressTotal}
+          filename={progressFile}
+          mode={processingMode}
+        />
+      )}
 
       {/* Background */}
       <div className="fixed inset-0 pointer-events-none">
