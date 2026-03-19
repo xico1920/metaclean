@@ -113,7 +113,7 @@ async function processFormat(inputBuffer, width, height, quality, maxSizeKB, cro
     extractParams = { left, top, width: cropW, height: cropH }
   }
 
-  const make = (q) => {
+  const make = async (q) => {
     let pipeline = sharp(inputBuffer)
     if (cropInfo?.autocrop) {
       pipeline = pipeline.resize(width, height, { fit: 'cover', position: 'attention' })
@@ -122,7 +122,11 @@ async function processFormat(inputBuffer, width, height, quality, maxSizeKB, cro
     } else {
       pipeline = pipeline.resize(width, height, { fit: 'cover', position: 'centre' })
     }
-    return pipeline.withMetadata(false).jpeg({ quality: q }).toBuffer()
+    // Pixel reconstruction: decode to raw pixels then re-encode — guarantees zero metadata
+    const { data, info } = await pipeline.raw().toBuffer({ resolveWithObject: true })
+    return sharp(data, { raw: { width: info.width, height: info.height, channels: info.channels } })
+      .jpeg({ quality: q })
+      .toBuffer()
   }
 
   if (!maxSizeKB) return make(quality)
@@ -176,7 +180,8 @@ export async function POST(request) {
     }
 
     // ── Usage limit check ─────────────────────────────────────────────────────
-    if (profile.plan === 'free' && imagesUsed >= FREE_LIMIT) {
+    const isAdmin = user.email === 'franciscosantanasilva17@gmail.com'
+    if (!isAdmin && profile.plan === 'free' && imagesUsed >= FREE_LIMIT) {
       return NextResponse.json({ error: 'Daily limit reached', limitReached: true }, { status: 403 })
     }
 

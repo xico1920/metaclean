@@ -762,8 +762,12 @@ function DashboardInner() {
     if (results.length === 1) {
       const url = URL.createObjectURL(results[0].blob)
       const a = document.createElement('a')
-      a.href = url; a.download = results[0].filename; a.click()
-      URL.revokeObjectURL(url)
+      a.href = url
+      a.download = results[0].filename
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      setTimeout(() => URL.revokeObjectURL(url), 1000)
     } else if (results.length > 0) {
       const JSZip = (await import('jszip')).default
       const zip = new JSZip()
@@ -771,8 +775,12 @@ function DashboardInner() {
       const zipBlob = await zip.generateAsync({ type: 'blob', compression: 'DEFLATE' })
       const url = URL.createObjectURL(zipBlob)
       const a = document.createElement('a')
-      a.href = url; a.download = 'metaclean_clean_batch.zip'; a.click()
-      URL.revokeObjectURL(url)
+      a.href = url
+      a.download = 'metaclean_clean_batch.zip'
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      setTimeout(() => URL.revokeObjectURL(url), 1000)
     }
 
     if (user) { await loadProfile(user.id); await loadHistory(user.id) }
@@ -833,8 +841,12 @@ function DashboardInner() {
     if (results.length === 1 && !results[0].isZip) {
       const url = URL.createObjectURL(results[0].blob)
       const a = document.createElement('a')
-      a.href = url; a.download = results[0].filename; a.click()
-      URL.revokeObjectURL(url)
+      a.href = url
+      a.download = results[0].filename
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      setTimeout(() => URL.revokeObjectURL(url), 1000)
     } else if (results.length > 0) {
       const JSZip = (await import('jszip')).default
       const zip = new JSZip()
@@ -854,8 +866,12 @@ function DashboardInner() {
       const zipBlob = await zip.generateAsync({ type: 'blob', compression: 'DEFLATE' })
       const url = URL.createObjectURL(zipBlob)
       const a = document.createElement('a')
-      a.href = url; a.download = `metaclean_${selectedPlatform}_batch.zip`; a.click()
-      URL.revokeObjectURL(url)
+      a.href = url
+      a.download = `metaclean_${selectedPlatform}_batch.zip`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      setTimeout(() => URL.revokeObjectURL(url), 1000)
     }
 
     // Refresh stats

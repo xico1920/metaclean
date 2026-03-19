@@ -31,7 +31,8 @@ export async function POST(request) {
       await supabase.from('profiles').update({ images_used_today: 0, last_reset_date: today }).eq('id', user.id)
     }
 
-    if (profile.plan === 'free' && imagesUsed >= FREE_LIMIT) {
+    const isAdmin = user.email === 'franciscosantanasilva17@gmail.com'
+    if (!isAdmin && profile.plan === 'free' && imagesUsed >= FREE_LIMIT) {
       return NextResponse.json({ error: 'Daily limit reached', limitReached: true }, { status: 403 })
     }
 
@@ -49,18 +50,19 @@ export async function POST(request) {
     let outputBuffer, contentType, outputName
 
     if (mimeType.startsWith('image/')) {
-      // Image: strip all metadata, keep original dimensions
-      let pipeline = sharp(inputBuffer).withMetadata(false)
+      // Pixel reconstruction: decode to raw pixels then re-encode — guarantees zero metadata
+      const { data, info } = await sharp(inputBuffer).raw().toBuffer({ resolveWithObject: true })
+      const rawInput = { raw: { width: info.width, height: info.height, channels: info.channels } }
       if (mimeType === 'image/png' || ext === 'png') {
-        outputBuffer = await pipeline.png().toBuffer()
+        outputBuffer = await sharp(data, rawInput).png().toBuffer()
         contentType = 'image/png'
         outputName = `metaclean_${baseName}_clean.png`
       } else if (mimeType === 'image/webp' || ext === 'webp') {
-        outputBuffer = await pipeline.webp({ quality: 92 }).toBuffer()
+        outputBuffer = await sharp(data, rawInput).webp({ quality: 92 }).toBuffer()
         contentType = 'image/webp'
         outputName = `metaclean_${baseName}_clean.webp`
       } else {
-        outputBuffer = await pipeline.jpeg({ quality: 92 }).toBuffer()
+        outputBuffer = await sharp(data, rawInput).jpeg({ quality: 92 }).toBuffer()
         contentType = 'image/jpeg'
         outputName = `metaclean_${baseName}_clean.jpg`
       }
