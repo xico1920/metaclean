@@ -466,22 +466,29 @@ export default function Home() {
     setProcessing(true)
     const { data } = await supabase.auth.getSession()
     const token = data.session?.access_token
-    for (const file of files) {
+    // Read all files into memory first so deleting them from disk mid-process doesn't hang
+    const fileSnapshots = await Promise.all(
+      files.map(async (file) => ({
+        blob: new Blob([await file.arrayBuffer()], { type: file.type }),
+        name: file.name,
+      }))
+    )
+    for (const { blob, name } of fileSnapshots) {
       const formData = new FormData()
-      formData.append('image', file)
+      formData.append('image', blob, name)
       formData.append('platform', selectedPlatform)
-      formData.append('name', file.name)
+      formData.append('name', name)
       const res = await fetch('/api/process', {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` },
         body: formData,
       })
       if (!res.ok) continue
-      const blob = await res.blob()
-      const url = URL.createObjectURL(blob)
+      const resBlob = await res.blob()
+      const url = URL.createObjectURL(resBlob)
       const a = document.createElement('a')
       a.href = url
-      const baseName = file.name.replace(/\.[^.]+$/, '')
+      const baseName = name.replace(/\.[^.]+$/, '')
       a.download = `metaclean_${baseName}_${selectedPlatform}.zip`
       a.click()
       URL.revokeObjectURL(url)
@@ -495,21 +502,28 @@ export default function Home() {
     setCleanProcessing(true)
     const { data } = await supabase.auth.getSession()
     const token = data.session?.access_token
+    // Read all files into memory first so deleting them from disk mid-process doesn't hang
+    const cleanSnapshots = await Promise.all(
+      cleanFiles.map(async (file) => ({
+        blob: new Blob([await file.arrayBuffer()], { type: file.type }),
+        name: file.name,
+      }))
+    )
     const results = []
-    for (const file of cleanFiles) {
+    for (const { blob: fileBlob, name } of cleanSnapshots) {
       const formData = new FormData()
-      formData.append('file', file)
-      formData.append('name', file.name)
+      formData.append('file', fileBlob, name)
+      formData.append('name', name)
       const res = await fetch('/api/clean', {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` },
         body: formData,
       })
       if (!res.ok) continue
-      const blob = await res.blob()
+      const resBlob = await res.blob()
       const cd = res.headers.get('Content-Disposition') || ''
       const nameMatch = cd.match(/filename="(.+?)"/)
-      results.push({ blob, name: nameMatch?.[1] || `clean_${file.name}` })
+      results.push({ blob: resBlob, name: nameMatch?.[1] || `clean_${name}` })
     }
     if (results.length === 1) {
       const url = URL.createObjectURL(results[0].blob)

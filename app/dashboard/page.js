@@ -1108,7 +1108,7 @@ function DashboardInner() {
     )
   }
 
-  const isAdmin = user?.email === 'franciscosantanasilva17@gmail.com'
+  const isAdmin = user?.email === process.env.NEXT_PUBLIC_ADMIN_EMAIL
   const isPro = isAdmin || profile?.plan === 'pro'
   const imagesUsed = profile?.images_used_today ?? 0
   const usageLimit = isPro ? null : FREE_LIMIT

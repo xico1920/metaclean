@@ -31,7 +31,7 @@ export async function POST(request) {
       await supabase.from('profiles').update({ images_used_today: 0, last_reset_date: today }).eq('id', user.id)
     }
 
-    const isAdmin = user.email === 'franciscosantanasilva17@gmail.com'
+    const isAdmin = user.email === process.env.ADMIN_EMAIL
     if (!isAdmin && profile.plan === 'free' && imagesUsed >= FREE_LIMIT) {
       return NextResponse.json({ error: 'Daily limit reached', limitReached: true }, { status: 403 })
     }
