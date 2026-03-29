@@ -23,9 +23,9 @@ function formatBytes(b) {
   return b >= 1048576 ? `${(b / 1048576).toFixed(1)} MB` : `${Math.round(b / 1024)} KB`
 }
 
-const IconOk   = () => <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#4ade80" strokeWidth="3.5"><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>
-const IconWarn = () => <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m0 3.75h.008v.008H12v-.008z"/></svg>
-const IconFail = () => <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#f87171" strokeWidth="3"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+const IconOk   = () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.5 12.75l6 6 9-13.5"/></svg>
+const IconWarn = () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"/></svg>
+const IconFail = () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12"/></svg>
 
 export default function AdReadyBadge({ platform, stats }) {
   const [expanded, setExpanded] = useState(false)
@@ -58,25 +58,19 @@ export default function AdReadyBadge({ platform, stats }) {
       <button
         onClick={() => setExpanded(e => !e)}
         style={{
-          display: 'inline-flex', alignItems: 'center', gap: 6,
-          padding: '4px 10px', borderRadius: 7, cursor: 'pointer',
+          display: 'inline-flex', alignItems: 'center', gap: 8,
+          padding: '6px 16px', borderRadius: 8, cursor: 'pointer',
           background: allGood ? 'rgba(34,197,94,0.08)' : 'rgba(251,191,36,0.08)',
-          border: `1px solid ${allGood ? 'rgba(34,197,94,0.2)' : 'rgba(251,191,36,0.2)'}`,
-          color: allGood ? '#4ade80' : '#fbbf24',
-          fontSize: 11, fontWeight: 600,
+          border: `1px solid ${allGood ? 'rgba(34,197,94,0.18)' : 'rgba(251,191,36,0.18)'}`,
+          color: allGood ? '#86efac' : '#fde68a',
+          fontSize: 12, fontWeight: 500,
         }}
       >
-        <span style={{
-          width: 14, height: 14, borderRadius: '50%', flexShrink: 0,
-          background: allGood ? 'rgba(34,197,94,0.15)' : 'rgba(251,191,36,0.15)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-        }}>
-          {allGood ? <IconOk /> : <IconWarn />}
-        </span>
+        {allGood ? <IconOk /> : <IconWarn />}
         {allGood ? 'Ad Ready ✓' : 'Review results'}
-        <span style={{ fontSize: 9, opacity: 0.5 }}>{stats.length} format{stats.length !== 1 ? 's' : ''}</span>
+        <span style={{ opacity: 0.5, fontSize: 11 }}>{stats.length} format{stats.length !== 1 ? 's' : ''}</span>
         <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"
-          style={{ transform: expanded ? 'rotate(180deg)' : 'none', transition: 'transform 0.18s', flexShrink: 0 }}>
+          style={{ transform: expanded ? 'rotate(180deg)' : 'none', transition: 'transform 0.18s', flexShrink: 0, opacity: 0.6 }}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5"/>
         </svg>
       </button>
