@@ -3,6 +3,8 @@ import { useState, useEffect, useRef, Suspense } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
+import AdReadyBadge from '@/app/components/AdReadyBadge'
+import { loadPresets, savePreset, deletePreset, MAX_PRESETS_FREE, MAX_PRESETS_PRO } from '@/lib/presets'
 
 export const dynamic = 'force-dynamic'
 
@@ -37,6 +39,19 @@ const t = {
     clean_desc: 'Strip metadata from any file. Images, PDFs and more — no resizing, no cropping.',
     clean_success: (n) => `${n} file${n === 1 ? '' : 's'} cleaned`,
     history_clean: 'Metadata only',
+    preset_label: 'Saved presets',
+    preset_save: 'Save preset',
+    preset_name_ph: 'Name this preset…',
+    preset_limit: (n, max) => `${n}/${max} presets`,
+    zip_mode: 'Upload ZIP',
+    zip_normal: 'Images',
+    zip_drop: 'Drop a ZIP file here',
+    zip_drop_sub: 'ZIP containing images · up to 50 per batch',
+    zip_select: 'Choose ZIP',
+    zip_process: 'Process ZIP',
+    zip_processing: 'Processing ZIP…',
+    zip_success: (n) => `${n} image${n === 1 ? '' : 's'} processed`,
+    zip_limit_free: 'Free plan: max 5 images per ZIP',
   },
   pt: {
     plan_free: 'Grátis', plan_pro: 'Pro',
@@ -67,6 +82,19 @@ const t = {
     clean_desc: 'Remove metadados de qualquer ficheiro. Imagens, PDFs e mais — sem redimensionar.',
     clean_success: (n) => `${n} ficheiro${n === 1 ? '' : 's'} limpo${n === 1 ? '' : 's'}`,
     history_clean: 'Apenas metadados',
+    preset_label: 'Presets guardados',
+    preset_save: 'Guardar preset',
+    preset_name_ph: 'Nome do preset…',
+    preset_limit: (n, max) => `${n}/${max} presets`,
+    zip_mode: 'Upload ZIP',
+    zip_normal: 'Imagens',
+    zip_drop: 'Arrasta um ficheiro ZIP aqui',
+    zip_drop_sub: 'ZIP com imagens · até 50 por lote',
+    zip_select: 'Escolher ZIP',
+    zip_process: 'Processar ZIP',
+    zip_processing: 'A processar ZIP…',
+    zip_success: (n) => `${n} imagem${n === 1 ? '' : 'ns'} processada${n === 1 ? '' : 's'}`,
+    zip_limit_free: 'Plano gratuito: máx 5 imagens por ZIP',
   },
   es: {
     plan_free: 'Gratis', plan_pro: 'Pro',
@@ -97,6 +125,19 @@ const t = {
     clean_desc: 'Elimina metadatos de cualquier archivo. Imágenes, PDFs y más — sin redimensionar.',
     clean_success: (n) => `${n} archivo${n === 1 ? '' : 's'} limpiado${n === 1 ? '' : 's'}`,
     history_clean: 'Solo metadatos',
+    preset_label: 'Presets guardados',
+    preset_save: 'Guardar preset',
+    preset_name_ph: 'Nombre del preset…',
+    preset_limit: (n, max) => `${n}/${max} presets`,
+    zip_mode: 'Subir ZIP',
+    zip_normal: 'Imágenes',
+    zip_drop: 'Arrastra un archivo ZIP aquí',
+    zip_drop_sub: 'ZIP con imágenes · hasta 50 por lote',
+    zip_select: 'Elegir ZIP',
+    zip_process: 'Procesar ZIP',
+    zip_processing: 'Procesando ZIP…',
+    zip_success: (n) => `${n} imagen${n === 1 ? '' : 'es'} procesada${n === 1 ? '' : 's'}`,
+    zip_limit_free: 'Plan gratuito: máx 5 imágenes por ZIP',
   },
 }
 
@@ -788,6 +829,23 @@ function DashboardInner() {
   const [menuOpen, setMenuOpen] = useState(false)
   const cleanFileInputRef = useRef(null)
 
+  // AdReady stats
+  const [processedStats, setProcessedStats] = useState(null)
+
+  // ZIP mode
+  const [zipMode, setZipMode] = useState(false)
+  const [zipUploadFile, setZipUploadFile] = useState(null)
+  const [zipProcessing, setZipProcessing] = useState(false)
+  const [zipDone, setZipDone] = useState(false)
+  const [zipProcessed, setZipProcessed] = useState(0)
+  const zipFileInputRef = useRef(null)
+
+  // Presets
+  const [presets, setPresets] = useState([])
+  const [savePresetOpen, setSavePresetOpen] = useState(false)
+  const [presetNameInput, setPresetNameInput] = useState('')
+  const [presetSaving, setPresetSaving] = useState(false)
+
   const i = t[lang]
 
   // Init formats when platform changes — only first format selected by default
@@ -809,6 +867,7 @@ function DashboardInner() {
       setUser(data.session.user)
       await loadProfile(data.session.user.id)
       await loadHistory(data.session.user.id)
+      setPresets(await loadPresets(supabase, data.session.user.id))
       setLoading(false)
       setTimeout(() => setLoaded(true), 40)
       if (searchParams.get('upgraded') === '1') setUpgradedNotice(true)
@@ -896,6 +955,63 @@ function DashboardInner() {
     setDone(false); setCleanDone(false)
     setLimitReached(false); setRejectedFiles([])
     setFileWarning(''); setStep('upload')
+    setProcessedStats(null)
+    setZipMode(false); setZipUploadFile(null); setZipDone(false)
+  }
+
+  const handleSavePreset = async () => {
+    if (!presetNameInput.trim() || presetSaving) return
+    setPresetSaving(true)
+    try {
+      await savePreset(supabase, user.id, { name: presetNameInput, platform: selectedPlatform, formats: selectedFormats })
+      setPresets(await loadPresets(supabase, user.id))
+      setSavePresetOpen(false)
+      setPresetNameInput('')
+    } catch {}
+    setPresetSaving(false)
+  }
+
+  const handleDeletePreset = async (presetId) => {
+    await deletePreset(supabase, presetId)
+    setPresets(await loadPresets(supabase, user.id))
+  }
+
+  const processZip = async () => {
+    if (!zipUploadFile) return
+    setZipProcessing(true)
+    setLimitReached(false)
+    try {
+      const { data } = await supabase.auth.getSession()
+      const token = data.session?.access_token
+      const formData = new FormData()
+      formData.append('zip', zipUploadFile)
+      formData.append('platform', selectedPlatform)
+      formData.append('formats', JSON.stringify([...selectedFormats]))
+      const res = await fetch('/api/process-zip', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` },
+        body: formData,
+      })
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}))
+        if (err.limitReached) setLimitReached(true)
+        return
+      }
+      const blob = await res.blob()
+      const processed = parseInt(res.headers.get('X-MC-Processed') || '0')
+      setZipProcessed(processed)
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url; a.download = `metaclean_${selectedPlatform}_batch.zip`
+      document.body.appendChild(a); a.click(); document.body.removeChild(a)
+      setTimeout(() => URL.revokeObjectURL(url), 1000)
+      setZipDone(true)
+      if (user) { await loadProfile(user.id); await loadHistory(user.id) }
+    } catch (err) {
+      console.error('processZip error:', err)
+    } finally {
+      setZipProcessing(false)
+    }
   }
 
   const handleCleanFiles = (e) => setCleanFiles(prev => [...prev, ...Array.from(e.target.files)])
@@ -1029,6 +1145,7 @@ function DashboardInner() {
 
     // Collect all results, then decide how to download
     const results = [] // { blob, filename, isZip }
+    const allStats = []
     setProgressTotal(files.length)
     setProgressCount(0)
     setProgressFile('')
@@ -1059,6 +1176,7 @@ function DashboardInner() {
       }
 
       const contentType = res.headers.get('Content-Type') || ''
+      const statsHeader = res.headers.get('X-MC-Stats')
       const blob = await res.blob()
       const base = file.name.replace(/\.[^.]+$/, '')
       const isZip = contentType.includes('zip')
@@ -1069,6 +1187,9 @@ function DashboardInner() {
           : `metaclean_${base}_${[...selectedFormats][0]}.jpg`,
         isZip,
       })
+      if (statsHeader) {
+        try { allStats.push(...JSON.parse(statsHeader)) } catch {}
+      }
       setProgressCount(fileIndex + 1)
     }
 
@@ -1115,6 +1236,7 @@ function DashboardInner() {
       await loadHistory(user.id)
     }
 
+    setProcessedStats(allStats.length > 0 ? { platform: selectedPlatform, formats: allStats } : null)
     setProcessing(false)
     setStep('upload')
     if (!hitLimit) setDone(true)
@@ -1174,7 +1296,7 @@ function DashboardInner() {
     transition: 'opacity 0.4s ease 0ms, transform 0.4s ease 0ms',
   }
 
-  const processingActive = processing || cleanProcessing
+  const processingActive = processing || cleanProcessing || zipProcessing
   const processingMode = cleanProcessing ? 'clean' : 'ad'
   const processingProgress = progressTotal > 0 ? (progressCount / progressTotal) * 100 : 0
 
@@ -1384,7 +1506,33 @@ function DashboardInner() {
           {dashMode === 'ad' && (
           <div className="p-5 sm:p-6" style={{borderBottom: '1px solid rgba(255,255,255,0.05)'}}>
 
-            {/* Platform selector */}
+            {/* ── Presets row ── */}
+            {presets.length > 0 && (
+              <div className="mb-5">
+                <p className="text-[10px] text-gray-500 uppercase tracking-widest mb-2 font-medium">{i.preset_label}</p>
+                <div className="flex flex-wrap gap-2">
+                  {presets.map(p => (
+                    <div key={p.id} className="flex items-center gap-1">
+                      <button
+                        onClick={() => { setSelectedPlatform(p.platform); setSelectedFormats(new Set(p.formats)) }}
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-medium transition-all"
+                        style={{background:'rgba(99,102,241,0.08)',border:'1px solid rgba(99,102,241,0.2)',color:'#a5b4fc'}}
+                      >
+                        <svg className="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 24 24"><path d="M5 3l14 9-14 9V3z"/></svg>
+                        {p.name}
+                      </button>
+                      <button
+                        onClick={() => handleDeletePreset(p.id)}
+                        className="p-1 rounded text-gray-700 hover:text-red-400 transition-colors"
+                        title="Delete"
+                      >×</button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+          {/* Platform selector */}
             <p className="text-[10px] text-gray-500 uppercase tracking-widest mb-3 font-medium">{i.choose_platform}</p>
             <div className="flex flex-wrap gap-2 mb-5">
               {Object.entries(PLATFORM_CONFIGS).map(([key, p]) => {
@@ -1458,6 +1606,41 @@ function DashboardInner() {
                   Safe zone overlay active — danger zones highlighted in upload area
                 </div>
               )}
+
+              {/* Save preset */}
+              <div className="mt-3 flex items-center gap-3">
+                {savePresetOpen ? (
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <input
+                      type="text"
+                      value={presetNameInput}
+                      onChange={e => setPresetNameInput(e.target.value)}
+                      placeholder={i.preset_name_ph}
+                      autoFocus
+                      className="px-3 py-1.5 rounded-lg text-[12px] text-white bg-transparent outline-none"
+                      style={{border:'1px solid rgba(99,102,241,0.35)', minWidth:140}}
+                      onKeyDown={e => { if (e.key === 'Enter') handleSavePreset(); if (e.key === 'Escape') { setSavePresetOpen(false); setPresetNameInput('') } }}
+                    />
+                    <button onClick={handleSavePreset} disabled={!presetNameInput.trim() || presetSaving} className="px-3 py-1.5 rounded-lg text-[11px] font-semibold text-white disabled:opacity-40 transition-opacity" style={{background:'rgba(99,102,241,0.3)',border:'1px solid rgba(99,102,241,0.4)'}}>
+                      {presetSaving ? '…' : 'Save'}
+                    </button>
+                    <button onClick={() => { setSavePresetOpen(false); setPresetNameInput('') }} className="text-gray-600 hover:text-gray-400 transition-colors text-sm">✕</button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => {
+                      const max = isPro ? MAX_PRESETS_PRO : MAX_PRESETS_FREE
+                      if (!isAdmin && presets.length >= max) return
+                      setSavePresetOpen(true)
+                    }}
+                    className="flex items-center gap-1.5 text-[11px] text-gray-600 hover:text-indigo-400 transition-colors"
+                  >
+                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4"/></svg>
+                    {i.preset_save}
+                    <span className="text-gray-700">{i.preset_limit(presets.length, isPro ? MAX_PRESETS_PRO : MAX_PRESETS_FREE)}</span>
+                  </button>
+                )}
+              </div>
             </div>
           </div>
           )} {/* end dashMode === 'ad' selectors */}
@@ -1504,6 +1687,90 @@ function DashboardInner() {
           {/* ── Ad mode: upload zone ── */}
           {dashMode === 'ad' && (
           <div className="p-4 sm:p-5">
+
+            {/* ZIP / Images toggle */}
+            <div className="flex items-center gap-2 mb-3">
+              <button
+                onClick={() => { setZipMode(false); setZipUploadFile(null); setZipDone(false) }}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-medium transition-all"
+                style={{
+                  background: !zipMode ? 'rgba(99,102,241,0.12)' : 'transparent',
+                  border: !zipMode ? '1px solid rgba(99,102,241,0.3)' : '1px solid rgba(255,255,255,0.07)',
+                  color: !zipMode ? '#a5b4fc' : 'rgba(255,255,255,0.3)',
+                }}
+              >{i.zip_normal}</button>
+              <button
+                onClick={() => { setZipMode(true); setFiles([]); setDone(false); setProcessedStats(null) }}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-medium transition-all"
+                style={{
+                  background: zipMode ? 'rgba(99,102,241,0.12)' : 'transparent',
+                  border: zipMode ? '1px solid rgba(99,102,241,0.3)' : '1px solid rgba(255,255,255,0.07)',
+                  color: zipMode ? '#a5b4fc' : 'rgba(255,255,255,0.3)',
+                }}
+              >
+                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 10V7"/></svg>
+                {i.zip_mode}
+              </button>
+            </div>
+
+            {/* ZIP drop zone */}
+            {zipMode ? (
+              <div
+                onDrop={(e) => { e.preventDefault(); setDragging(false); const f = e.dataTransfer.files[0]; if (f?.name.endsWith('.zip')) setZipUploadFile(f) }}
+                onDragOver={(e) => { e.preventDefault(); setDragging(true) }}
+                onDragLeave={() => setDragging(false)}
+                className="relative rounded-xl transition-all duration-300"
+                style={{
+                  background: dragging ? 'rgba(59,130,246,0.06)' : 'rgba(255,255,255,0.02)',
+                  border: dragging ? '1.5px solid rgba(99,102,241,0.5)' : '1.5px dashed rgba(255,255,255,0.08)',
+                  textAlign: 'center', padding: '2.5rem 1.5rem', minHeight: '160px',
+                }}
+              >
+                {!zipUploadFile ? (
+                  <div>
+                    <div className="w-12 h-12 rounded-2xl mx-auto mb-4 flex items-center justify-center" style={{background:'rgba(255,255,255,0.04)',border:'1px solid rgba(255,255,255,0.07)'}}>
+                      <svg className="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 10V7"/></svg>
+                    </div>
+                    <p className="text-white font-semibold mb-1.5">{i.zip_drop}</p>
+                    <p className="text-gray-500 text-sm mb-4">{i.zip_drop_sub}</p>
+                    {!isPro && <p className="text-amber-400/60 text-[11px] mb-4">{i.zip_limit_free}</p>}
+                    <label {...glowHandlers} className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-semibold text-white cursor-pointer" style={glowStyle}>
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4"/></svg>
+                      {i.zip_select}
+                      <input ref={zipFileInputRef} type="file" accept=".zip" className="hidden" onChange={(e) => { const f = e.target.files[0]; if (f) setZipUploadFile(f) }} />
+                    </label>
+                  </div>
+                ) : (
+                  <div>
+                    <div className="flex items-center justify-center gap-2 mb-6">
+                      <svg className="w-4 h-4 text-indigo-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 10V7"/></svg>
+                      <span className="text-gray-300 text-sm font-medium truncate max-w-[200px]">{zipUploadFile.name}</span>
+                      <span className="text-gray-600 text-xs shrink-0">{(zipUploadFile.size/1024/1024).toFixed(1)} MB</span>
+                    </div>
+                    {limitReached ? (
+                      <div className="mb-4 px-4 py-3 rounded-xl text-[13px]" style={{background:'rgba(239,68,68,0.08)',border:'1px solid rgba(239,68,68,0.2)'}}>
+                        <p className="text-red-300 font-semibold mb-1">{i.limit_title}</p>
+                        <p className="text-red-400/70 text-[12px] mb-3">{i.limit_sub}</p>
+                        <button onClick={handleUpgrade} {...glowHandlers} className="px-4 py-2 rounded-xl text-[12px] font-semibold text-white" style={glowStyle}>{i.upgrade_cta}</button>
+                      </div>
+                    ) : (
+                      <div className="flex items-center justify-center gap-3 flex-wrap">
+                        <button onClick={processZip} disabled={zipProcessing} {...glowHandlers} className="inline-flex items-center gap-2.5 px-7 py-3 rounded-xl text-sm font-semibold text-white disabled:opacity-40" style={glowStyle}>
+                          {zipProcessing ? <><IconSpin />{i.zip_processing}</> : <><IconDownload />{i.zip_process}</>}
+                        </button>
+                        <button onClick={() => { setZipUploadFile(null); setZipDone(false); setLimitReached(false); if (zipFileInputRef.current) zipFileInputRef.current.value = '' }} className="px-4 py-3 text-xs text-gray-500 hover:text-gray-300 transition-colors">{i.clear}</button>
+                      </div>
+                    )}
+                    {zipDone && !limitReached && (
+                      <div className="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-medium" style={{background:'rgba(34,197,94,0.08)',border:'1px solid rgba(34,197,94,0.18)',color:'#86efac'}}>
+                        <IconCheck />{i.zip_success(zipProcessed)}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            ) : (
+
             <div
               onDrop={handleDrop}
               onDragOver={(e) => { e.preventDefault(); setDragging(true) }}
@@ -1560,7 +1827,7 @@ function DashboardInner() {
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
                         Edit crops →
                       </button>
-                      <button onClick={() => { setFiles([]); setDone(false); setLimitReached(false); setStep('upload'); if (fileInputRef.current) fileInputRef.current.value = '' }} className="px-4 py-3 text-xs text-gray-500 hover:text-gray-300 transition-colors">{i.clear}</button>
+                      <button onClick={() => { setFiles([]); setDone(false); setLimitReached(false); setStep('upload'); setProcessedStats(null); if (fileInputRef.current) fileInputRef.current.value = '' }} className="px-4 py-3 text-xs text-gray-500 hover:text-gray-300 transition-colors">{i.clear}</button>
                     </div>
                   )}
                   {done && !limitReached && (
@@ -1568,9 +1835,14 @@ function DashboardInner() {
                       <IconCheck />{i.success(files.length)}
                     </div>
                   )}
+                  {done && !limitReached && processedStats && (
+                    <AdReadyBadge platform={processedStats.platform} stats={processedStats.formats} />
+                  )}
                 </div>
               )}
             </div>
+
+            )} {/* end zipMode ternary */}
           </div>
           )} {/* end dashMode === 'ad' upload */}
 

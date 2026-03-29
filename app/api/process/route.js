@@ -29,7 +29,7 @@ import { getSupabaseAdmin } from '@/lib/supabaseAdmin'
 const PLATFORMS = {
   meta: {
     quality: 90,
-    maxSizeKB: null,
+    maxSizeKB: 1024,
     formats: [
       { label: 'meta_1x1_1080x1080',     width: 1080, height: 1080 },
       { label: 'meta_4x5_1080x1350',     width: 1080, height: 1350 },
@@ -39,7 +39,7 @@ const PLATFORMS = {
   },
   google: {
     quality: 85,
-    maxSizeKB: 5120,
+    maxSizeKB: 150,
     formats: [
       { label: 'google_1.91x1_1200x628', width: 1200, height: 628  },
       { label: 'google_1x1_1200x1200',   width: 1200, height: 1200 },
@@ -129,7 +129,10 @@ async function processFormat(inputBuffer, width, height, quality, maxSizeKB, cro
       .toBuffer()
   }
 
-  if (!maxSizeKB) return make(quality)
+  if (!maxSizeKB) {
+    const buffer = await make(quality)
+    return { buffer, quality, size: buffer.length, compressionApplied: false }
+  }
 
   let q = quality
   let result
@@ -137,9 +140,9 @@ async function processFormat(inputBuffer, width, height, quality, maxSizeKB, cro
     result = await make(q)
     if (result.length <= maxSizeKB * 1024) break
     q -= 5
-  } while (q >= 50)
+  } while (q >= 40)
 
-  return result
+  return { buffer: result, quality: q, size: result.length, compressionApplied: q < quality }
 }
 
 export async function POST(request) {
@@ -210,10 +213,15 @@ export async function POST(request) {
     for (const fmt of config.formats) {
       if (selectedFormats && !selectedFormats.includes(fmt.label)) continue
       const cropInfo = cropData[fmt.label] || null
-      const buffer = await processFormat(
+      const { buffer, quality: finalQuality, size: finalSize, compressionApplied } = await processFormat(
         inputBuffer, fmt.width, fmt.height, config.quality, config.maxSizeKB, cropInfo
       )
-      processedFiles.push({ label: fmt.label, buffer, filename: `metaclean_${baseName}_${fmt.label}.jpg` })
+      processedFiles.push({
+        label: fmt.label,
+        buffer,
+        filename: `metaclean_${baseName}_${fmt.label}.jpg`,
+        stats: { width: fmt.width, height: fmt.height, size: finalSize, quality: finalQuality, compressionApplied },
+      })
     }
 
     if (processedFiles.length === 0) {
@@ -235,12 +243,24 @@ export async function POST(request) {
       formats: processedFormats,
     })
 
+    const statsHeader = JSON.stringify(
+      processedFiles.map(f => ({
+        label: f.label,
+        w: f.stats.width,
+        h: f.stats.height,
+        size: f.stats.size,
+        quality: f.stats.quality,
+        compressionApplied: f.stats.compressionApplied,
+      }))
+    )
+
     // Single format → return image directly (no zip)
     if (processedFiles.length === 1) {
       return new NextResponse(processedFiles[0].buffer, {
         headers: {
           'Content-Type': 'image/jpeg',
           'Content-Disposition': `attachment; filename="${processedFiles[0].filename}"`,
+          'X-MC-Stats': statsHeader,
         },
       })
     }
@@ -254,6 +274,7 @@ export async function POST(request) {
       headers: {
         'Content-Type': 'application/zip',
         'Content-Disposition': `attachment; filename="metaclean_${baseName}_${platform}.zip"`,
+        'X-MC-Stats': statsHeader,
       },
     })
   } catch (error) {
