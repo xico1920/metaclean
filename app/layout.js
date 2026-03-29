@@ -16,9 +16,6 @@ export const metadata = {
     title: 'MetaClean — Ad-ready images',
     description: 'Strip metadata, resize to every ad format, and clean your creatives automatically.',
   },
-  icons: {
-    icon: '/favicon.svg',
-  },
 }
 
 export default function RootLayout({ children }) {
