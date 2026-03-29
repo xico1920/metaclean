@@ -223,25 +223,25 @@ const IconDownload = () => <svg className="w-4 h-4" fill="none" stroke="currentC
 const IconSpin = () => <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>
 const IconCheck = () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.5 12.75l6 6 9-13.5" /></svg>
 
-function ProcessingOverlay({ progress, current, total, filename, mode }) {
+function ProcessingOverlay({ progress, current, total, filename, mode, meta }) {
   const pct = Math.min(progress, 100)
 
-  // Tags distributed left and right of the frame, each with a y% position
-  const leftTags  = [
-    { label: 'GPS · 48.856°N, 2.352°E' , y:  6 },
-    { label: 'f/2.8 · 1/500s · AF-C'   , y: 22 },
-    { label: 'Author · J. Silva'        , y: 38 },
-    { label: 'Canon EOS R5'             , y: 54 },
-    { label: 'Adobe Lightroom 7.3'      , y: 70 },
-    { label: '© All rights reserved'   , y: 86 },
+  // Build tags from real EXIF when available, fall back to generic placeholders
+  const leftTags = [
+    { label: meta?.gps      || 'GPS · — '            , y:  6 },
+    { label: meta?.aperture && meta?.shutter ? `${meta.aperture} · ${meta.shutter}` : 'f/— · —s', y: 22 },
+    { label: meta?.copyright ? `© ${meta.copyright}` : 'Author · —', y: 38 },
+    { label: meta?.camera   || '—'                    , y: 54 },
+    { label: meta?.software || '—'                    , y: 70 },
+    { label: 'EXIF · stripping'                        , y: 86 },
   ]
   const rightTags = [
-    { label: 'EXIF 2.31'               , y: 13 },
-    { label: 'ISO · 3200'              , y: 29 },
-    { label: '2024-11-03  14:22:07'    , y: 45 },
-    { label: 'sRGB · 96 dpi'           , y: 61 },
-    { label: 'iPhone 15 Pro · Wide'    , y: 77 },
-    { label: 'Altitude · 84.3 m'       , y: 93 },
+    { label: 'EXIF 2.31'                              , y: 13 },
+    { label: meta?.iso      || 'ISO · —'              , y: 29 },
+    { label: meta?.date     || '—'                    , y: 45 },
+    { label: meta?.dpi      ? `sRGB · ${meta.dpi}`   : 'sRGB · —', y: 61 },
+    { label: filename || '—'                          , y: 77 },
+    { label: meta?.altitude || 'Altitude · —'         , y: 93 },
   ]
 
   const tag = (label, erased, side) => ({
@@ -784,6 +784,7 @@ function DashboardInner() {
   const [progressCount, setProgressCount] = useState(0)
   const [progressTotal, setProgressTotal] = useState(0)
   const [progressFile, setProgressFile] = useState('')
+  const [progressMeta, setProgressMeta] = useState(null)
   const [menuOpen, setMenuOpen] = useState(false)
   const cleanFileInputRef = useRef(null)
 
@@ -904,6 +905,50 @@ function DashboardInner() {
     setCleanFiles(prev => [...prev, ...Array.from(e.dataTransfer.files)])
   }
 
+  const extractFileMeta = async (file) => {
+    try {
+      const exifr = (await import('exifr')).default
+      const exif = await exifr.parse(file, {
+        pick: ['Make', 'Model', 'ISO', 'FNumber', 'ExposureTime', 'DateTimeOriginal',
+               'Software', 'Copyright', 'GPSLatitude', 'GPSLongitude', 'GPSAltitude',
+               'ColorSpace', 'XResolution'],
+      })
+      if (!exif) return null
+
+      const formatGPS = (lat, lon) => {
+        if (lat == null || lon == null) return null
+        const latStr = `${Math.abs(lat).toFixed(3)}°${lat >= 0 ? 'N' : 'S'}`
+        const lonStr = `${Math.abs(lon).toFixed(3)}°${lon >= 0 ? 'E' : 'W'}`
+        return `GPS · ${latStr}, ${lonStr}`
+      }
+      const formatShutter = (t) => {
+        if (!t) return null
+        return t < 1 ? `1/${Math.round(1/t)}s` : `${t}s`
+      }
+      const formatDate = (d) => {
+        if (!d) return null
+        const dt = typeof d === 'string' ? new Date(d.replace(':', '-').replace(':', '-')) : d
+        if (isNaN(dt)) return null
+        return dt.toISOString().replace('T', '  ').slice(0, 19)
+      }
+
+      return {
+        gps:      formatGPS(exif.GPSLatitude, exif.GPSLongitude),
+        aperture: exif.FNumber        ? `f/${exif.FNumber}` : null,
+        shutter:  formatShutter(exif.ExposureTime),
+        iso:      exif.ISO            ? `ISO · ${exif.ISO}` : null,
+        camera:   exif.Make && exif.Model ? `${exif.Make} ${exif.Model}`.slice(0, 24) : null,
+        software: exif.Software       ? exif.Software.slice(0, 22) : null,
+        copyright:exif.Copyright      ? exif.Copyright.slice(0, 22) : null,
+        date:     formatDate(exif.DateTimeOriginal),
+        altitude: exif.GPSAltitude    ? `Altitude · ${exif.GPSAltitude.toFixed(1)} m` : null,
+        dpi:      exif.XResolution    ? `${exif.XResolution} dpi` : null,
+      }
+    } catch {
+      return null
+    }
+  }
+
   const processClean = async () => {
     if (cleanFiles.length === 0) return
     setCleanProcessing(true)
@@ -919,6 +964,7 @@ function DashboardInner() {
     for (let cleanIdx = 0; cleanIdx < cleanFiles.length; cleanIdx++) {
       const file = cleanFiles[cleanIdx]
       setProgressFile(file.name)
+      extractFileMeta(file).then(setProgressMeta)
       const formData = new FormData()
       formData.append('file', file)
       formData.append('name', file.name)
@@ -990,6 +1036,7 @@ function DashboardInner() {
     for (let fileIndex = 0; fileIndex < files.length; fileIndex++) {
       const file = files[fileIndex]
       setProgressFile(file.name)
+      extractFileMeta(file).then(setProgressMeta)
       const formData = new FormData()
       formData.append('image', file)
       formData.append('platform', selectedPlatform)
@@ -1142,6 +1189,7 @@ function DashboardInner() {
           total={progressTotal}
           filename={progressFile}
           mode={processingMode}
+          meta={progressMeta}
         />
       )}
 
