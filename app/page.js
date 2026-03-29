@@ -614,7 +614,7 @@ export default function Home() {
             {i.badge}
           </div>
 
-          <h1 className="font-bold mb-5 sm:mb-6 tracking-tight leading-[1.05]" style={{fontSize: 'clamp(30px, 5vw, 72px)'}}>
+          <h1 className="font-bold mb-5 sm:mb-6 tracking-tight leading-[1.1]" style={{fontSize: 'clamp(30px, 5vw, 72px)'}}>
             <span className="text-gray-100">{i.hero1}</span><br />
             <span
               style={{
@@ -625,6 +625,7 @@ export default function Home() {
                 backgroundClip: 'text',
                 backgroundSize: '300% 300%',
                 backgroundPosition: '0% 50%',
+                paddingBottom: '0.12em',
                 opacity: wordVisible ? 1 : 0,
                 transform: wordVisible ? 'translateY(0)' : 'translateY(-10px)',
                 transition: wordVisible
