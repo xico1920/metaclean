@@ -1835,9 +1835,12 @@ function DashboardInner() {
                       <div className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-medium" style={{background: 'rgba(34,197,94,0.08)', border: '1px solid rgba(34,197,94,0.18)', color: '#86efac'}}>
                         <IconCheck />{i.success(files.length)}
                       </div>
-                      {processedStats && (
-                        <AdReadyBadge platform={processedStats.platform} stats={processedStats.formats} />
-                      )}
+                      {(() => {
+                        const stats = processedStats?.formats ?? platformCfg.formats
+                          .filter(f => selectedFormats.has(f.label))
+                          .map(f => ({ label: f.label, w: f.width, h: f.height, size: 0, quality: 90 }))
+                        return <AdReadyBadge platform={processedStats?.platform ?? selectedPlatform} stats={stats} />
+                      })()}
                     </div>
                   )}
                 </div>
