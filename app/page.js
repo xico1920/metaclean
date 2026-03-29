@@ -404,6 +404,9 @@ export default function Home() {
     const saved = localStorage.getItem('metaclean_lang')
     if (saved && ['en', 'pt', 'es'].includes(saved)) setLang(saved)
 
+    const onLang = (e) => setLang(e.detail)
+    window.addEventListener('metaclean:lang', onLang)
+
     if (new URLSearchParams(window.location.search).get('error')) {
       window.history.replaceState({}, '', window.location.pathname)
     }
@@ -416,7 +419,10 @@ export default function Home() {
       if (s) { router.replace('/dashboard'); return }
       setSession(s)
     })
-    return () => subscription.unsubscribe()
+    return () => {
+      subscription.unsubscribe()
+      window.removeEventListener('metaclean:lang', onLang)
+    }
   }, [router])
 
   const storeFilesForAfterAuth = (filesToStore) => {

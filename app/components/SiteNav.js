@@ -79,6 +79,7 @@ export default function SiteNav() {
   const setLangAndSave = (l) => {
     setLang(l)
     localStorage.setItem('metaclean_lang', l)
+    window.dispatchEvent(new CustomEvent('metaclean:lang', { detail: l }))
     setLangOpen(false)
   }
 
