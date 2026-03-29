@@ -52,7 +52,7 @@ export default function AdReadyBadge({ platform, stats }) {
   ]
 
   return (
-    <div style={{ display: 'inline-block', marginTop: 8, position: 'relative', textAlign: 'left' }}>
+    <div style={{ display: 'inline-block', position: 'relative', textAlign: 'left' }}>
 
       {/* Badge button */}
       <button

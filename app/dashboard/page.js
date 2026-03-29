@@ -1831,12 +1831,14 @@ function DashboardInner() {
                     </div>
                   )}
                   {done && !limitReached && (
-                    <div className="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-medium" style={{background: 'rgba(34,197,94,0.08)', border: '1px solid rgba(34,197,94,0.18)', color: '#86efac'}}>
-                      <IconCheck />{i.success(files.length)}
+                    <div className="mt-4 flex items-center justify-center gap-2 flex-wrap">
+                      <div className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-medium" style={{background: 'rgba(34,197,94,0.08)', border: '1px solid rgba(34,197,94,0.18)', color: '#86efac'}}>
+                        <IconCheck />{i.success(files.length)}
+                      </div>
+                      {processedStats && (
+                        <AdReadyBadge platform={processedStats.platform} stats={processedStats.formats} />
+                      )}
                     </div>
-                  )}
-                  {done && !limitReached && processedStats && (
-                    <AdReadyBadge platform={processedStats.platform} stats={processedStats.formats} />
                   )}
                 </div>
               )}
