@@ -1138,10 +1138,11 @@ function DashboardInner() {
     if (selectedFormats.size === 0 || files.length === 0) return
     setProcessing(true)
     setLimitReached(false)
+    let hitLimit = false
 
+    try {
     const { data } = await supabase.auth.getSession()
     const token = data.session?.access_token
-    let hitLimit = false
 
     // Collect all results, then decide how to download
     const results = [] // { blob, filename, isZip }
@@ -1237,9 +1238,13 @@ function DashboardInner() {
     }
 
     setProcessedStats(allStats.length > 0 ? { platform: selectedPlatform, formats: allStats } : null)
-    setProcessing(false)
     setStep('upload')
     if (!hitLimit) setDone(true)
+    } catch (err) {
+      console.error('processImages error:', err)
+    } finally {
+      setProcessing(false)
+    }
   }
 
   const handleUpgrade = async () => {

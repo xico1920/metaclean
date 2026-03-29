@@ -1,6 +1,7 @@
 'use client'
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
+import SiteNav from '@/app/components/SiteNav'
 
 function Reveal({ children, delay = 0, y = 16, className = '' }) {
   const ref = useRef(null)
@@ -77,13 +78,7 @@ export default function Terms() {
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px]" style={{background: 'radial-gradient(ellipse at top, rgba(59,130,246,0.05) 0%, transparent 65%)'}} />
       </div>
 
-      <nav className="relative z-10 flex items-center justify-between px-4 sm:px-8 py-4 sm:py-5" style={{borderBottom: '1px solid rgba(255,255,255,0.05)', ...en(0)}}>
-        <Logo />
-        <div className="flex items-center gap-4 text-[12px] text-gray-500">
-          <Link href="/privacy" className="hover:text-gray-300 transition-colors">Privacy</Link>
-          <Link href="/" className="hover:text-gray-300 transition-colors">Home</Link>
-        </div>
-      </nav>
+      <SiteNav />
 
       <div className="relative z-10 max-w-2xl mx-auto px-4 sm:px-6 pt-12 sm:pt-16 pb-24 sm:pb-32">
 
