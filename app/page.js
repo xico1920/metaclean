@@ -464,84 +464,105 @@ export default function Home() {
   const processImages = async () => {
     if (!session) { setShowGate(true); return }
     setProcessing(true)
-    const { data } = await supabase.auth.getSession()
-    const token = data.session?.access_token
-    // Read all files into memory first so deleting them from disk mid-process doesn't hang
-    const fileSnapshots = await Promise.all(
-      files.map(async (file) => ({
-        blob: new Blob([await file.arrayBuffer()], { type: file.type }),
-        name: file.name,
-      }))
-    )
-    for (const { blob, name } of fileSnapshots) {
-      const formData = new FormData()
-      formData.append('image', blob, name)
-      formData.append('platform', selectedPlatform)
-      formData.append('name', name)
-      const res = await fetch('/api/process', {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}` },
-        body: formData,
-      })
-      if (!res.ok) continue
-      const resBlob = await res.blob()
-      const url = URL.createObjectURL(resBlob)
-      const a = document.createElement('a')
-      a.href = url
-      const baseName = name.replace(/\.[^.]+$/, '')
-      a.download = `metaclean_${baseName}_${selectedPlatform}.zip`
-      a.click()
-      URL.revokeObjectURL(url)
+    try {
+      const { data } = await supabase.auth.getSession()
+      const token = data.session?.access_token
+      // Read all files into memory first so deleting them from disk mid-process doesn't hang
+      const fileSnapshots = await Promise.all(
+        files.map(async (file) => ({
+          blob: new Blob([await file.arrayBuffer()], { type: file.type }),
+          name: file.name,
+        }))
+      )
+      let downloaded = 0
+      for (const { blob, name } of fileSnapshots) {
+        const formData = new FormData()
+        formData.append('image', blob, name)
+        formData.append('platform', selectedPlatform)
+        formData.append('name', name)
+        const res = await fetch('/api/process', {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${token}` },
+          body: formData,
+        })
+        if (!res.ok) continue
+        const resBlob = await res.blob()
+        const url = URL.createObjectURL(resBlob)
+        const a = document.createElement('a')
+        a.href = url
+        const baseName = name.replace(/\.[^.]+$/, '')
+        a.download = `metaclean_${baseName}_${selectedPlatform}.zip`
+        document.body.appendChild(a)
+        a.click()
+        document.body.removeChild(a)
+        setTimeout(() => URL.revokeObjectURL(url), 1000)
+        downloaded++
+      }
+      if (downloaded > 0) setDone(true)
+    } catch (err) {
+      console.error('processImages error:', err)
+    } finally {
+      setProcessing(false)
     }
-    setProcessing(false)
-    setDone(true)
   }
 
   const processCleanHome = async () => {
     if (!session) { setShowGate(true); return }
     setCleanProcessing(true)
-    const { data } = await supabase.auth.getSession()
-    const token = data.session?.access_token
-    // Read all files into memory first so deleting them from disk mid-process doesn't hang
-    const cleanSnapshots = await Promise.all(
-      cleanFiles.map(async (file) => ({
-        blob: new Blob([await file.arrayBuffer()], { type: file.type }),
-        name: file.name,
-      }))
-    )
-    const results = []
-    for (const { blob: fileBlob, name } of cleanSnapshots) {
-      const formData = new FormData()
-      formData.append('file', fileBlob, name)
-      formData.append('name', name)
-      const res = await fetch('/api/clean', {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}` },
-        body: formData,
-      })
-      if (!res.ok) continue
-      const resBlob = await res.blob()
-      const cd = res.headers.get('Content-Disposition') || ''
-      const nameMatch = cd.match(/filename="(.+?)"/)
-      results.push({ blob: resBlob, name: nameMatch?.[1] || `clean_${name}` })
+    try {
+      const { data } = await supabase.auth.getSession()
+      const token = data.session?.access_token
+      // Read all files into memory first so deleting them from disk mid-process doesn't hang
+      const cleanSnapshots = await Promise.all(
+        cleanFiles.map(async (file) => ({
+          blob: new Blob([await file.arrayBuffer()], { type: file.type }),
+          name: file.name,
+        }))
+      )
+      const results = []
+      for (const { blob: fileBlob, name } of cleanSnapshots) {
+        const formData = new FormData()
+        formData.append('file', fileBlob, name)
+        formData.append('name', name)
+        const res = await fetch('/api/clean', {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${token}` },
+          body: formData,
+        })
+        if (!res.ok) continue
+        const resBlob = await res.blob()
+        const cd = res.headers.get('Content-Disposition') || ''
+        const nameMatch = cd.match(/filename="(.+?)"/)
+        results.push({ blob: resBlob, name: nameMatch?.[1] || `clean_${name}` })
+      }
+      if (results.length === 1) {
+        const url = URL.createObjectURL(results[0].blob)
+        const a = document.createElement('a')
+        a.href = url; a.download = results[0].name
+        document.body.appendChild(a)
+        a.click()
+        document.body.removeChild(a)
+        setTimeout(() => URL.revokeObjectURL(url), 1000)
+        setCleanDone(true)
+      } else if (results.length > 1) {
+        const JSZip = (await import('jszip')).default
+        const zip = new JSZip()
+        results.forEach(r => zip.file(r.name, r.blob))
+        const zipBlob = await zip.generateAsync({ type: 'blob' })
+        const url = URL.createObjectURL(zipBlob)
+        const a = document.createElement('a')
+        a.href = url; a.download = 'metaclean_cleaned.zip'
+        document.body.appendChild(a)
+        a.click()
+        document.body.removeChild(a)
+        setTimeout(() => URL.revokeObjectURL(url), 1000)
+        setCleanDone(true)
+      }
+    } catch (err) {
+      console.error('processCleanHome error:', err)
+    } finally {
+      setCleanProcessing(false)
     }
-    if (results.length === 1) {
-      const url = URL.createObjectURL(results[0].blob)
-      const a = document.createElement('a')
-      a.href = url; a.download = results[0].name; a.click()
-      URL.revokeObjectURL(url)
-    } else if (results.length > 1) {
-      const JSZip = (await import('jszip')).default
-      const zip = new JSZip()
-      results.forEach(r => zip.file(r.name, r.blob))
-      const zipBlob = await zip.generateAsync({ type: 'blob' })
-      const url = URL.createObjectURL(zipBlob)
-      const a = document.createElement('a')
-      a.href = url; a.download = 'metaclean_cleaned.zip'; a.click()
-      URL.revokeObjectURL(url)
-    }
-    setCleanProcessing(false)
-    setCleanDone(true)
   }
 
   const features = [
