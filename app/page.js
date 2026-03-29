@@ -5,6 +5,12 @@ import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import SiteNav from '@/app/components/SiteNav'
 
+const cycleWords = {
+  en: ['rejected.', 'disapproved.', 'flagged.', 'too large.', 'low quality.'],
+  pt: ['rejeitados.', 'reprovados.', 'bloqueados.', 'grandes demais.', 'com má qualidade.'],
+  es: ['rechazados.', 'desaprobados.', 'bloqueados.', 'demasiado grandes.', 'de mala calidad.'],
+}
+
 const t = {
   en: {
     nav_features: 'Features', nav_pricing: 'Pricing', nav_cta: 'Get started', nav_dashboard: 'Dashboard',
@@ -56,7 +62,7 @@ const t = {
   pt: {
     nav_features: 'Funcionalidades', nav_pricing: 'Preços', nav_cta: 'Começar', nav_dashboard: 'Dashboard',
     badge: 'Usado por +500 anunciantes',
-    hero1: 'Os teus anúncios continuam', hero2: 'a ser rejeitados.',
+    hero1: 'Os teus anúncios continuam a ser', hero2: 'rejeitados.',
     hero3: 'Nós resolvemos isso.',
     subtitle: 'Remove metadata, redimensiona para todos os formatos e limpa os teus criativos automaticamente. Um clique. Funciona no Meta, Google, TikTok e mais.',
     drop: 'Arrasta imagens aqui', drop_sub: 'PNG, JPG, WEBP · Até 50MB cada',
@@ -388,6 +394,8 @@ export default function Home() {
   const [done, setDone] = useState(false)
   const [dragging, setDragging] = useState(false)
   const [lang, setLang] = useState('en')
+  const [wordIdx, setWordIdx] = useState(0)
+  const [wordVisible, setWordVisible] = useState(true)
   const [selectedPlatform, setSelectedPlatform] = useState('meta')
   const [session, setSession] = useState(null)
   const [showGate, setShowGate] = useState(false)
@@ -399,6 +407,18 @@ export default function Home() {
   const [cleanDone, setCleanDone] = useState(false)
   const cleanFileInputRef = useRef(null)
   const i = t[lang]
+
+  useEffect(() => {
+    const words = cycleWords[lang]
+    const cycle = setInterval(() => {
+      setWordVisible(false)
+      setTimeout(() => {
+        setWordIdx(idx => (idx + 1) % words.length)
+        setWordVisible(true)
+      }, 300)
+    }, 2800)
+    return () => clearInterval(cycle)
+  }, [lang])
 
   useEffect(() => {
     const saved = localStorage.getItem('metaclean_lang')
@@ -597,21 +617,24 @@ export default function Home() {
           <h1 className="font-bold mb-5 sm:mb-6 tracking-tight leading-[1.05]" style={{fontSize: 'clamp(30px, 5vw, 72px)'}}>
             <span className="text-gray-100">{i.hero1}</span><br />
             <span
-              onMouseMove={(e) => {
-                const rect = e.currentTarget.getBoundingClientRect()
-                const x = ((e.clientX - rect.left) / rect.width) * 100
-                e.currentTarget.style.backgroundPosition = `${x}% 50%`
-              }}
               style={{
+                display: 'inline-block',
                 background: 'linear-gradient(135deg, #38bdf8, #6366f1, #e879f9, #38bdf8)',
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
                 backgroundClip: 'text',
                 backgroundSize: '300% 300%',
                 backgroundPosition: '0% 50%',
-                transition: 'background-position 0.05s ease',
+                opacity: wordVisible ? 1 : 0,
+                transform: wordVisible ? 'translateY(0)' : 'translateY(-10px)',
+                transition: wordVisible
+                  ? 'opacity 0.4s cubic-bezier(0.16,1,0.3,1), transform 0.4s cubic-bezier(0.16,1,0.3,1)'
+                  : 'opacity 0.25s ease, transform 0.25s ease',
               }}
-            ><span style={{textTransform: 'uppercase'}}>R</span>{i.hero2.slice(1)}</span>
+            >
+              <span style={{textTransform: 'uppercase'}}>{cycleWords[lang][wordIdx].charAt(0)}</span>
+              {cycleWords[lang][wordIdx].slice(1)}
+            </span>
             <br />
             <span className="text-gray-100">{i.hero3}</span>
           </h1>
