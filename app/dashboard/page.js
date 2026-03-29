@@ -1022,46 +1022,66 @@ function DashboardInner() {
   }
 
   const extractFileMeta = async (file) => {
+    // Always-available info from the browser
+    const fmtBytes = (b) => b >= 1048576 ? `${(b / 1048576).toFixed(1)} MB` : `${Math.round(b / 1024)} KB`
+    const ext = file.name.split('.').pop()?.toUpperCase() || 'IMG'
+    const filesize = fmtBytes(file.size)
+    const filetype = `${ext} · ${filesize}`
+    const modified = file.lastModified
+      ? new Date(file.lastModified).toISOString().replace('T', '  ').slice(0, 19)
+      : null
+
+    // Image dimensions via browser
+    let dimensions = null
+    try {
+      const url = URL.createObjectURL(file)
+      await new Promise((resolve) => {
+        const img = new Image()
+        img.onload = () => { dimensions = `${img.naturalWidth} × ${img.naturalHeight} px`; resolve() }
+        img.onerror = resolve
+        img.src = url
+      })
+      URL.revokeObjectURL(url)
+    } catch {}
+
+    // EXIF (may be empty for screenshots / already-edited images)
+    let exif = null
     try {
       const exifr = (await import('exifr')).default
-      const exif = await exifr.parse(file, {
+      exif = await exifr.parse(file, {
         pick: ['Make', 'Model', 'ISO', 'FNumber', 'ExposureTime', 'DateTimeOriginal',
                'Software', 'Copyright', 'GPSLatitude', 'GPSLongitude', 'GPSAltitude',
                'ColorSpace', 'XResolution'],
       })
-      if (!exif) return null
+    } catch {}
 
-      const formatGPS = (lat, lon) => {
-        if (lat == null || lon == null) return null
-        const latStr = `${Math.abs(lat).toFixed(3)}°${lat >= 0 ? 'N' : 'S'}`
-        const lonStr = `${Math.abs(lon).toFixed(3)}°${lon >= 0 ? 'E' : 'W'}`
-        return `GPS · ${latStr}, ${lonStr}`
-      }
-      const formatShutter = (t) => {
-        if (!t) return null
-        return t < 1 ? `1/${Math.round(1/t)}s` : `${t}s`
-      }
-      const formatDate = (d) => {
-        if (!d) return null
-        const dt = typeof d === 'string' ? new Date(d.replace(':', '-').replace(':', '-')) : d
-        if (isNaN(dt)) return null
-        return dt.toISOString().replace('T', '  ').slice(0, 19)
-      }
+    const formatGPS = (lat, lon) => {
+      if (lat == null || lon == null) return null
+      return `GPS · ${Math.abs(lat).toFixed(3)}°${lat >= 0 ? 'N' : 'S'}, ${Math.abs(lon).toFixed(3)}°${lon >= 0 ? 'E' : 'W'}`
+    }
+    const formatShutter = (t) => {
+      if (!t) return null
+      return t < 1 ? `1/${Math.round(1/t)}s` : `${t}s`
+    }
+    const formatDate = (d) => {
+      if (!d) return null
+      const dt = typeof d === 'string' ? new Date(d.replace(':', '-').replace(':', '-')) : d
+      if (isNaN(dt)) return null
+      return dt.toISOString().replace('T', '  ').slice(0, 19)
+    }
 
-      return {
-        gps:      formatGPS(exif.GPSLatitude, exif.GPSLongitude),
-        aperture: exif.FNumber        ? `f/${exif.FNumber}` : null,
-        shutter:  formatShutter(exif.ExposureTime),
-        iso:      exif.ISO            ? `ISO · ${exif.ISO}` : null,
-        camera:   exif.Make && exif.Model ? `${exif.Make} ${exif.Model}`.slice(0, 24) : null,
-        software: exif.Software       ? exif.Software.slice(0, 22) : null,
-        copyright:exif.Copyright      ? exif.Copyright.slice(0, 22) : null,
-        date:     formatDate(exif.DateTimeOriginal),
-        altitude: exif.GPSAltitude    ? `Altitude · ${exif.GPSAltitude.toFixed(1)} m` : null,
-        dpi:      exif.XResolution    ? `${exif.XResolution} dpi` : null,
-      }
-    } catch {
-      return null
+    return {
+      // EXIF fields — fall back to file info so tags are never empty
+      gps:       (exif && formatGPS(exif.GPSLatitude, exif.GPSLongitude)) || dimensions || 'GPS · not found',
+      aperture:  exif?.FNumber ? `f/${exif.FNumber}` : null,
+      shutter:   formatShutter(exif?.ExposureTime),
+      iso:       exif?.ISO ? `ISO · ${exif.ISO}` : filesize,
+      camera:    (exif?.Make && exif?.Model) ? `${exif.Make} ${exif.Model}`.slice(0, 24) : filetype,
+      software:  exif?.Software ? exif.Software.slice(0, 22) : (dimensions || '—'),
+      copyright: exif?.Copyright ? exif.Copyright.slice(0, 22) : 'No copyright tag',
+      date:      formatDate(exif?.DateTimeOriginal) || modified || '—',
+      altitude:  exif?.GPSAltitude ? `Altitude · ${exif.GPSAltitude.toFixed(1)} m` : 'No GPS altitude',
+      dpi:       exif?.XResolution ? `${exif.XResolution} dpi` : 'No DPI tag',
     }
   }
 
