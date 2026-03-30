@@ -125,6 +125,7 @@ export default function SiteNav() {
         <div className="flex items-center gap-2 sm:gap-5">
           {navLink('/features', 'Features')}
           {navLink('/pricing', 'Pricing')}
+          {navLink('/blog', 'Blog')}
           {!session && mounted && navLink('/login', 'Login')}
 
           {/* Language selector */}
@@ -179,6 +180,7 @@ export default function SiteNav() {
           <div className="px-4 py-2 space-y-1">
             {mobileLink('/features', 'Features')}
             {mobileLink('/pricing', 'Pricing')}
+            {mobileLink('/blog', 'Blog')}
             {mobileAuthCta}
           </div>
         </div>
