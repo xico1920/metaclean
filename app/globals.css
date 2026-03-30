@@ -117,3 +117,6 @@ body {
   transform: scale(1.02);
 }
 .btn-glow:active { transform: scale(0.98); }
+
+/* ── Blog card hover ────────────────────────────────────────────────────────── */
+.blog-card:hover { border-color: rgba(99,102,241,0.3) !important; }

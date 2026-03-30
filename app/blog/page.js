@@ -87,16 +87,13 @@ export default function BlogIndex() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           {posts.map(post => (
             <Link key={post.slug} href={`/blog/${post.slug}`} style={{ textDecoration: 'none' }}>
-              <div style={{
+              <div className="blog-card" style={{
                 background: '#0d0d14',
                 border: '1px solid rgba(255,255,255,0.06)',
                 borderRadius: 14,
                 padding: '24px 28px',
                 transition: 'border-color 0.2s ease',
-              }}
-              onMouseEnter={e => e.currentTarget.style.borderColor = 'rgba(99,102,241,0.3)'}
-              onMouseLeave={e => e.currentTarget.style.borderColor = 'rgba(255,255,255,0.06)'}
-              >
+              }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
                   <span style={{ fontSize: 11, fontWeight: 600, color: post.tagColor || '#818cf8', background: post.tagBg || 'rgba(99,102,241,0.1)', border: `1px solid ${post.tagBorder || 'rgba(99,102,241,0.2)'}`, borderRadius: 6, padding: '2px 8px', letterSpacing: '0.3px' }}>{post.tag}</span>
                   <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.25)' }}>{post.date}</span>
