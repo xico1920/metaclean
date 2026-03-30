@@ -151,41 +151,50 @@ export async function POST(request) {
 
     // ── Auth ──────────────────────────────────────────────────────────────────
     const authHeader = request.headers.get('Authorization')
+    const GUEST_LIMIT = 2
+
+    // Guest mode — no token, allow up to GUEST_LIMIT images (tracked client-side)
     if (!authHeader?.startsWith('Bearer ')) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-    const token = authHeader.slice(7)
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token)
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+      const guestCount = parseInt(request.headers.get('X-Guest-Count') || '0', 10)
+      if (guestCount >= GUEST_LIMIT) {
+        return NextResponse.json({ error: 'Guest limit reached', guestLimitReached: true }, { status: 403 })
+      }
+      // Skip profile/limit logic — fall through to processing below
+    } else {
+      // ── Authenticated user ────────────────────────────────────────────────
+      const token = authHeader.slice(7)
+      const { data: { user }, error: authError } = await supabase.auth.getUser(token)
+      if (authError || !user) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      }
 
-    // ── Profile + daily reset ─────────────────────────────────────────────────
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', user.id)
-      .single()
-
-    if (!profile) {
-      return NextResponse.json({ error: 'Profile not found' }, { status: 404 })
-    }
-
-    const today = new Date().toISOString().split('T')[0]
-    let imagesUsed = profile.images_used_today
-
-    if (profile.last_reset_date !== today) {
-      imagesUsed = 0
-      await supabase
+      // ── Profile + daily reset ───────────────────────────────────────────────
+      const { data: profile } = await supabase
         .from('profiles')
-        .update({ images_used_today: 0, last_reset_date: today })
+        .select('*')
         .eq('id', user.id)
-    }
+        .single()
 
-    // ── Usage limit check ─────────────────────────────────────────────────────
-    const isAdmin = user.email === process.env.ADMIN_EMAIL
-    if (!isAdmin && profile.plan === 'free' && imagesUsed >= FREE_LIMIT) {
-      return NextResponse.json({ error: 'Daily limit reached', limitReached: true }, { status: 403 })
+      if (!profile) {
+        return NextResponse.json({ error: 'Profile not found' }, { status: 404 })
+      }
+
+      const today = new Date().toISOString().split('T')[0]
+      let imagesUsed = profile.images_used_today
+
+      if (profile.last_reset_date !== today) {
+        imagesUsed = 0
+        await supabase
+          .from('profiles')
+          .update({ images_used_today: 0, last_reset_date: today })
+          .eq('id', user.id)
+      }
+
+      // ── Usage limit check ─────────────────────────────────────────────────
+      const isAdmin = user.email === process.env.ADMIN_EMAIL
+      if (!isAdmin && profile.plan === 'free' && imagesUsed >= FREE_LIMIT) {
+        return NextResponse.json({ error: 'Daily limit reached', limitReached: true }, { status: 403 })
+      }
     }
 
     // ── Process ───────────────────────────────────────────────────────────────
