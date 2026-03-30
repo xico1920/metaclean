@@ -407,15 +407,6 @@ export default function Home() {
   const [cleanDone, setCleanDone] = useState(false)
   const cleanFileInputRef = useRef(null)
 
-  // Guest mode — 2 free files total (shared across ad + clean modes)
-  const GUEST_LIMIT = 2
-  const [guestCount, setGuestCount] = useState(() => {
-    if (typeof window === 'undefined') return 0
-    return parseInt(localStorage.getItem('metaclean_guest_count') || '0', 10)
-  })
-  const [guestWarning, setGuestWarning] = useState('') // shown when drop exceeds remaining
-  const [showGuestDone, setShowGuestDone] = useState(false) // show gate after limit used
-
   const i = t[lang]
 
   useEffect(() => {
@@ -474,24 +465,8 @@ export default function Home() {
   }
 
   const interceptFiles = (incomingFiles) => {
-    if (session) {
-      setFiles(incomingFiles)
-      setDone(false)
-      return
-    }
-    // Guest mode: cap at remaining quota
-    const remaining = GUEST_LIMIT - guestCount
-    if (remaining <= 0) {
-      storeFilesForAfterAuth(incomingFiles)
-      setShowGate(true)
-      if (fileInputRef.current) fileInputRef.current.value = ''
-      return
-    }
-    const capped = incomingFiles.slice(0, remaining)
-    setFiles(capped)
-    setDone(false)
-    setGuestWarning(incomingFiles.length > remaining ? `Only ${remaining} file${remaining === 1 ? '' : 's'} allowed on the free trial — sign up for more.` : '')
-    if (fileInputRef.current) fileInputRef.current.value = ''
+    storeFilesForAfterAuth(incomingFiles)
+    router.push('/dashboard')
   }
 
   const handleFiles = (e) => interceptFiles(Array.from(e.target.files))
@@ -502,66 +477,36 @@ export default function Home() {
   }
 
   const processImages = async () => {
+    if (!session) { storeFilesForAfterAuth(files); router.push('/dashboard'); return }
     setProcessing(true)
-    setGuestWarning('')
     try {
       const { data } = await supabase.auth.getSession()
       const token = data.session?.access_token
-      const fileSnapshots = await Promise.all(
-        files.map(async (file) => ({
-          blob: new Blob([await file.arrayBuffer()], { type: file.type }),
-          name: file.name,
-        }))
-      )
+      const fileSnapshots = await Promise.all(files.map(async (file) => ({ blob: new Blob([await file.arrayBuffer()], { type: file.type }), name: file.name })))
       let downloaded = 0
-      let currentGuest = guestCount
       for (const { blob, name } of fileSnapshots) {
         const formData = new FormData()
         formData.append('image', blob, name)
         formData.append('platform', selectedPlatform)
         formData.append('name', name)
-        const headers = token
-          ? { 'Authorization': `Bearer ${token}` }
-          : { 'X-Guest-Count': String(currentGuest) }
-        const res = await fetch('/api/process', { method: 'POST', headers, body: formData })
-        if (!res.ok) {
-          const err = await res.json().catch(() => ({}))
-          if (err.guestLimitReached) { storeFilesForAfterAuth(files); setShowGate(true); break }
-          continue
-        }
-        // Increment guest counter per file processed
-        if (!token) {
-          currentGuest++
-          localStorage.setItem('metaclean_guest_count', String(currentGuest))
-          setGuestCount(currentGuest)
-        }
+        const res = await fetch('/api/process', { method: 'POST', headers: { 'Authorization': `Bearer ${token}` }, body: formData })
+        if (!res.ok) continue
         const resBlob = await res.blob()
         const url = URL.createObjectURL(resBlob)
         const a = document.createElement('a')
-        a.href = url
-        const baseName = name.replace(/\.[^.]+$/, '')
-        a.download = `metaclean_${baseName}_${selectedPlatform}.zip`
+        a.href = url; a.download = `metaclean_${name.replace(/\.[^.]+$/, '')}_${selectedPlatform}.zip`
         document.body.appendChild(a); a.click(); document.body.removeChild(a)
         setTimeout(() => URL.revokeObjectURL(url), 1000)
         downloaded++
       }
-      if (downloaded > 0) {
-        setDone(true)
-        // After using all guest quota, show signup gate
-        if (!token && currentGuest >= GUEST_LIMIT) {
-          setTimeout(() => setShowGate(true), 1200)
-        }
-      }
-    } catch (err) {
-      console.error('processImages error:', err)
-    } finally {
-      setProcessing(false)
-    }
+      if (downloaded > 0) setDone(true)
+    } catch (err) { console.error('processImages error:', err) }
+    finally { setProcessing(false) }
   }
 
   const processCleanHome = async () => {
+    if (!session) { storeFilesForAfterAuth(cleanFiles); router.push('/dashboard'); return }
     setCleanProcessing(true)
-    setGuestWarning('')
     try {
       const { data } = await supabase.auth.getSession()
       const token = data.session?.access_token
@@ -573,28 +518,12 @@ export default function Home() {
         }))
       )
       const results = []
-      let currentGuest = guestCount
       for (const { blob: fileBlob, name } of cleanSnapshots) {
-        // Guest: check quota before each file
-        if (!token && currentGuest >= GUEST_LIMIT) {
-          storeFilesForAfterAuth(cleanFiles)
-          setShowGate(true)
-          break
-        }
         const formData = new FormData()
         formData.append('file', fileBlob, name)
         formData.append('name', name)
-        const res = await fetch('/api/clean', {
-          method: 'POST',
-          headers: token ? { 'Authorization': `Bearer ${token}` } : {},
-          body: formData,
-        })
+        const res = await fetch('/api/clean', { method: 'POST', headers: { 'Authorization': `Bearer ${token}` }, body: formData })
         if (!res.ok) continue
-        if (!token) {
-          currentGuest++
-          localStorage.setItem('metaclean_guest_count', String(currentGuest))
-          setGuestCount(currentGuest)
-        }
         const resBlob = await res.blob()
         const cd = res.headers.get('Content-Disposition') || ''
         const nameMatch = cd.match(/filename="(.+?)"/)
@@ -622,11 +551,6 @@ export default function Home() {
         document.body.removeChild(a)
         setTimeout(() => URL.revokeObjectURL(url), 1000)
         setCleanDone(true)
-      }
-      // After using all guest quota, show gate
-      if (!token && results.length > 0) {
-        const finalCount = parseInt(localStorage.getItem('metaclean_guest_count') || '0', 10)
-        if (finalCount >= GUEST_LIMIT) setTimeout(() => setShowGate(true), 1200)
       }
     } catch (err) {
       console.error('processCleanHome error:', err)
@@ -795,11 +719,6 @@ export default function Home() {
                     </div>
                   ))}
                 </div>
-                {guestWarning ? (
-                  <div className="mb-4 text-center text-[12px] px-3 py-2 rounded-lg" style={{background: 'rgba(251,191,36,0.07)', border: '1px solid rgba(251,191,36,0.2)', color: '#fbbf24'}}>
-                    {guestWarning} <button onClick={() => setShowGate(true)} className="underline ml-1">Sign up free</button>
-                  </div>
-                ) : null}
                 <div className="flex items-center justify-center gap-3 flex-wrap">
                   <button onClick={processImages} disabled={processing} {...glowHandlers} className="inline-flex items-center gap-2.5 px-7 sm:px-9 py-3.5 rounded-xl text-sm font-semibold text-white disabled:opacity-40" style={glowStyle}>
                     {processing ? <><IconSpin />{i.processing}</> : <><IconDownload />{i.process}</>}
@@ -816,7 +735,7 @@ export default function Home() {
           </div>
           ) : (
           <div
-            onDrop={(e) => { e.preventDefault(); setCleanDragging(false); const f = Array.from(e.dataTransfer.files); if (!session) { const remaining = GUEST_LIMIT - guestCount; if (remaining <= 0) { storeFilesForAfterAuth(f); setShowGate(true); return }; const capped = f.slice(0, remaining); setCleanFiles(prev => [...prev, ...capped]); setCleanDone(false); if (f.length > remaining) setGuestWarning(`Only ${remaining} file${remaining === 1 ? '' : 's'} allowed on the free trial.`); return }; setCleanFiles(prev => [...prev, ...f]); setCleanDone(false) }}
+            onDrop={(e) => { e.preventDefault(); setCleanDragging(false); const f = Array.from(e.dataTransfer.files); if (!session) { storeFilesForAfterAuth(f); router.push('/dashboard'); return }; setCleanFiles(prev => [...prev, ...f]); setCleanDone(false) }}
             onDragOver={(e) => { e.preventDefault(); setCleanDragging(true) }}
             onDragLeave={() => setCleanDragging(false)}
             className="rounded-2xl transition-all duration-300 mb-4 px-5 py-10 sm:px-10 sm:py-14"
@@ -840,7 +759,7 @@ export default function Home() {
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
                   {i.clean_select}
-                  <input ref={cleanFileInputRef} type="file" multiple className="hidden" onChange={(e) => { const f = Array.from(e.target.files); if (!session) { const remaining = GUEST_LIMIT - guestCount; if (remaining <= 0) { storeFilesForAfterAuth(f); setShowGate(true); return }; const capped = f.slice(0, remaining); setCleanFiles(prev => [...prev, ...capped]); setCleanDone(false); if (f.length > remaining) setGuestWarning(`Only ${remaining} file${remaining === 1 ? '' : 's'} allowed on the free trial.`); return }; setCleanFiles(prev => [...prev, ...f]); setCleanDone(false) }} />
+                  <input ref={cleanFileInputRef} type="file" multiple className="hidden" onChange={(e) => { const f = Array.from(e.target.files); if (!session) { storeFilesForAfterAuth(f); router.push('/dashboard'); return }; setCleanFiles(prev => [...prev, ...f]); setCleanDone(false) }} />
                 </label>
               </>
             ) : (
