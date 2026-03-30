@@ -1519,10 +1519,12 @@ function DashboardInner() {
             )}
           </div>
 
-          {/* Sign out — desktop only */}
-          <button onClick={handleSignOut} className="hidden sm:block text-[12px] text-gray-500 hover:text-gray-300 transition-colors px-2 py-1.5">
-            {i.signout}
-          </button>
+          {/* Sign out — desktop only, logged-in users only */}
+          {user && (
+            <button onClick={handleSignOut} className="hidden sm:block text-[12px] text-gray-500 hover:text-gray-300 transition-colors px-2 py-1.5">
+              {i.signout}
+            </button>
+          )}
 
           {/* Hamburger — mobile only */}
           <button
@@ -1555,13 +1557,15 @@ function DashboardInner() {
               </div>
             )}
             <div className="px-4 py-1">
-              <button
-                onClick={() => { handleSignOut(); setMenuOpen(false) }}
-                className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-[13px] text-gray-400 hover:text-white hover:bg-white/[0.04] transition-all text-left"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9" /></svg>
-                {i.signout}
-              </button>
+              {user && (
+                <button
+                  onClick={() => { handleSignOut(); setMenuOpen(false) }}
+                  className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-[13px] text-gray-400 hover:text-white hover:bg-white/[0.04] transition-all text-left"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9" /></svg>
+                  {i.signout}
+                </button>
+              )}
             </div>
           </div>
         )}
