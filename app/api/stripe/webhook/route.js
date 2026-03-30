@@ -25,6 +25,20 @@ export async function POST(request) {
         .from('profiles')
         .update({ plan: 'pro', stripe_subscription_id: session.subscription })
         .eq('id', userId)
+
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('email')
+        .eq('id', userId)
+        .single()
+      if (profile?.email) {
+        const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://metaclean.pro'
+        fetch(`${appUrl}/api/email/upgrade`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: profile.email }),
+        }).catch(() => {})
+      }
     }
   }
 

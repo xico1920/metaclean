@@ -157,6 +157,11 @@ export default function Login() {
             images_used_today: 0,
             last_reset_date: new Date().toISOString().split('T')[0],
           })
+          fetch('/api/email/welcome', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email }),
+          }).catch(() => {})
         }
       }
       router.push('/dashboard')
