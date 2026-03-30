@@ -3,6 +3,45 @@ import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import SiteNav from '@/app/components/SiteNav'
 
+const t = {
+  en: {
+    label: 'Ad Creative Guides',
+    h1a: 'Everything you need',
+    h1b: 'to run better ads.',
+    sub: 'Practical guides on ad image specs, metadata, creative optimization — for every platform that matters.',
+    featured: 'Featured',
+    readMore: 'Read more',
+    readArticle: 'Read article',
+    ctaTitle: 'Ready to put this into practice?',
+    ctaSub: 'Strip metadata and resize to every ad format — free, no account needed.',
+    ctaBtn: 'Try MetaClean free →',
+  },
+  pt: {
+    label: 'Guias de Criativos',
+    h1a: 'Tudo o que precisas',
+    h1b: 'para anúncios melhores.',
+    sub: 'Guias práticos sobre tamanhos de imagens, metadados e otimização de criativos — para todas as plataformas.',
+    featured: 'Destaque',
+    readMore: 'Ler mais',
+    readArticle: 'Ler artigo',
+    ctaTitle: 'Pronto para pôr isto em prática?',
+    ctaSub: 'Remove metadados e redimensiona para todos os formatos — grátis, sem conta necessária.',
+    ctaBtn: 'Experimenta o MetaClean →',
+  },
+  es: {
+    label: 'Guías de Creativos',
+    h1a: 'Todo lo que necesitas',
+    h1b: 'para mejores anuncios.',
+    sub: 'Guías prácticas sobre tamaños de imágenes, metadatos y optimización de creativos — para todas las plataformas.',
+    featured: 'Destacado',
+    readMore: 'Leer más',
+    readArticle: 'Leer artículo',
+    ctaTitle: '¿Listo para ponerlo en práctica?',
+    ctaSub: 'Elimina metadatos y redimensiona a todos los formatos — gratis, sin cuenta necesaria.',
+    ctaBtn: 'Prueba MetaClean gratis →',
+  },
+}
+
 const posts = [
   {
     slug: 'why-meta-rejects-ads',
@@ -84,7 +123,7 @@ function useVisible(threshold = 0.15) {
   return [ref, visible]
 }
 
-function FeaturedCard({ post }) {
+function FeaturedCard({ post, i }) {
   const [ref, visible] = useVisible(0.1)
   const [hovered, setHovered] = useState(false)
   return (
@@ -120,7 +159,7 @@ function FeaturedCard({ post }) {
               fontSize: 10, fontWeight: 700, letterSpacing: '0.8px', textTransform: 'uppercase',
               color: '#fbbf24', background: 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.2)',
               borderRadius: 6, padding: '3px 9px',
-            }}>Featured</span>
+            }}>{i.featured}</span>
             <span style={{ fontSize: 11, fontWeight: 600, color: post.tagColor, background: post.tagBg, border: `1px solid ${post.tagBorder}`, borderRadius: 6, padding: '3px 9px' }}>{post.tag}</span>
             <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.2)' }}>·</span>
             <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)' }}>{post.readTime}</span>
@@ -134,7 +173,7 @@ function FeaturedCard({ post }) {
           </p>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <span style={{ fontSize: 13, color: hovered ? '#a5b4fc' : 'rgba(255,255,255,0.35)', transition: 'color 0.2s ease', fontWeight: 500 }}>Read article</span>
+            <span style={{ fontSize: 13, color: hovered ? '#a5b4fc' : 'rgba(255,255,255,0.35)', transition: 'color 0.2s ease', fontWeight: 500 }}>{i.readArticle}</span>
             <svg width="14" height="14" fill="none" stroke={hovered ? '#a5b4fc' : 'rgba(255,255,255,0.35)'} strokeWidth="2" viewBox="0 0 24 24" style={{ transition: 'all 0.2s ease', transform: hovered ? 'translateX(3px)' : 'none' }}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
             </svg>
@@ -145,7 +184,7 @@ function FeaturedCard({ post }) {
   )
 }
 
-function PostCard({ post, delay = 0 }) {
+function PostCard({ post, delay = 0, i }) {
   const [ref, visible] = useVisible(0.1)
   const [hovered, setHovered] = useState(false)
   return (
@@ -181,7 +220,7 @@ function PostCard({ post, delay = 0 }) {
           </p>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-            <span style={{ fontSize: 12, color: hovered ? '#a5b4fc' : 'rgba(255,255,255,0.25)', transition: 'color 0.2s', fontWeight: 500 }}>Read more</span>
+            <span style={{ fontSize: 12, color: hovered ? '#a5b4fc' : 'rgba(255,255,255,0.25)', transition: 'color 0.2s', fontWeight: 500 }}>{i.readMore}</span>
             <svg width="12" height="12" fill="none" stroke={hovered ? '#a5b4fc' : 'rgba(255,255,255,0.25)'} strokeWidth="2" viewBox="0 0 24 24" style={{ transition: 'all 0.2s', transform: hovered ? 'translateX(2px)' : 'none' }}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
             </svg>
@@ -194,8 +233,18 @@ function PostCard({ post, delay = 0 }) {
 
 export default function BlogIndex() {
   const [heroVisible, setHeroVisible] = useState(false)
-  useEffect(() => { setTimeout(() => setHeroVisible(true), 60) }, [])
+  const [lang, setLang] = useState('en')
 
+  useEffect(() => {
+    setTimeout(() => setHeroVisible(true), 60)
+    const saved = localStorage.getItem('metaclean_lang')
+    if (saved && ['en', 'pt', 'es'].includes(saved)) setLang(saved)
+    const onLang = (e) => setLang(e.detail)
+    window.addEventListener('metaclean:lang', onLang)
+    return () => window.removeEventListener('metaclean:lang', onLang)
+  }, [])
+
+  const i = t[lang]
   const featured = posts.find(p => p.featured)
   const rest = posts.filter(p => !p.featured)
 
@@ -219,20 +268,20 @@ export default function BlogIndex() {
             {/* Label */}
             <div style={{ display: 'inline-flex', alignItems: 'center', gap: 7, background: 'rgba(99,102,241,0.08)', border: '1px solid rgba(99,102,241,0.18)', borderRadius: 99, padding: '5px 14px', marginBottom: 24 }}>
               <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#6366f1', boxShadow: '0 0 8px rgba(99,102,241,0.8)' }} />
-              <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', fontWeight: 500, letterSpacing: '0.3px' }}>Ad Creative Guides</span>
+              <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', fontWeight: 500, letterSpacing: '0.3px' }}>{i.label}</span>
             </div>
 
             <h1 style={{ fontSize: 48, fontWeight: 800, letterSpacing: '-1.5px', lineHeight: 1.1, marginBottom: 16 }}>
-              <span style={{ color: 'white' }}>Everything you need</span><br />
+              <span style={{ color: 'white' }}>{i.h1a}</span><br />
               <span style={{
                 background: 'linear-gradient(135deg, #6366f1, #8b5cf6, #a5b4fc)',
                 WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
                 paddingBottom: '0.1em', display: 'inline-block',
-              }}>to run better ads.</span>
+              }}>{i.h1b}</span>
             </h1>
 
             <p style={{ fontSize: 16, color: 'rgba(255,255,255,0.45)', lineHeight: 1.65, maxWidth: 480, margin: 0 }}>
-              Practical guides on ad image specs, metadata, creative optimization — for every platform that matters.
+              {i.sub}
             </p>
           </div>
         </div>
@@ -247,12 +296,12 @@ export default function BlogIndex() {
       <div style={{ maxWidth: 760, margin: '0 auto', padding: '48px 24px 80px' }}>
 
         {/* Featured */}
-        {featured && <FeaturedCard post={featured} />}
+        {featured && <FeaturedCard post={featured} i={i} />}
 
         {/* Grid */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 16 }}>
           {rest.map((post, idx) => (
-            <PostCard key={post.slug} post={post} delay={idx * 60} />
+            <PostCard key={post.slug} post={post} delay={idx * 60} i={i} />
           ))}
         </div>
 
@@ -270,8 +319,8 @@ export default function BlogIndex() {
           flexWrap: 'wrap',
         }}>
           <div>
-            <p style={{ fontSize: 16, fontWeight: 700, color: 'white', marginBottom: 4, letterSpacing: '-0.3px' }}>Ready to put this into practice?</p>
-            <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.4)', margin: 0 }}>Strip metadata and resize to every ad format — free, no account needed.</p>
+            <p style={{ fontSize: 16, fontWeight: 700, color: 'white', marginBottom: 4, letterSpacing: '-0.3px' }}>{i.ctaTitle}</p>
+            <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.4)', margin: 0 }}>{i.ctaSub}</p>
           </div>
           <Link href="/dashboard" style={{
             display: 'inline-block', padding: '11px 24px',
@@ -279,7 +328,7 @@ export default function BlogIndex() {
             borderRadius: 10, fontSize: 13, fontWeight: 600, color: 'white',
             textDecoration: 'none', whiteSpace: 'nowrap', letterSpacing: '-0.2px',
           }}>
-            Try MetaClean free →
+            {i.ctaBtn}
           </Link>
         </div>
       </div>
