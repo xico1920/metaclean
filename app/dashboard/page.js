@@ -52,6 +52,15 @@ const t = {
     zip_processing: 'Processing ZIP…',
     zip_success: (n) => `${n} image${n === 1 ? '' : 's'} processed`,
     zip_limit_free: 'Free plan: max 5 images per ZIP',
+    guest_tut_title: 'Clean your ad creatives — free',
+    guest_tut_s1_t: 'Strip metadata automatically',
+    guest_tut_s1_d: 'Hidden EXIF data causes ad rejections. MetaClean removes it before your image hits the platform.',
+    guest_tut_s2_t: 'Resize to every ad format',
+    guest_tut_s2_d: 'Meta, TikTok, Google, Pinterest — get every placement size generated in one click.',
+    guest_tut_s3_t: 'Get more with a free account',
+    guest_tut_s3_d: 'Create an account to process 10 images/day, save presets, and track your conversion history.',
+    guest_tut_cta: 'Create free account',
+    guest_tut_skip: 'Continue as guest',
   },
   pt: {
     plan_free: 'Grátis', plan_pro: 'Pro',
@@ -95,6 +104,15 @@ const t = {
     zip_processing: 'A processar ZIP…',
     zip_success: (n) => `${n} imagem${n === 1 ? '' : 'ns'} processada${n === 1 ? '' : 's'}`,
     zip_limit_free: 'Plano gratuito: máx 5 imagens por ZIP',
+    guest_tut_title: 'Limpa os teus criativos — grátis',
+    guest_tut_s1_t: 'Remove metadata automaticamente',
+    guest_tut_s1_d: 'Dados EXIF ocultos causam rejeições. O MetaClean remove-os antes de a imagem chegar à plataforma.',
+    guest_tut_s2_t: 'Redimensiona para todos os formatos',
+    guest_tut_s2_d: 'Meta, TikTok, Google, Pinterest — gera todos os tamanhos de placement com um clique.',
+    guest_tut_s3_t: 'Mais com uma conta gratuita',
+    guest_tut_s3_d: 'Cria uma conta para processar 10 imagens/dia, guardar presets e ver o histórico.',
+    guest_tut_cta: 'Criar conta gratuita',
+    guest_tut_skip: 'Continuar como convidado',
   },
   es: {
     plan_free: 'Gratis', plan_pro: 'Pro',
@@ -138,6 +156,15 @@ const t = {
     zip_processing: 'Procesando ZIP…',
     zip_success: (n) => `${n} imagen${n === 1 ? '' : 'es'} procesada${n === 1 ? '' : 's'}`,
     zip_limit_free: 'Plan gratuito: máx 5 imágenes por ZIP',
+    guest_tut_title: 'Limpia tus creatividades — gratis',
+    guest_tut_s1_t: 'Elimina metadata automáticamente',
+    guest_tut_s1_d: 'Los datos EXIF ocultos causan rechazos. MetaClean los elimina antes de que la imagen llegue a la plataforma.',
+    guest_tut_s2_t: 'Redimensiona a todos los formatos',
+    guest_tut_s2_d: 'Meta, TikTok, Google, Pinterest — genera todos los tamaños de placement con un clic.',
+    guest_tut_s3_t: 'Más con una cuenta gratuita',
+    guest_tut_s3_d: 'Crea una cuenta para procesar 10 imágenes/día, guardar presets y ver tu historial.',
+    guest_tut_cta: 'Crear cuenta gratuita',
+    guest_tut_skip: 'Continuar como invitado',
   },
 }
 
@@ -859,6 +886,7 @@ function DashboardInner() {
     return parseInt(localStorage.getItem('metaclean_guest_count') || '0', 10)
   })
   const [showSignupPrompt, setShowSignupPrompt] = useState(false)
+  const [showGuestTutorial, setShowGuestTutorial] = useState(false)
 
   const i = t[lang]
 
@@ -872,6 +900,9 @@ function DashboardInner() {
     const saved = localStorage.getItem('metaclean_lang')
     if (saved && ['en', 'pt', 'es'].includes(saved)) setLang(saved)
 
+    const modeParam = searchParams.get('mode')
+    if (modeParam === 'clean') setDashMode('clean')
+
     if (new URLSearchParams(window.location.search).get('error')) {
       window.history.replaceState({}, '', window.location.pathname)
     }
@@ -880,6 +911,9 @@ function DashboardInner() {
       if (!data.session) {
         setLoading(false)
         setTimeout(() => setLoaded(true), 40)
+        if (!localStorage.getItem('metaclean_guest_tutorial_seen')) {
+          setTimeout(() => setShowGuestTutorial(true), 700)
+        }
         return
       }
       setUser(data.session.user)
@@ -1384,6 +1418,50 @@ function DashboardInner() {
 
   return (
     <main className="min-h-screen bg-[#060609] text-white" style={{fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'}}>
+
+      {/* Guest tutorial modal */}
+      {showGuestTutorial && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{background: 'rgba(6,6,9,0.88)', backdropFilter: 'blur(12px)'}}>
+          <div className="w-full max-w-md rounded-2xl p-8" style={{background: '#0d0d14', border: '1px solid rgba(255,255,255,0.09)', boxShadow: '0 32px 80px rgba(0,0,0,0.6)'}}>
+            <div className="text-center mb-6">
+              <div className="w-14 h-14 rounded-2xl mx-auto mb-5 flex items-center justify-center" style={{background: 'rgba(99,102,241,0.12)', border: '1px solid rgba(99,102,241,0.25)'}}>
+                <svg width="28" height="28" fill="none" stroke="#a5b4fc" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" /></svg>
+              </div>
+              <h2 className="text-xl font-bold text-white mb-2">{i.guest_tut_title}</h2>
+            </div>
+            <div className="space-y-4 mb-8">
+              {[
+                { n: '1', title: i.guest_tut_s1_t, desc: i.guest_tut_s1_d },
+                { n: '2', title: i.guest_tut_s2_t, desc: i.guest_tut_s2_d },
+                { n: '3', title: i.guest_tut_s3_t, desc: i.guest_tut_s3_d },
+              ].map(({ n, title, desc }) => (
+                <div key={n} className="flex gap-4">
+                  <div className="w-7 h-7 rounded-full flex items-center justify-center shrink-0 mt-0.5 text-[12px] font-bold" style={{background: 'rgba(99,102,241,0.15)', color: '#a5b4fc', border: '1px solid rgba(99,102,241,0.2)'}}>{n}</div>
+                  <div>
+                    <p className="text-white font-semibold text-[13px] mb-0.5">{title}</p>
+                    <p className="text-gray-500 text-[12px] leading-relaxed">{desc}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <a
+              href="/login"
+              onClick={() => localStorage.setItem('metaclean_guest_tutorial_seen', '1')}
+              {...glowHandlers}
+              className="block w-full py-3 rounded-xl text-[14px] font-semibold text-white text-center mb-3"
+              style={glowStyle}
+            >
+              {i.guest_tut_cta} →
+            </a>
+            <button
+              onClick={() => { setShowGuestTutorial(false); localStorage.setItem('metaclean_guest_tutorial_seen', '1') }}
+              className="block w-full py-2.5 text-[13px] text-gray-500 hover:text-gray-300 transition-colors text-center"
+            >
+              {i.guest_tut_skip}
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Guest signup prompt */}
       {showSignupPrompt && (

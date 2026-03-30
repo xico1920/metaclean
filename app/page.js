@@ -400,7 +400,7 @@ export default function Home() {
   const [session, setSession] = useState(null)
   const [showGate, setShowGate] = useState(false)
   const fileInputRef = useRef(null)
-  const [homeMode, setHomeMode] = useState('ad')
+  const homeMode = 'ad'
   const [cleanFiles, setCleanFiles] = useState([])
   const [cleanDragging, setCleanDragging] = useState(false)
   const [cleanProcessing, setCleanProcessing] = useState(false)
@@ -464,9 +464,9 @@ export default function Home() {
     } catch {}
   }
 
-  const interceptFiles = (incomingFiles) => {
+  const interceptFiles = (incomingFiles, mode = 'ad') => {
     storeFilesForAfterAuth(incomingFiles)
-    router.push('/dashboard')
+    router.push(`/dashboard?mode=${mode}`)
   }
 
   const handleFiles = (e) => interceptFiles(Array.from(e.target.files))
@@ -477,7 +477,7 @@ export default function Home() {
   }
 
   const processImages = async () => {
-    if (!session) { storeFilesForAfterAuth(files); router.push('/dashboard'); return }
+    if (!session) { storeFilesForAfterAuth(files); router.push('/dashboard?mode=ad'); return }
     setProcessing(true)
     try {
       const { data } = await supabase.auth.getSession()
@@ -505,7 +505,7 @@ export default function Home() {
   }
 
   const processCleanHome = async () => {
-    if (!session) { storeFilesForAfterAuth(cleanFiles); router.push('/dashboard'); return }
+    if (!session) { storeFilesForAfterAuth(cleanFiles); router.push('/dashboard?mode=clean'); return }
     setCleanProcessing(true)
     try {
       const { data } = await supabase.auth.getSession()
@@ -622,7 +622,7 @@ export default function Home() {
               {[['ad', i.mode_ad], ['clean', i.mode_clean]].map(([mode, label]) => (
                 <button
                   key={mode}
-                  onClick={() => { setHomeMode(mode); setFiles([]); setCleanFiles([]); setDone(false); setCleanDone(false) }}
+                  onClick={() => router.push(`/dashboard?mode=${mode}`)}
                   className="px-4 py-1.5 rounded-lg text-[13px] font-medium transition-all duration-200"
                   style={{
                     background: homeMode === mode ? 'rgba(255,255,255,0.08)' : 'transparent',
@@ -735,7 +735,7 @@ export default function Home() {
           </div>
           ) : (
           <div
-            onDrop={(e) => { e.preventDefault(); setCleanDragging(false); const f = Array.from(e.dataTransfer.files); if (!session) { storeFilesForAfterAuth(f); router.push('/dashboard'); return }; setCleanFiles(prev => [...prev, ...f]); setCleanDone(false) }}
+            onDrop={(e) => { e.preventDefault(); setCleanDragging(false); const f = Array.from(e.dataTransfer.files); if (!session) { storeFilesForAfterAuth(f); router.push('/dashboard?mode=clean'); return }; setCleanFiles(prev => [...prev, ...f]); setCleanDone(false) }}
             onDragOver={(e) => { e.preventDefault(); setCleanDragging(true) }}
             onDragLeave={() => setCleanDragging(false)}
             className="rounded-2xl transition-all duration-300 mb-4 px-5 py-10 sm:px-10 sm:py-14"
@@ -759,7 +759,7 @@ export default function Home() {
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
                   {i.clean_select}
-                  <input ref={cleanFileInputRef} type="file" multiple className="hidden" onChange={(e) => { const f = Array.from(e.target.files); if (!session) { storeFilesForAfterAuth(f); router.push('/dashboard'); return }; setCleanFiles(prev => [...prev, ...f]); setCleanDone(false) }} />
+                  <input ref={cleanFileInputRef} type="file" multiple className="hidden" onChange={(e) => { const f = Array.from(e.target.files); if (!session) { storeFilesForAfterAuth(f); router.push('/dashboard?mode=clean'); return }; setCleanFiles(prev => [...prev, ...f]); setCleanDone(false) }} />
                 </label>
               </>
             ) : (
