@@ -684,6 +684,7 @@ export default function Home() {
         <Reveal y={12}>
           {homeMode === 'ad' ? (
           <div
+            onClick={() => { if (!session) router.push('/dashboard?mode=ad') }}
             onDrop={handleDrop}
             onDragOver={(e) => { e.preventDefault(); setDragging(true) }}
             onDragLeave={() => setDragging(false)}
@@ -702,7 +703,7 @@ export default function Home() {
                 </div>
                 <p className="text-white font-semibold text-lg mb-2">{i.drop}</p>
                 <p className="text-gray-500 text-sm mb-8">{i.drop_sub}</p>
-                <label {...glowHandlers} className="inline-flex items-center gap-2 px-7 py-3 rounded-xl text-sm font-semibold text-white cursor-pointer" style={glowStyle}>
+                <label onClick={(e) => { if (!session) { e.preventDefault(); router.push('/dashboard?mode=ad') } }} {...glowHandlers} className="inline-flex items-center gap-2 px-7 py-3 rounded-xl text-sm font-semibold text-white cursor-pointer" style={glowStyle}>
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
                   {i.select}
                   <input ref={fileInputRef} type="file" multiple accept="image/*" className="hidden" onChange={handleFiles} />
@@ -735,6 +736,7 @@ export default function Home() {
           </div>
           ) : (
           <div
+            onClick={() => { if (!session) router.push('/dashboard?mode=clean') }}
             onDrop={(e) => { e.preventDefault(); setCleanDragging(false); const f = Array.from(e.dataTransfer.files); if (!session) { storeFilesForAfterAuth(f); router.push('/dashboard?mode=clean'); return }; setCleanFiles(prev => [...prev, ...f]); setCleanDone(false) }}
             onDragOver={(e) => { e.preventDefault(); setCleanDragging(true) }}
             onDragLeave={() => setCleanDragging(false)}
@@ -753,7 +755,7 @@ export default function Home() {
                 </div>
                 <p className="text-white font-semibold text-lg mb-2">{i.clean_drop}</p>
                 <p className="text-gray-500 text-sm mb-8">{i.clean_drop_sub}</p>
-                <label className="inline-flex items-center gap-2 px-7 py-3 rounded-xl text-sm font-semibold cursor-pointer transition-all duration-200" style={{background: 'rgba(99,102,241,0.12)', border: '1px solid rgba(99,102,241,0.3)', color: '#a5b4fc'}}
+                <label onClick={(e) => { if (!session) { e.preventDefault(); router.push('/dashboard?mode=clean') } }} className="inline-flex items-center gap-2 px-7 py-3 rounded-xl text-sm font-semibold cursor-pointer transition-all duration-200" style={{background: 'rgba(99,102,241,0.12)', border: '1px solid rgba(99,102,241,0.3)', color: '#a5b4fc'}}
                   onMouseEnter={e => e.currentTarget.style.background = 'rgba(99,102,241,0.2)'}
                   onMouseLeave={e => e.currentTarget.style.background = 'rgba(99,102,241,0.12)'}
                 >
