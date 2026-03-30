@@ -15,6 +15,14 @@ const t = {
     ctaTitle: 'Ready to put this into practice?',
     ctaSub: 'Strip metadata and resize to every ad format — free, no account needed.',
     ctaBtn: 'Try MetaClean free →',
+    posts: [
+      { title: 'Why Meta Rejects Ad Images (And How to Fix It)', description: 'The most common reasons Facebook and Instagram reject your creatives — image size, text overlay, metadata, policy violations — and exactly how to fix each one.', tag: 'Troubleshooting', readTime: '8 min read' },
+      { title: 'Meta Ads Image Sizes: The Complete 2025 Guide', description: 'Every image size and format you need for Facebook and Instagram ads — Feed, Stories, Reels, and more.', tag: 'Meta Ads', readTime: '6 min read' },
+      { title: 'TikTok Ads Image & Video Sizes: The Complete 2025 Guide', description: 'Every TikTok ad image and video size, aspect ratio, and file limit. The 500KB limit explained.', tag: 'TikTok Ads', readTime: '5 min read' },
+      { title: 'Google Ads Image Sizes: Complete Guide for 2025', description: 'Every Google Ads image size for Display, Performance Max, Discovery, and Responsive ads.', tag: 'Google Ads', readTime: '7 min read' },
+      { title: 'Pinterest Ads Image Sizes: Complete Guide for 2025', description: 'Every Pinterest ad image size — Standard Pins, Shopping Ads, Carousel, and Collections.', tag: 'Pinterest Ads', readTime: '5 min read' },
+      { title: 'How to Remove EXIF Metadata from Images (2025 Guide)', description: 'What EXIF metadata is, why it matters for ad platforms, and the fastest ways to strip it.', tag: 'Privacy & Tech', readTime: '6 min read' },
+    ],
   },
   pt: {
     label: 'Guias de Criativos',
@@ -27,6 +35,14 @@ const t = {
     ctaTitle: 'Pronto para pôr isto em prática?',
     ctaSub: 'Remove metadados e redimensiona para todos os formatos — grátis, sem conta necessária.',
     ctaBtn: 'Experimenta o MetaClean →',
+    posts: [
+      { title: 'Por Que o Meta Rejeita Imagens de Anúncios (E Como Corrigir)', description: 'As razões mais comuns pelas quais o Facebook e Instagram rejeitam os teus criativos — tamanho, texto, metadados, violações de política — e como corrigir cada uma.', tag: 'Resolução de Problemas', readTime: '8 min de leitura' },
+      { title: 'Tamanhos de Imagens para Anúncios Meta: Guia Completo 2025', description: 'Todos os tamanhos e formatos de imagem para anúncios no Facebook e Instagram — Feed, Stories, Reels e muito mais.', tag: 'Anúncios Meta', readTime: '6 min de leitura' },
+      { title: 'Tamanhos de Imagens e Vídeos TikTok Ads: Guia Completo 2025', description: 'Todos os tamanhos de imagem e vídeo, proporções e limites de ficheiro para TikTok Ads. O limite de 500KB explicado.', tag: 'TikTok Ads', readTime: '5 min de leitura' },
+      { title: 'Tamanhos de Imagens Google Ads: Guia Completo 2025', description: 'Todos os tamanhos de imagem do Google Ads para Display, Performance Max, Discovery e anúncios responsivos.', tag: 'Google Ads', readTime: '7 min de leitura' },
+      { title: 'Tamanhos de Imagens Pinterest Ads: Guia Completo 2025', description: 'Todos os tamanhos de imagem para Pinterest Ads — Pins Padrão, Shopping Ads, Carrossel e Coleções.', tag: 'Pinterest Ads', readTime: '5 min de leitura' },
+      { title: 'Como Remover Metadados EXIF de Imagens (Guia 2025)', description: 'O que são metadados EXIF, por que importam nas plataformas de anúncios e as formas mais rápidas de os remover.', tag: 'Privacidade & Tech', readTime: '6 min de leitura' },
+    ],
   },
   es: {
     label: 'Guías de Creativos',
@@ -39,77 +55,24 @@ const t = {
     ctaTitle: '¿Listo para ponerlo en práctica?',
     ctaSub: 'Elimina metadatos y redimensiona a todos los formatos — gratis, sin cuenta necesaria.',
     ctaBtn: 'Prueba MetaClean gratis →',
+    posts: [
+      { title: '¿Por Qué Meta Rechaza las Imágenes de Anuncios? (Y Cómo Solucionarlo)', description: 'Las razones más comunes por las que Facebook e Instagram rechazan tus creativos — tamaño, texto, metadatos, infracciones — y cómo solucionar cada una.', tag: 'Solución de Problemas', readTime: '8 min de lectura' },
+      { title: 'Tamaños de Imágenes para Anuncios Meta: Guía Completa 2025', description: 'Todos los tamaños y formatos de imagen para anuncios en Facebook e Instagram — Feed, Stories, Reels y más.', tag: 'Anuncios Meta', readTime: '6 min de lectura' },
+      { title: 'Tamaños de Imágenes y Vídeos TikTok Ads: Guía Completa 2025', description: 'Todos los tamaños de imagen y vídeo, relaciones de aspecto y límites de archivo para TikTok Ads. El límite de 500KB explicado.', tag: 'TikTok Ads', readTime: '5 min de lectura' },
+      { title: 'Tamaños de Imágenes Google Ads: Guía Completa 2025', description: 'Todos los tamaños de imagen de Google Ads para Display, Performance Max, Discovery y anuncios responsivos.', tag: 'Google Ads', readTime: '7 min de lectura' },
+      { title: 'Tamaños de Imágenes Pinterest Ads: Guía Completa 2025', description: 'Todos los tamaños de imagen para Pinterest Ads — Pines Estándar, Shopping Ads, Carrusel y Colecciones.', tag: 'Pinterest Ads', readTime: '5 min de lectura' },
+      { title: 'Cómo Eliminar Metadatos EXIF de Imágenes (Guía 2025)', description: 'Qué son los metadatos EXIF, por qué importan en las plataformas de anuncios y las formas más rápidas de eliminarlos.', tag: 'Privacidad & Tech', readTime: '6 min de lectura' },
+    ],
   },
 }
 
-const posts = [
-  {
-    slug: 'why-meta-rejects-ads',
-    title: 'Why Meta Rejects Ad Images (And How to Fix It)',
-    description: 'The most common reasons Facebook and Instagram reject your creatives — image size, text overlay, metadata, policy violations — and exactly how to fix each one.',
-    date: 'March 30, 2025',
-    readTime: '8 min read',
-    tag: 'Troubleshooting',
-    tagColor: '#f87171',
-    tagBg: 'rgba(248,113,113,0.1)',
-    tagBorder: 'rgba(248,113,113,0.2)',
-    featured: true,
-  },
-  {
-    slug: 'meta-ads-image-size',
-    title: 'Meta Ads Image Sizes: The Complete 2025 Guide',
-    description: 'Every image size and format you need for Facebook and Instagram ads — Feed, Stories, Reels, and more.',
-    date: 'March 30, 2025',
-    readTime: '6 min read',
-    tag: 'Meta Ads',
-    tagColor: '#818cf8',
-    tagBg: 'rgba(99,102,241,0.1)',
-    tagBorder: 'rgba(99,102,241,0.2)',
-  },
-  {
-    slug: 'tiktok-ads-image-size',
-    title: 'TikTok Ads Image & Video Sizes: The Complete 2025 Guide',
-    description: 'Every TikTok ad image and video size, aspect ratio, and file limit. The 500KB limit explained.',
-    date: 'March 30, 2025',
-    readTime: '5 min read',
-    tag: 'TikTok Ads',
-    tagColor: '#f472b6',
-    tagBg: 'rgba(244,114,182,0.1)',
-    tagBorder: 'rgba(244,114,182,0.2)',
-  },
-  {
-    slug: 'google-ads-image-size',
-    title: 'Google Ads Image Sizes: Complete Guide for 2025',
-    description: 'Every Google Ads image size for Display, Performance Max, Discovery, and Responsive ads.',
-    date: 'March 30, 2025',
-    readTime: '7 min read',
-    tag: 'Google Ads',
-    tagColor: '#34d399',
-    tagBg: 'rgba(52,211,153,0.1)',
-    tagBorder: 'rgba(52,211,153,0.2)',
-  },
-  {
-    slug: 'pinterest-ads-image-size',
-    title: 'Pinterest Ads Image Sizes: Complete Guide for 2025',
-    description: 'Every Pinterest ad image size — Standard Pins, Shopping Ads, Carousel, and Collections.',
-    date: 'March 30, 2025',
-    readTime: '5 min read',
-    tag: 'Pinterest Ads',
-    tagColor: '#f87171',
-    tagBg: 'rgba(248,113,113,0.1)',
-    tagBorder: 'rgba(248,113,113,0.2)',
-  },
-  {
-    slug: 'remove-exif-metadata-images',
-    title: 'How to Remove EXIF Metadata from Images (2025 Guide)',
-    description: 'What EXIF metadata is, why it matters for ad platforms, and the fastest ways to strip it.',
-    date: 'March 30, 2025',
-    readTime: '6 min read',
-    tag: 'Privacy & Tech',
-    tagColor: '#818cf8',
-    tagBg: 'rgba(99,102,241,0.1)',
-    tagBorder: 'rgba(99,102,241,0.2)',
-  },
+const postsMeta = [
+  { slug: 'why-meta-rejects-ads', tagColor: '#f87171', tagBg: 'rgba(248,113,113,0.1)', tagBorder: 'rgba(248,113,113,0.2)', featured: true },
+  { slug: 'meta-ads-image-size', tagColor: '#818cf8', tagBg: 'rgba(99,102,241,0.1)', tagBorder: 'rgba(99,102,241,0.2)' },
+  { slug: 'tiktok-ads-image-size', tagColor: '#f472b6', tagBg: 'rgba(244,114,182,0.1)', tagBorder: 'rgba(244,114,182,0.2)' },
+  { slug: 'google-ads-image-size', tagColor: '#34d399', tagBg: 'rgba(52,211,153,0.1)', tagBorder: 'rgba(52,211,153,0.2)' },
+  { slug: 'pinterest-ads-image-size', tagColor: '#f87171', tagBg: 'rgba(248,113,113,0.1)', tagBorder: 'rgba(248,113,113,0.2)' },
+  { slug: 'remove-exif-metadata-images', tagColor: '#818cf8', tagBg: 'rgba(99,102,241,0.1)', tagBorder: 'rgba(99,102,241,0.2)' },
 ]
 
 function useVisible(threshold = 0.15) {
@@ -245,6 +208,7 @@ export default function BlogIndex() {
   }, [])
 
   const i = t[lang]
+  const posts = postsMeta.map((meta, idx) => ({ ...meta, ...i.posts[idx] }))
   const featured = posts.find(p => p.featured)
   const rest = posts.filter(p => !p.featured)
 
