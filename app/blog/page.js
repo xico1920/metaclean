@@ -1,11 +1,7 @@
+'use client'
+import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import SiteNav from '@/app/components/SiteNav'
-
-export const metadata = {
-  title: 'Blog — Ad Creative Tips & Image Optimization',
-  description: 'Guides on image sizing, metadata, and ad creative optimization for Meta, Google, TikTok, and more.',
-  alternates: { canonical: 'https://metaclean.pro/blog' },
-}
 
 const posts = [
   {
@@ -18,11 +14,12 @@ const posts = [
     tagColor: '#f87171',
     tagBg: 'rgba(248,113,113,0.1)',
     tagBorder: 'rgba(248,113,113,0.2)',
+    featured: true,
   },
   {
     slug: 'meta-ads-image-size',
     title: 'Meta Ads Image Sizes: The Complete 2025 Guide',
-    description: 'Every image size and format you need for Facebook and Instagram ads — Feed, Stories, Reels, and more. Plus how to resize in seconds.',
+    description: 'Every image size and format you need for Facebook and Instagram ads — Feed, Stories, Reels, and more.',
     date: 'March 30, 2025',
     readTime: '6 min read',
     tag: 'Meta Ads',
@@ -33,7 +30,7 @@ const posts = [
   {
     slug: 'tiktok-ads-image-size',
     title: 'TikTok Ads Image & Video Sizes: The Complete 2025 Guide',
-    description: 'Every TikTok ad image and video size, aspect ratio, and file limit — In-Feed, TopView, Spark Ads, and more. The 500KB limit explained.',
+    description: 'Every TikTok ad image and video size, aspect ratio, and file limit. The 500KB limit explained.',
     date: 'March 30, 2025',
     readTime: '5 min read',
     tag: 'TikTok Ads',
@@ -44,7 +41,7 @@ const posts = [
   {
     slug: 'google-ads-image-size',
     title: 'Google Ads Image Sizes: Complete Guide for 2025',
-    description: 'Every Google Ads image size for Display, Performance Max, Discovery, and Responsive ads. Aspect ratios, file limits, and best practices.',
+    description: 'Every Google Ads image size for Display, Performance Max, Discovery, and Responsive ads.',
     date: 'March 30, 2025',
     readTime: '7 min read',
     tag: 'Google Ads',
@@ -55,7 +52,7 @@ const posts = [
   {
     slug: 'pinterest-ads-image-size',
     title: 'Pinterest Ads Image Sizes: Complete Guide for 2025',
-    description: 'Every Pinterest ad image size — Standard Pins, Shopping Ads, Carousel, and Collections. Why 2:3 dominates and how to design for the Pinterest feed.',
+    description: 'Every Pinterest ad image size — Standard Pins, Shopping Ads, Carousel, and Collections.',
     date: 'March 30, 2025',
     readTime: '5 min read',
     tag: 'Pinterest Ads',
@@ -66,7 +63,7 @@ const posts = [
   {
     slug: 'remove-exif-metadata-images',
     title: 'How to Remove EXIF Metadata from Images (2025 Guide)',
-    description: 'What EXIF metadata is, why it matters for ad platforms, and the fastest ways to strip it — online, on Mac, on Windows, and in bulk automatically.',
+    description: 'What EXIF metadata is, why it matters for ad platforms, and the fastest ways to strip it.',
     date: 'March 30, 2025',
     readTime: '6 min read',
     tag: 'Privacy & Tech',
@@ -76,35 +73,214 @@ const posts = [
   },
 ]
 
+function useVisible(threshold = 0.15) {
+  const ref = useRef(null)
+  const [visible, setVisible] = useState(false)
+  useEffect(() => {
+    const obs = new IntersectionObserver(([e]) => { if (e.isIntersecting) { setVisible(true); obs.disconnect() } }, { threshold })
+    if (ref.current) obs.observe(ref.current)
+    return () => obs.disconnect()
+  }, [threshold])
+  return [ref, visible]
+}
+
+function FeaturedCard({ post }) {
+  const [ref, visible] = useVisible(0.1)
+  const [hovered, setHovered] = useState(false)
+  return (
+    <div ref={ref} style={{ opacity: visible ? 1 : 0, transform: visible ? 'none' : 'translateY(24px)', transition: 'opacity 0.6s ease, transform 0.6s ease', marginBottom: 24 }}>
+      <Link href={`/blog/${post.slug}`} style={{ textDecoration: 'none', display: 'block' }}>
+        <div
+          onMouseEnter={() => setHovered(true)}
+          onMouseLeave={() => setHovered(false)}
+          style={{
+            position: 'relative',
+            background: hovered ? '#10101a' : '#0d0d14',
+            border: `1px solid ${hovered ? 'rgba(99,102,241,0.35)' : 'rgba(255,255,255,0.07)'}`,
+            borderRadius: 18,
+            padding: '36px 40px',
+            transition: 'all 0.25s ease',
+            overflow: 'hidden',
+            boxShadow: hovered ? '0 0 0 1px rgba(99,102,241,0.1), 0 20px 60px rgba(0,0,0,0.4)' : 'none',
+          }}
+        >
+          {/* Glow orb */}
+          <div style={{
+            position: 'absolute', top: -60, right: -60,
+            width: 260, height: 260,
+            background: 'radial-gradient(circle, rgba(99,102,241,0.12) 0%, transparent 70%)',
+            borderRadius: '50%',
+            pointerEvents: 'none',
+            opacity: hovered ? 1 : 0.4,
+            transition: 'opacity 0.4s ease',
+          }} />
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 18 }}>
+            <span style={{
+              fontSize: 10, fontWeight: 700, letterSpacing: '0.8px', textTransform: 'uppercase',
+              color: '#fbbf24', background: 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.2)',
+              borderRadius: 6, padding: '3px 9px',
+            }}>Featured</span>
+            <span style={{ fontSize: 11, fontWeight: 600, color: post.tagColor, background: post.tagBg, border: `1px solid ${post.tagBorder}`, borderRadius: 6, padding: '3px 9px' }}>{post.tag}</span>
+            <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.2)' }}>·</span>
+            <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)' }}>{post.readTime}</span>
+          </div>
+
+          <h2 style={{ fontSize: 26, fontWeight: 800, letterSpacing: '-0.7px', lineHeight: 1.25, color: 'white', marginBottom: 14, maxWidth: 540 }}>
+            {post.title}
+          </h2>
+          <p style={{ fontSize: 15, color: 'rgba(255,255,255,0.45)', lineHeight: 1.65, margin: '0 0 24px', maxWidth: 520 }}>
+            {post.description}
+          </p>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <span style={{ fontSize: 13, color: hovered ? '#a5b4fc' : 'rgba(255,255,255,0.35)', transition: 'color 0.2s ease', fontWeight: 500 }}>Read article</span>
+            <svg width="14" height="14" fill="none" stroke={hovered ? '#a5b4fc' : 'rgba(255,255,255,0.35)'} strokeWidth="2" viewBox="0 0 24 24" style={{ transition: 'all 0.2s ease', transform: hovered ? 'translateX(3px)' : 'none' }}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+            </svg>
+          </div>
+        </div>
+      </Link>
+    </div>
+  )
+}
+
+function PostCard({ post, delay = 0 }) {
+  const [ref, visible] = useVisible(0.1)
+  const [hovered, setHovered] = useState(false)
+  return (
+    <div ref={ref} style={{ opacity: visible ? 1 : 0, transform: visible ? 'none' : 'translateY(20px)', transition: `opacity 0.5s ease ${delay}ms, transform 0.5s ease ${delay}ms` }}>
+      <Link href={`/blog/${post.slug}`} style={{ textDecoration: 'none', display: 'block', height: '100%' }}>
+        <div
+          onMouseEnter={() => setHovered(true)}
+          onMouseLeave={() => setHovered(false)}
+          style={{
+            height: '100%',
+            background: hovered ? '#10101a' : '#0d0d14',
+            border: `1px solid ${hovered ? 'rgba(99,102,241,0.25)' : 'rgba(255,255,255,0.06)'}`,
+            borderRadius: 14,
+            padding: '24px',
+            transition: 'all 0.2s ease',
+            display: 'flex',
+            flexDirection: 'column',
+            boxShadow: hovered ? '0 8px 32px rgba(0,0,0,0.3)' : 'none',
+            transform: hovered ? 'translateY(-2px)' : 'none',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
+            <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.4px', color: post.tagColor, background: post.tagBg, border: `1px solid ${post.tagBorder}`, borderRadius: 5, padding: '2px 8px' }}>{post.tag}</span>
+            <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.2)', marginLeft: 'auto' }}>{post.readTime}</span>
+          </div>
+
+          <h3 style={{ fontSize: 16, fontWeight: 700, letterSpacing: '-0.35px', lineHeight: 1.35, color: 'white', marginBottom: 10, flex: 1 }}>
+            {post.title}
+          </h3>
+
+          <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', lineHeight: 1.6, margin: '0 0 20px' }}>
+            {post.description}
+          </p>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+            <span style={{ fontSize: 12, color: hovered ? '#a5b4fc' : 'rgba(255,255,255,0.25)', transition: 'color 0.2s', fontWeight: 500 }}>Read more</span>
+            <svg width="12" height="12" fill="none" stroke={hovered ? '#a5b4fc' : 'rgba(255,255,255,0.25)'} strokeWidth="2" viewBox="0 0 24 24" style={{ transition: 'all 0.2s', transform: hovered ? 'translateX(2px)' : 'none' }}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+            </svg>
+          </div>
+        </div>
+      </Link>
+    </div>
+  )
+}
+
 export default function BlogIndex() {
+  const [heroVisible, setHeroVisible] = useState(false)
+  useEffect(() => { setTimeout(() => setHeroVisible(true), 60) }, [])
+
+  const featured = posts.find(p => p.featured)
+  const rest = posts.filter(p => !p.featured)
+
   return (
     <div style={{ minHeight: '100vh', background: '#060609', color: 'white', fontFamily: '-apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif' }}>
       <SiteNav />
-      <div style={{ maxWidth: 720, margin: '0 auto', padding: '60px 24px' }}>
-        <h1 style={{ fontSize: 32, fontWeight: 700, letterSpacing: '-0.8px', marginBottom: 8 }}>Blog</h1>
-        <p style={{ fontSize: 15, color: 'rgba(255,255,255,0.4)', marginBottom: 48 }}>Ad creative tips, image optimization guides, and platform updates.</p>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          {posts.map(post => (
-            <Link key={post.slug} href={`/blog/${post.slug}`} style={{ textDecoration: 'none' }}>
-              <div className="blog-card" style={{
-                background: '#0d0d14',
-                border: '1px solid rgba(255,255,255,0.06)',
-                borderRadius: 14,
-                padding: '24px 28px',
-                transition: 'border-color 0.2s ease',
-              }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
-                  <span style={{ fontSize: 11, fontWeight: 600, color: post.tagColor || '#818cf8', background: post.tagBg || 'rgba(99,102,241,0.1)', border: `1px solid ${post.tagBorder || 'rgba(99,102,241,0.2)'}`, borderRadius: 6, padding: '2px 8px', letterSpacing: '0.3px' }}>{post.tag}</span>
-                  <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.25)' }}>{post.date}</span>
-                  <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.2)' }}>·</span>
-                  <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.25)' }}>{post.readTime}</span>
-                </div>
-                <h2 style={{ fontSize: 18, fontWeight: 700, letterSpacing: '-0.4px', color: 'white', marginBottom: 8 }}>{post.title}</h2>
-                <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.45)', lineHeight: 1.6, margin: 0 }}>{post.description}</p>
-              </div>
-            </Link>
+      {/* Hero */}
+      <div style={{ position: 'relative', overflow: 'hidden' }}>
+        {/* Background glow */}
+        <div style={{
+          position: 'absolute', top: -100, left: '50%', transform: 'translateX(-50%)',
+          width: 700, height: 400,
+          background: 'radial-gradient(ellipse, rgba(99,102,241,0.08) 0%, transparent 70%)',
+          pointerEvents: 'none',
+        }} />
+
+        <div style={{ maxWidth: 760, margin: '0 auto', padding: '72px 24px 52px' }}>
+          <div style={{ opacity: heroVisible ? 1 : 0, transform: heroVisible ? 'none' : 'translateY(16px)', transition: 'opacity 0.6s ease, transform 0.6s ease' }}>
+
+            {/* Label */}
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 7, background: 'rgba(99,102,241,0.08)', border: '1px solid rgba(99,102,241,0.18)', borderRadius: 99, padding: '5px 14px', marginBottom: 24 }}>
+              <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#6366f1', boxShadow: '0 0 8px rgba(99,102,241,0.8)' }} />
+              <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', fontWeight: 500, letterSpacing: '0.3px' }}>Ad Creative Guides</span>
+            </div>
+
+            <h1 style={{ fontSize: 48, fontWeight: 800, letterSpacing: '-1.5px', lineHeight: 1.1, marginBottom: 16 }}>
+              <span style={{ color: 'white' }}>Everything you need</span><br />
+              <span style={{
+                background: 'linear-gradient(135deg, #6366f1, #8b5cf6, #a5b4fc)',
+                WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
+                paddingBottom: '0.1em', display: 'inline-block',
+              }}>to run better ads.</span>
+            </h1>
+
+            <p style={{ fontSize: 16, color: 'rgba(255,255,255,0.45)', lineHeight: 1.65, maxWidth: 480, margin: 0 }}>
+              Practical guides on ad image specs, metadata, creative optimization — for every platform that matters.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Divider */}
+      <div style={{ maxWidth: 760, margin: '0 auto', padding: '0 24px' }}>
+        <div style={{ height: 1, background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.06) 30%, rgba(255,255,255,0.06) 70%, transparent)' }} />
+      </div>
+
+      {/* Content */}
+      <div style={{ maxWidth: 760, margin: '0 auto', padding: '48px 24px 80px' }}>
+
+        {/* Featured */}
+        {featured && <FeaturedCard post={featured} />}
+
+        {/* Grid */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 16 }}>
+          {rest.map((post, idx) => (
+            <PostCard key={post.slug} post={post} delay={idx * 60} />
           ))}
+        </div>
+
+        {/* Bottom CTA */}
+        <div style={{
+          marginTop: 64,
+          padding: '36px 40px',
+          background: 'linear-gradient(135deg, rgba(37,99,235,0.07), rgba(139,92,246,0.09))',
+          border: '1px solid rgba(99,102,241,0.18)',
+          borderRadius: 18,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: 24,
+          flexWrap: 'wrap',
+        }}>
+          <div>
+            <p style={{ fontSize: 16, fontWeight: 700, color: 'white', marginBottom: 4, letterSpacing: '-0.3px' }}>Ready to put this into practice?</p>
+            <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.4)', margin: 0 }}>Strip metadata and resize to every ad format — free, no account needed.</p>
+          </div>
+          <Link href="/dashboard" style={{
+            display: 'inline-block', padding: '11px 24px',
+            background: 'linear-gradient(135deg, #2563eb, #4f46e5, #8b5cf6)',
+            borderRadius: 10, fontSize: 13, fontWeight: 600, color: 'white',
+            textDecoration: 'none', whiteSpace: 'nowrap', letterSpacing: '-0.2px',
+          }}>
+            Try MetaClean free →
+          </Link>
         </div>
       </div>
     </div>
