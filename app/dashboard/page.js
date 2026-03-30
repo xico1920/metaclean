@@ -852,13 +852,6 @@ function DashboardInner() {
   // Onboarding
   const [showOnboarding, setShowOnboarding] = useState(false)
 
-  // Guest mode
-  const GUEST_LIMIT = 2
-  const [guestCount, setGuestCount] = useState(() => {
-    if (typeof window === 'undefined') return 0
-    return parseInt(localStorage.getItem('metaclean_guest_count') || '0', 10)
-  })
-  const [showSignupPrompt, setShowSignupPrompt] = useState(false)
 
   const i = t[lang]
 
@@ -878,18 +871,13 @@ function DashboardInner() {
 
     supabase.auth.getSession().then(async ({ data }) => {
       if (!data.session) {
-        // Guest mode — allow trial without login
-        setLoading(false)
-        setTimeout(() => setLoaded(true), 40)
+        router.replace('/login')
         return
       }
       setUser(data.session.user)
       await loadProfile(data.session.user.id)
       await loadHistory(data.session.user.id)
       setPresets(await loadPresets(supabase, data.session.user.id))
-      // Clear guest count on login
-      localStorage.removeItem('metaclean_guest_count')
-      setGuestCount(0)
       setLoading(false)
       setTimeout(() => setLoaded(true), 40)
       if (searchParams.get('upgraded') === '1') setUpgradedNotice(true)
@@ -1184,12 +1172,6 @@ function DashboardInner() {
   const processImages = async (cropData = {}) => {
     if (selectedFormats.size === 0 || files.length === 0) return
 
-    // Guest limit check — before processing
-    if (!user && guestCount >= GUEST_LIMIT) {
-      setShowSignupPrompt(true)
-      return
-    }
-
     setProcessing(true)
     setLimitReached(false)
     let hitLimit = false
@@ -1218,9 +1200,7 @@ function DashboardInner() {
         formData.append('cropData', JSON.stringify(cropData[fileIndex]))
       }
 
-      const headers = token
-        ? { 'Authorization': `Bearer ${token}` }
-        : { 'X-Guest-Count': String(guestCount) }
+      const headers = { 'Authorization': `Bearer ${token}` }
 
       const res = await fetch('/api/process', {
         method: 'POST',
@@ -1231,15 +1211,7 @@ function DashboardInner() {
       if (!res.ok) {
         const err = await res.json().catch(() => ({}))
         if (err.limitReached) { setLimitReached(true); hitLimit = true; break }
-        if (err.guestLimitReached) { setShowSignupPrompt(true); hitLimit = true; break }
         continue
-      }
-
-      // Increment guest count after each successful process
-      if (!token) {
-        const newCount = guestCount + fileIndex + 1
-        localStorage.setItem('metaclean_guest_count', String(newCount))
-        setGuestCount(newCount)
       }
 
       const contentType = res.headers.get('Content-Type') || ''
@@ -1394,47 +1366,6 @@ function DashboardInner() {
     <main className="min-h-screen bg-[#060609] text-white" style={{fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'}}>
 
       {/* Onboarding modal */}
-      {/* Guest signup prompt */}
-      {showSignupPrompt && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{background: 'rgba(6,6,9,0.9)', backdropFilter: 'blur(12px)'}}>
-          <div className="w-full max-w-sm rounded-2xl p-8" style={{background: '#0d0d14', border: '1px solid rgba(99,102,241,0.25)', boxShadow: '0 32px 80px rgba(0,0,0,0.7)'}}>
-            <div className="text-center mb-6">
-              <div className="w-14 h-14 rounded-2xl mx-auto mb-5 flex items-center justify-center" style={{background: 'rgba(99,102,241,0.12)', border: '1px solid rgba(99,102,241,0.25)'}}>
-                <svg width="26" height="26" fill="none" stroke="#a5b4fc" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" /></svg>
-              </div>
-              <h2 className="text-xl font-bold text-white mb-2">You've used your 2 free tries</h2>
-              <p className="text-gray-400 text-[14px] leading-relaxed">Create a free account to get 10 images/day — no credit card needed.</p>
-            </div>
-            <div className="space-y-3 mb-6">
-              {[
-                '10 images/day on the free plan',
-                'All ad platforms & formats',
-                'Conversion history saved',
-              ].map((item, idx) => (
-                <div key={idx} className="flex items-center gap-3">
-                  <div className="w-4 h-4 rounded flex items-center justify-center shrink-0" style={{background: 'rgba(99,102,241,0.2)', border: '1px solid rgba(99,102,241,0.4)'}}>
-                    <svg className="w-2.5 h-2.5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M4.5 12.75l6 6 9-13.5" /></svg>
-                  </div>
-                  <span className="text-[13px] text-gray-300">{item}</span>
-                </div>
-              ))}
-            </div>
-            <a
-              href="/login"
-              className="block w-full py-3 rounded-xl text-[14px] font-semibold text-white text-center mb-3"
-              style={{background: 'linear-gradient(135deg, #2563eb, #4f46e5, #8b5cf6)'}}
-            >
-              Create free account →
-            </a>
-            <button
-              onClick={() => setShowSignupPrompt(false)}
-              className="block w-full py-2.5 text-[13px] text-gray-500 hover:text-gray-300 transition-colors text-center"
-            >
-              Maybe later
-            </button>
-          </div>
-        </div>
-      )}
 
       {showOnboarding && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{background: 'rgba(6,6,9,0.85)', backdropFilter: 'blur(12px)'}}>
@@ -1593,24 +1524,6 @@ function DashboardInner() {
             <IconCheck />
             {i.upgraded}
             <button onClick={() => setUpgradedNotice(false)} className="ml-auto text-green-400/60 hover:text-green-400 transition-colors">×</button>
-          </div>
-        )}
-
-        {/* Guest trial banner */}
-        {!user && (
-          <div className="mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 px-5 py-4 rounded-xl" style={{background: 'linear-gradient(135deg, rgba(37,99,235,0.08), rgba(99,102,241,0.1))', border: '1px solid rgba(99,102,241,0.18)'}}>
-            <div>
-              <p className="text-[13px] text-gray-200 font-medium">Try MetaClean — no account needed</p>
-              <div className="flex items-center gap-2 mt-1">
-                <div className="w-24 h-1 rounded-full overflow-hidden" style={{background: 'rgba(255,255,255,0.08)'}}>
-                  <div className="h-full rounded-full transition-all" style={{width: `${(guestCount / GUEST_LIMIT) * 100}%`, background: guestCount >= GUEST_LIMIT ? '#f87171' : '#6366f1'}} />
-                </div>
-                <span className="text-[11px] text-gray-500">{guestCount}/{GUEST_LIMIT} free tries used</span>
-              </div>
-            </div>
-            <a href="/login" className="shrink-0 px-4 py-2 rounded-xl text-[12px] font-semibold text-white whitespace-nowrap" style={{background: 'linear-gradient(135deg, #2563eb, #4f46e5, #8b5cf6)'}}>
-              Create free account →
-            </a>
           </div>
         )}
 
