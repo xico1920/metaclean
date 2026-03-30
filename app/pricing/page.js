@@ -1,7 +1,9 @@
 'use client'
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import SiteNav from '@/app/components/SiteNav'
+import { supabase } from '@/lib/supabase'
 
 // ── Reveal ────────────────────────────────────────────────────────────────────
 function Reveal({ children, delay = 0, y = 18, className = '' }) {
@@ -113,11 +115,29 @@ function FaqItem({ q, a, delay }) {
 }
 
 export default function Pricing() {
+  const router = useRouter()
   const [mounted, setMounted] = useState(false)
+  const [upgrading, setUpgrading] = useState(false)
   useEffect(() => {
     const t = setTimeout(() => setMounted(true), 30)
     return () => clearTimeout(t)
   }, [])
+
+  const handleGetPro = async () => {
+    setUpgrading(true)
+    try {
+      const { data } = await supabase.auth.getSession()
+      if (!data.session) { router.push('/login?plan=pro'); return }
+      const res = await fetch('/api/stripe/checkout', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${data.session.access_token}` },
+      })
+      const json = await res.json()
+      if (json.url) window.location.href = json.url
+    } finally {
+      setUpgrading(false)
+    }
+  }
 
   const en = (d = 0) => ({
     opacity: mounted ? 1 : 0,
@@ -265,9 +285,9 @@ export default function Pricing() {
                 ))}
               </div>
               <div className="mt-auto">
-                <Link href="/login" {...glowHandlers} className="block w-full py-3 rounded-xl text-[13px] font-semibold text-center text-white" style={glowStyle}>
-                  Get started
-                </Link>
+                <button onClick={handleGetPro} disabled={upgrading} {...glowHandlers} className="block w-full py-3 rounded-xl text-[13px] font-semibold text-center text-white disabled:opacity-60" style={glowStyle}>
+                  {upgrading ? 'Loading…' : 'Get Pro — €9/mo'}
+                </button>
               </div>
             </div>
           </Reveal>

@@ -14,7 +14,7 @@ const cycleWords = {
 const t = {
   en: {
     nav_features: 'Features', nav_pricing: 'Pricing', nav_cta: 'Get started', nav_dashboard: 'Dashboard',
-    badge: 'Trusted by 500+ advertisers',
+    badge: 'No account needed to try',
     hero1: 'Your ads keep getting', hero2: 'rejected.',
     hero3: "We fix that.",
     subtitle: 'Strip metadata, resize to every ad format, and clean your creatives automatically. One click. Works on Meta, Google, TikTok and more.',
@@ -26,7 +26,7 @@ const t = {
     f3_title: 'Bulk processing', f3_desc: 'Drop 50 images, get 50 clean images back. All at once.', f3_sub: 'Up to 50MB per file · Batch download',
     f4_title: 'AI Autocrop', f4_desc: 'Smart cropping that detects the most important subject in your image and keeps it centered in every format.', f4_sub: 'Content-aware · Zero manual adjustments',
     know_more: 'Learn more →',
-    stats: '50,000+ images processed this month',
+    stats: 'No files stored · Processed in memory · Deleted after download',
     free: 'Free', free_sub: 'Get started', free_desc: '10 images per day',
     pro: 'Pro', pro_sub: 'Most popular', pro_desc: 'Unlimited images · All formats · Priority processing',
     platforms: 'Works with',
@@ -61,7 +61,7 @@ const t = {
   },
   pt: {
     nav_features: 'Funcionalidades', nav_pricing: 'Preços', nav_cta: 'Começar', nav_dashboard: 'Dashboard',
-    badge: 'Usado por +500 anunciantes',
+    badge: 'Sem conta necessária para experimentar',
     hero1: 'Os teus anúncios continuam a ser', hero2: 'rejeitados.',
     hero3: 'Nós resolvemos isso.',
     subtitle: 'Remove metadata, redimensiona para todos os formatos e limpa os teus criativos automaticamente. Um clique. Funciona no Meta, Google, TikTok e mais.',
@@ -73,7 +73,7 @@ const t = {
     f3_title: 'Processamento em massa', f3_desc: 'Arrasta 50 imagens, recebe 50 imagens limpas. Tudo de uma vez.', f3_sub: 'Até 50MB por ficheiro · Download em batch',
     f4_title: 'AI Autocrop', f4_desc: 'Corte inteligente que deteta o sujeito mais importante da imagem e mantém-no centrado em todos os formatos.', f4_sub: 'Content-aware · Sem ajustes manuais',
     know_more: 'Saber mais →',
-    stats: '+50.000 imagens processadas este mês',
+    stats: 'Sem ficheiros guardados · Processado em memória · Eliminado após download',
     free: 'Grátis', free_sub: 'Começar', free_desc: '10 imagens por dia',
     pro: 'Pro', pro_sub: 'Mais popular', pro_desc: 'Imagens ilimitadas · Todos os formatos · Processamento prioritário',
     platforms: 'Funciona com',
@@ -108,7 +108,7 @@ const t = {
   },
   es: {
     nav_features: 'Funciones', nav_pricing: 'Precios', nav_cta: 'Empezar', nav_dashboard: 'Dashboard',
-    badge: 'Usado por +500 anunciantes',
+    badge: 'Sin cuenta necesaria para probar',
     hero1: 'Tus anuncios siguen siendo', hero2: 'rechazados.',
     hero3: 'Nosotros lo solucionamos.',
     subtitle: 'Elimina metadatos, redimensiona a todos los formatos y limpia tus creativos automáticamente. Un clic. Funciona en Meta, Google, TikTok y más.',
@@ -120,7 +120,7 @@ const t = {
     f3_title: 'Procesamiento masivo', f3_desc: 'Sube 50 imágenes, recibe 50 imágenes limpias. Todo a la vez.', f3_sub: 'Hasta 50MB por archivo · Descarga en batch',
     f4_title: 'AI Autocrop', f4_desc: 'Recorte inteligente que detecta el sujeto más importante de tu imagen y lo mantiene centrado en cada formato.', f4_sub: 'Content-aware · Sin ajustes manuales',
     know_more: 'Saber más →',
-    stats: '+50.000 imágenes procesadas este mes',
+    stats: 'Sin archivos guardados · Procesado en memoria · Eliminado tras la descarga',
     free: 'Gratis', free_sub: 'Empezar', free_desc: '10 imágenes por día',
     pro: 'Pro', pro_sub: 'Más popular', pro_desc: 'Imágenes ilimitadas · Todos los formatos · Procesamiento prioritario',
     platforms: 'Funciona con',

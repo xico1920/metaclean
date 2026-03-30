@@ -832,6 +832,9 @@ function DashboardInner() {
   // AdReady stats
   const [processedStats, setProcessedStats] = useState(null)
 
+  // Preview before download
+  const [pendingResults, setPendingResults] = useState(null) // { results, previewUrl, platform, formatCount }
+
   // ZIP mode
   const [zipMode, setZipMode] = useState(false)
   const [zipUploadFile, setZipUploadFile] = useState(null)
@@ -845,6 +848,9 @@ function DashboardInner() {
   const [savePresetOpen, setSavePresetOpen] = useState(false)
   const [presetNameInput, setPresetNameInput] = useState('')
   const [presetSaving, setPresetSaving] = useState(false)
+
+  // Onboarding
+  const [showOnboarding, setShowOnboarding] = useState(false)
 
   const i = t[lang]
 
@@ -871,6 +877,11 @@ function DashboardInner() {
       setLoading(false)
       setTimeout(() => setLoaded(true), 40)
       if (searchParams.get('upgraded') === '1') setUpgradedNotice(true)
+
+      // Show onboarding on first login ever
+      if (!localStorage.getItem('metaclean_onboarded')) {
+        setTimeout(() => setShowOnboarding(true), 800)
+      }
 
       // Restore files dropped on landing page before auth
       try {
@@ -1214,42 +1225,27 @@ function DashboardInner() {
       setProgressCount(fileIndex + 1)
     }
 
-    // Download: single JPG → direct, everything else → one combined zip
-    if (results.length === 1 && !results[0].isZip) {
-      const url = URL.createObjectURL(results[0].blob)
-      const a = document.createElement('a')
-      a.href = url
-      a.download = results[0].filename
-      document.body.appendChild(a)
-      a.click()
-      document.body.removeChild(a)
-      setTimeout(() => URL.revokeObjectURL(url), 1000)
-    } else if (results.length > 0) {
-      const JSZip = (await import('jszip')).default
-      const zip = new JSZip()
-      for (const { blob, filename, isZip } of results) {
-        if (isZip) {
-          // Unpack inner zip and add files flat into the outer zip
-          const inner = await JSZip.loadAsync(blob)
-          await Promise.all(Object.keys(inner.files).map(async (name) => {
-            if (!inner.files[name].dir) {
-              zip.file(name, await inner.files[name].async('blob'))
-            }
-          }))
+    // Build preview URL from first result
+    let previewUrl = null
+    if (results.length > 0) {
+      try {
+        const first = results[0]
+        if (!first.isZip) {
+          previewUrl = URL.createObjectURL(first.blob)
         } else {
-          zip.file(filename, blob)
+          const JSZip = (await import('jszip')).default
+          const inner = await JSZip.loadAsync(first.blob)
+          const firstName = Object.keys(inner.files).find(n => !inner.files[n].dir && /\.(jpe?g|png|webp)$/i.test(n))
+          if (firstName) {
+            const b = await inner.files[firstName].async('blob')
+            previewUrl = URL.createObjectURL(b)
+          }
         }
-      }
-      const zipBlob = await zip.generateAsync({ type: 'blob', compression: 'DEFLATE' })
-      const url = URL.createObjectURL(zipBlob)
-      const a = document.createElement('a')
-      a.href = url
-      a.download = `metaclean_${selectedPlatform}_batch.zip`
-      document.body.appendChild(a)
-      a.click()
-      document.body.removeChild(a)
-      setTimeout(() => URL.revokeObjectURL(url), 1000)
+      } catch {}
     }
+
+    const formatCount = allStats.length || selectedFormats.size
+    setPendingResults(results.length > 0 ? { results, previewUrl, platform: selectedPlatform, formatCount } : null)
 
     // Refresh stats
     if (user) {
@@ -1264,6 +1260,40 @@ function DashboardInner() {
       console.error('processImages error:', err)
     } finally {
       setProcessing(false)
+    }
+  }
+
+  const triggerDownload = async () => {
+    if (!pendingResults) return
+    const { results, previewUrl, platform } = pendingResults
+    if (previewUrl) URL.revokeObjectURL(previewUrl)
+    setPendingResults(null)
+
+    if (results.length === 1 && !results[0].isZip) {
+      const url = URL.createObjectURL(results[0].blob)
+      const a = document.createElement('a')
+      a.href = url; a.download = results[0].filename
+      document.body.appendChild(a); a.click(); document.body.removeChild(a)
+      setTimeout(() => URL.revokeObjectURL(url), 1000)
+    } else if (results.length > 0) {
+      const JSZip = (await import('jszip')).default
+      const zip = new JSZip()
+      for (const { blob, filename, isZip } of results) {
+        if (isZip) {
+          const inner = await JSZip.loadAsync(blob)
+          await Promise.all(Object.keys(inner.files).map(async (name) => {
+            if (!inner.files[name].dir) zip.file(name, await inner.files[name].async('blob'))
+          }))
+        } else {
+          zip.file(filename, blob)
+        }
+      }
+      const zipBlob = await zip.generateAsync({ type: 'blob', compression: 'DEFLATE' })
+      const url = URL.createObjectURL(zipBlob)
+      const a = document.createElement('a')
+      a.href = url; a.download = `metaclean_${platform}_batch.zip`
+      document.body.appendChild(a); a.click(); document.body.removeChild(a)
+      setTimeout(() => URL.revokeObjectURL(url), 1000)
     }
   }
 
@@ -1327,6 +1357,44 @@ function DashboardInner() {
 
   return (
     <main className="min-h-screen bg-[#060609] text-white" style={{fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'}}>
+
+      {/* Onboarding modal */}
+      {showOnboarding && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{background: 'rgba(6,6,9,0.85)', backdropFilter: 'blur(12px)'}}>
+          <div className="w-full max-w-md rounded-2xl p-8" style={{background: '#0d0d14', border: '1px solid rgba(255,255,255,0.09)', boxShadow: '0 32px 80px rgba(0,0,0,0.6)'}}>
+            <div className="text-center mb-6">
+              <div className="w-14 h-14 rounded-2xl mx-auto mb-5 flex items-center justify-center" style={{background: 'rgba(99,102,241,0.12)', border: '1px solid rgba(99,102,241,0.25)'}}>
+                <svg width="28" height="28" fill="none" stroke="#a5b4fc" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" /></svg>
+              </div>
+              <h2 className="text-xl font-bold text-white mb-2">Welcome to MetaClean</h2>
+              <p className="text-gray-400 text-[14px] leading-relaxed">Your ad-ready image tool. Here's how to get started in 3 steps.</p>
+            </div>
+            <div className="space-y-4 mb-8">
+              {[
+                { n: '1', title: 'Choose your platform', desc: 'Select Meta, Google, TikTok or another platform to get the right ad formats automatically.' },
+                { n: '2', title: 'Drop your images', desc: 'Upload your creatives. We strip metadata, compress, and resize to every format.' },
+                { n: '3', title: 'Download & publish', desc: 'Preview your results and download a clean ZIP ready to upload to any ad platform.' },
+              ].map(({ n, title, desc }) => (
+                <div key={n} className="flex gap-4">
+                  <div className="w-7 h-7 rounded-full flex items-center justify-center shrink-0 mt-0.5 text-[12px] font-bold" style={{background: 'rgba(99,102,241,0.15)', color: '#a5b4fc', border: '1px solid rgba(99,102,241,0.2)'}}>{n}</div>
+                  <div>
+                    <p className="text-white font-semibold text-[13px] mb-0.5">{title}</p>
+                    <p className="text-gray-500 text-[12px] leading-relaxed">{desc}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <button
+              onClick={() => { setShowOnboarding(false); localStorage.setItem('metaclean_onboarded', '1') }}
+              {...glowHandlers}
+              className="w-full py-3 rounded-xl text-[14px] font-semibold text-white"
+              style={glowStyle}
+            >
+              Let's go →
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Processing overlay */}
       {processingActive && (
@@ -1852,20 +1920,48 @@ function DashboardInner() {
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
                         Edit crops →
                       </button>
-                      <button onClick={() => { setFiles([]); setDone(false); setLimitReached(false); setStep('upload'); setProcessedStats(null); if (fileInputRef.current) fileInputRef.current.value = '' }} className="px-4 py-3 text-xs text-gray-500 hover:text-gray-300 transition-colors">{i.clear}</button>
+                      <button onClick={() => { setFiles([]); setDone(false); setLimitReached(false); setStep('upload'); setProcessedStats(null); setPendingResults(null); if (fileInputRef.current) fileInputRef.current.value = '' }} className="px-4 py-3 text-xs text-gray-500 hover:text-gray-300 transition-colors">{i.clear}</button>
                     </div>
                   )}
                   {done && !limitReached && (
-                    <div className="mt-4 flex items-center justify-center gap-2 flex-wrap">
-                      <div className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-medium" style={{background: 'rgba(34,197,94,0.08)', border: '1px solid rgba(34,197,94,0.18)', color: '#86efac'}}>
-                        <IconCheck />{i.success(files.length)}
+                    <div className="mt-5">
+                      {/* Preview before download */}
+                      {pendingResults && (
+                        <div className="mb-4 rounded-xl overflow-hidden" style={{border: '1px solid rgba(255,255,255,0.07)', background: 'rgba(255,255,255,0.02)'}}>
+                          {pendingResults.previewUrl && (
+                            <div className="relative" style={{maxHeight: 220, overflow: 'hidden'}}>
+                              <img src={pendingResults.previewUrl} alt="Preview" style={{width: '100%', height: 220, objectFit: 'cover', display: 'block'}} />
+                              <div style={{position:'absolute',inset:0,background:'linear-gradient(to bottom, transparent 40%, rgba(6,6,9,0.85))'}} />
+                              <div style={{position:'absolute',bottom:12,left:16,fontSize:11,color:'rgba(255,255,255,0.5)'}}>
+                                Preview · {pendingResults.formatCount} format{pendingResults.formatCount !== 1 ? 's' : ''} ready
+                              </div>
+                            </div>
+                          )}
+                          <div className="p-4 flex items-center justify-between gap-3">
+                            <div className="flex items-center gap-2 text-xs text-gray-400">
+                              <IconCheck />
+                              <span>{i.success(files.length)} · {pendingResults.formatCount} format{pendingResults.formatCount !== 1 ? 's' : ''}</span>
+                            </div>
+                            <button onClick={triggerDownload} {...glowHandlers} className="inline-flex items-center gap-2 px-5 py-2 rounded-lg text-xs font-semibold text-white" style={glowStyle}>
+                              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+                              Download
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                      <div className="flex items-center justify-center gap-2 flex-wrap">
+                        {!pendingResults && (
+                          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-medium" style={{background: 'rgba(34,197,94,0.08)', border: '1px solid rgba(34,197,94,0.18)', color: '#86efac'}}>
+                            <IconCheck />{i.success(files.length)}
+                          </div>
+                        )}
+                        {(() => {
+                          const stats = processedStats?.formats ?? platformCfg.formats
+                            .filter(f => selectedFormats.has(f.label))
+                            .map(f => ({ label: f.label, w: f.width, h: f.height, size: 0, quality: 90 }))
+                          return <AdReadyBadge platform={processedStats?.platform ?? selectedPlatform} stats={stats} />
+                        })()}
                       </div>
-                      {(() => {
-                        const stats = processedStats?.formats ?? platformCfg.formats
-                          .filter(f => selectedFormats.has(f.label))
-                          .map(f => ({ label: f.label, w: f.width, h: f.height, size: 0, quality: 90 }))
-                        return <AdReadyBadge platform={processedStats?.platform ?? selectedPlatform} stats={stats} />
-                      })()}
                     </div>
                   )}
                 </div>
