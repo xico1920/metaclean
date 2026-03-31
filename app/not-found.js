@@ -35,6 +35,8 @@ const t = {
   es: { cta: 'Volver a MetaClean', redirect: (n) => `Redirigiendo en ${n}s…` },
 }
 
+const FLOAT_TAGS = ['EXIF', 'GPS', 'Device Info', 'Rejected', 'Metadata', 'IPTC', 'ColorSpace', 'ISO 400', 'f/1.8', 'RAW', 'Timestamp', '#rejected']
+
 const TOTAL = 15
 
 export default function NotFound() {
@@ -42,13 +44,34 @@ export default function NotFound() {
   const [countdown, setCountdown] = useState(TOTAL)
   const [visible, setVisible] = useState(false)
   const [phrase] = useState(() => Math.floor(Math.random() * 6))
+  const [isMobile, setIsMobile] = useState(false)
+
+  // Parallax / spotlight
+  const [tilt, setTilt] = useState({ x: 0, y: 0 })
+  const [spotlight, setSpotlight] = useState({ x: 50, y: 50 })
+  const [btnOffset, setBtnOffset] = useState({ x: 0, y: 0 })
+  const btnRef = useRef(null)
   const canvasRef = useRef(null)
-  const mouseRef = useRef({ x: -999, y: -999 })
+  const pointerRef = useRef({ x: -999, y: -999 })
+
+  // Floating tags — generated once
+  const [floatTags] = useState(() =>
+    FLOAT_TAGS.map((label, idx) => ({
+      label,
+      x: 5 + (idx * 37 + 11) % 85,
+      y: 5 + (idx * 53 + 7) % 88,
+      dur: 14 + (idx * 7) % 12,
+      delay: -(idx * 3.1),
+      opacity: 0.06 + (idx % 4) * 0.04,
+      scale: 0.75 + (idx % 3) * 0.12,
+    }))
+  )
 
   useEffect(() => {
     const saved = localStorage.getItem('metaclean_lang')
     if (saved && ['en', 'pt', 'es'].includes(saved)) setLang(saved)
     setTimeout(() => setVisible(true), 60)
+    setIsMobile('ontouchstart' in window || navigator.maxTouchPoints > 0)
   }, [])
 
   useEffect(() => {
@@ -56,6 +79,59 @@ export default function NotFound() {
     const timer = setTimeout(() => setCountdown(n => n - 1), 1000)
     return () => clearTimeout(timer)
   }, [countdown])
+
+  // Mouse interactions (desktop)
+  useEffect(() => {
+    if (isMobile) return
+
+    const onMove = (e) => {
+      const cx = window.innerWidth / 2
+      const cy = window.innerHeight / 2
+      const dx = (e.clientX - cx) / cx
+      const dy = (e.clientY - cy) / cy
+      setTilt({ x: dy * -10, y: dx * 10 })
+      setSpotlight({ x: (e.clientX / window.innerWidth) * 100, y: (e.clientY / window.innerHeight) * 100 })
+      pointerRef.current = { x: e.clientX, y: e.clientY }
+
+      // Magnetic button
+      const btn = btnRef.current
+      if (btn) {
+        const r = btn.getBoundingClientRect()
+        const bx = r.left + r.width / 2
+        const by = r.top + r.height / 2
+        const dist = Math.sqrt((e.clientX - bx) ** 2 + (e.clientY - by) ** 2)
+        const radius = 90
+        if (dist < radius) {
+          const pull = (1 - dist / radius) * 0.35
+          setBtnOffset({ x: (e.clientX - bx) * pull, y: (e.clientY - by) * pull })
+        } else {
+          setBtnOffset({ x: 0, y: 0 })
+        }
+      }
+    }
+
+    const onLeave = () => {
+      setTilt({ x: 0, y: 0 })
+      setBtnOffset({ x: 0, y: 0 })
+      pointerRef.current = { x: -999, y: -999 }
+    }
+
+    window.addEventListener('mousemove', onMove)
+    window.addEventListener('mouseleave', onLeave)
+    return () => { window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseleave', onLeave) }
+  }, [isMobile])
+
+  // Gyroscope for mobile parallax
+  useEffect(() => {
+    if (!isMobile) return
+    const onOrientation = (e) => {
+      const x = Math.max(-1, Math.min(1, (e.beta - 45) / 30))
+      const y = Math.max(-1, Math.min(1, e.gamma / 30))
+      setTilt({ x: x * -8, y: y * 8 })
+    }
+    window.addEventListener('deviceorientation', onOrientation)
+    return () => window.removeEventListener('deviceorientation', onOrientation)
+  }, [isMobile])
 
   // Particle canvas
   useEffect(() => {
@@ -69,13 +145,9 @@ export default function NotFound() {
     const onResize = () => { W = canvas.width = window.innerWidth; H = canvas.height = window.innerHeight }
     window.addEventListener('resize', onResize)
 
-    const onMouse = (e) => { mouseRef.current = { x: e.clientX, y: e.clientY } }
-    window.addEventListener('mousemove', onMouse)
-
-    const COUNT = 55
+    const COUNT = isMobile ? 30 : 55
     const particles = Array.from({ length: COUNT }, () => ({
-      x: Math.random() * W,
-      y: Math.random() * H,
+      x: Math.random() * W, y: Math.random() * H,
       r: Math.random() * 1.4 + 0.4,
       vx: (Math.random() - 0.5) * 0.25,
       vy: (Math.random() - 0.5) * 0.25,
@@ -85,63 +157,49 @@ export default function NotFound() {
 
     const draw = () => {
       ctx.clearRect(0, 0, W, H)
-      const mx = mouseRef.current.x
-      const my = mouseRef.current.y
+      const mx = pointerRef.current.x
+      const my = pointerRef.current.y
 
       for (const p of particles) {
-        // Mouse repulsion
-        const dx = p.x - mx
-        const dy = p.y - my
+        const dx = p.x - mx; const dy = p.y - my
         const dist = Math.sqrt(dx * dx + dy * dy)
-        if (dist < 120) {
+        if (dist < 120 && dist > 0) {
           const force = (120 - dist) / 120
           p.vx += (dx / dist) * force * 0.04
           p.vy += (dy / dist) * force * 0.04
         }
-
-        p.vx *= 0.98
-        p.vy *= 0.98
-        p.x += p.vx
-        p.y += p.vy
-
-        if (p.x < 0) p.x = W
-        if (p.x > W) p.x = 0
-        if (p.y < 0) p.y = H
-        if (p.y > H) p.y = 0
-
+        p.vx *= 0.98; p.vy *= 0.98
+        p.x += p.vx; p.y += p.vy
+        if (p.x < 0) p.x = W; if (p.x > W) p.x = 0
+        if (p.y < 0) p.y = H; if (p.y > H) p.y = 0
         ctx.beginPath()
         ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2)
-        ctx.fillStyle = `hsla(${p.hue}, 70%, 70%, ${p.alpha})`
+        ctx.fillStyle = `hsla(${p.hue},70%,70%,${p.alpha})`
         ctx.fill()
       }
 
-      // Draw connections
-      for (let i = 0; i < COUNT; i++) {
-        for (let j = i + 1; j < COUNT; j++) {
-          const dx = particles[i].x - particles[j].x
-          const dy = particles[i].y - particles[j].y
+      const CONN_DIST = isMobile ? 80 : 110
+      for (let a = 0; a < COUNT; a++) {
+        for (let b = a + 1; b < COUNT; b++) {
+          const dx = particles[a].x - particles[b].x
+          const dy = particles[a].y - particles[b].y
           const d = Math.sqrt(dx * dx + dy * dy)
-          if (d < 110) {
+          if (d < CONN_DIST) {
             ctx.beginPath()
-            ctx.moveTo(particles[i].x, particles[i].y)
-            ctx.lineTo(particles[j].x, particles[j].y)
-            ctx.strokeStyle = `rgba(99,102,241,${0.07 * (1 - d / 110)})`
+            ctx.moveTo(particles[a].x, particles[a].y)
+            ctx.lineTo(particles[b].x, particles[b].y)
+            ctx.strokeStyle = `rgba(99,102,241,${0.07 * (1 - d / CONN_DIST)})`
             ctx.lineWidth = 0.6
             ctx.stroke()
           }
         }
       }
-
       raf = requestAnimationFrame(draw)
     }
     draw()
 
-    return () => {
-      cancelAnimationFrame(raf)
-      window.removeEventListener('resize', onResize)
-      window.removeEventListener('mousemove', onMouse)
-    }
-  }, [])
+    return () => { cancelAnimationFrame(raf); window.removeEventListener('resize', onResize) }
+  }, [isMobile])
 
   const i = t[lang]
   const p = phrases[lang][phrase]
@@ -154,13 +212,20 @@ export default function NotFound() {
   })
 
   return (
-    <main className="min-h-screen bg-[#060609] text-white flex flex-col items-center justify-center px-4 overflow-hidden"
-      style={{fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'}}>
-
+    <main
+      className="min-h-screen bg-[#060609] text-white flex flex-col items-center justify-center px-4 overflow-hidden"
+      style={{fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'}}
+    >
       {/* Particle canvas */}
       <canvas ref={canvasRef} className="fixed inset-0 pointer-events-none" style={{zIndex: 0}} />
 
-      {/* Background glows */}
+      {/* Noise grain overlay */}
+      <div className="fixed inset-0 pointer-events-none" style={{zIndex: 2, opacity: 0.03, backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 256 256\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'noise\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.9\' numOctaves=\'4\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23noise)\'/%3E%3C/svg%3E")', backgroundRepeat: 'repeat', backgroundSize: '128px 128px'}} />
+
+      {/* Spotlight following mouse */}
+      <div className="fixed inset-0 pointer-events-none" style={{zIndex: 1, background: `radial-gradient(600px circle at ${spotlight.x}% ${spotlight.y}%, rgba(99,102,241,0.07) 0%, transparent 70%)`, transition: 'background 0.1s ease'}} />
+
+      {/* Static background glows */}
       <div className="fixed inset-0 pointer-events-none" style={{zIndex: 0}}>
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[600px]"
           style={{background: 'radial-gradient(ellipse at top, rgba(99,102,241,0.18) 0%, transparent 65%)'}} />
@@ -172,130 +237,129 @@ export default function NotFound() {
           style={{background: 'radial-gradient(ellipse, rgba(139,92,246,0.09) 0%, transparent 70%)'}} />
       </div>
 
-      <div className="relative text-center max-w-xl w-full" style={{zIndex: 1}}>
-
-        {/* 404 */}
-        <div style={{...anim(0), position: 'relative', display: 'inline-block', marginBottom: '2rem'}}>
-          {/* Glow bloom layers */}
-          <span aria-hidden style={{
-            fontSize: 'clamp(100px, 22vw, 160px)',
-            fontWeight: 800,
-            lineHeight: 1,
-            letterSpacing: '-0.04em',
+      {/* Floating metadata tags */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden" style={{zIndex: 1}}>
+        {floatTags.map((tag, idx) => (
+          <span key={idx} style={{
             position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            background: 'linear-gradient(135deg, #2563eb, #6366f1, #8b5cf6)',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-            backgroundClip: 'text',
-            filter: 'blur(18px)',
-            opacity: 0.7,
-            animation: 'bloom 3.5s ease-in-out infinite',
-            pointerEvents: 'none',
-          }}>404</span>
-          <span aria-hidden style={{
-            fontSize: 'clamp(100px, 22vw, 160px)',
-            fontWeight: 800,
-            lineHeight: 1,
-            letterSpacing: '-0.04em',
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            background: 'linear-gradient(135deg, #4f46e5, #8b5cf6)',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-            backgroundClip: 'text',
-            filter: 'blur(40px)',
-            opacity: 0.45,
-            animation: 'bloom 3.5s ease-in-out infinite 0.4s',
-            pointerEvents: 'none',
-          }}>404</span>
-          {/* Main text */}
-          <span style={{
-            fontSize: 'clamp(100px, 22vw, 160px)',
-            fontWeight: 800,
-            lineHeight: 1,
-            letterSpacing: '-0.04em',
-            background: 'linear-gradient(135deg, #60a5fa 0%, #818cf8 40%, #a78bfa 100%)',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-            backgroundClip: 'text',
-            display: 'block',
-            position: 'relative',
-            animation: 'pulse404 3.5s ease-in-out infinite',
+            left: `${tag.x}%`,
+            top: `${tag.y}%`,
+            fontSize: `${11 * tag.scale}px`,
+            fontFamily: 'monospace',
+            color: `rgba(165,180,252,${tag.opacity})`,
+            border: `1px solid rgba(99,102,241,${tag.opacity * 0.8})`,
+            padding: '2px 7px',
+            borderRadius: '5px',
+            background: `rgba(99,102,241,${tag.opacity * 0.15})`,
+            animation: `floatTag ${tag.dur}s ease-in-out ${tag.delay}s infinite`,
+            whiteSpace: 'nowrap',
+            userSelect: 'none',
           }}>
-            404
+            {tag.label}
           </span>
+        ))}
+      </div>
+
+      {/* Main content with parallax */}
+      <div
+        className="relative text-center w-full"
+        style={{
+          zIndex: 3,
+          maxWidth: '560px',
+          transform: `perspective(800px) rotateX(${tilt.x}deg) rotateY(${tilt.y}deg)`,
+          transition: isMobile ? 'transform 0.6s ease-out' : 'transform 0.15s ease-out',
+        }}
+      >
+
+        {/* 404 with glow bloom */}
+        <div style={{...anim(0), position: 'relative', display: 'inline-block', marginBottom: '1.75rem'}}>
+          <span aria-hidden style={{
+            fontSize: 'clamp(100px, 22vw, 160px)', fontWeight: 800, lineHeight: 1, letterSpacing: '-0.04em',
+            position: 'absolute', top: 0, left: 0, right: 0,
+            background: 'linear-gradient(135deg, #2563eb, #6366f1, #8b5cf6)',
+            WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
+            filter: 'blur(20px)', opacity: 0.75,
+            animation: 'bloom 3.5s ease-in-out infinite', pointerEvents: 'none',
+          }}>404</span>
+          <span aria-hidden style={{
+            fontSize: 'clamp(100px, 22vw, 160px)', fontWeight: 800, lineHeight: 1, letterSpacing: '-0.04em',
+            position: 'absolute', top: 0, left: 0, right: 0,
+            background: 'linear-gradient(135deg, #4f46e5, #8b5cf6)',
+            WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
+            filter: 'blur(45px)', opacity: 0.5,
+            animation: 'bloom 3.5s ease-in-out infinite 0.5s', pointerEvents: 'none',
+          }}>404</span>
+          <span style={{
+            fontSize: 'clamp(100px, 22vw, 160px)', fontWeight: 800, lineHeight: 1, letterSpacing: '-0.04em',
+            background: 'linear-gradient(135deg, #60a5fa 0%, #818cf8 40%, #a78bfa 100%)',
+            WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
+            display: 'block', position: 'relative',
+            animation: 'pulse404 3.5s ease-in-out infinite',
+          }}>404</span>
         </div>
 
         {/* Rejected badge */}
         <div style={{...anim(100), display: 'flex', justifyContent: 'center', marginBottom: '1.5rem'}}>
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-[11px] font-semibold uppercase tracking-widest"
-            style={{
-              background: 'rgba(239,68,68,0.08)',
-              border: '1px solid rgba(239,68,68,0.2)',
-              color: '#f87171',
-              animation: 'fadePulse 2.5s ease-in-out infinite',
-            }}>
-            <span style={{width: 6, height: 6, borderRadius: '50%', background: '#f87171', display: 'inline-block', animation: 'blink 1.2s step-start infinite'}} />
+          <div style={{
+            display: 'inline-flex', alignItems: 'center', gap: '7px',
+            padding: '5px 12px', borderRadius: '999px', fontSize: '11px', fontWeight: 600,
+            letterSpacing: '0.1em', textTransform: 'uppercase',
+            background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.22)', color: '#f87171',
+            animation: 'fadePulse 2.5s ease-in-out infinite',
+          }}>
+            <span style={{width: 6, height: 6, borderRadius: '50%', background: '#f87171', flexShrink: 0, animation: 'blink 1.2s step-start infinite'}} />
             Page Rejected
           </div>
         </div>
 
         {/* Title */}
-        <h1 style={{...anim(200), fontSize: 'clamp(20px, 4vw, 28px)', fontWeight: 700, color: 'white', marginBottom: '1rem', lineHeight: 1.3}}>
+        <h1 style={{...anim(200), fontSize: 'clamp(19px, 3.5vw, 27px)', fontWeight: 700, color: 'white', marginBottom: '1rem', lineHeight: 1.35, padding: '0 8px'}}>
           {p.title}
         </h1>
 
         {/* Sub */}
-        <p style={{...anim(300), color: 'rgba(156,163,175,1)', fontSize: '15px', lineHeight: 1.7, marginBottom: '2.5rem', maxWidth: '440px', margin: '0 auto 2.5rem'}}>
+        <p style={{...anim(300), color: 'rgba(156,163,175,1)', fontSize: '15px', lineHeight: 1.7, maxWidth: '420px', margin: '0 auto 2.5rem', padding: '0 8px'}}>
           {p.sub}
         </p>
 
-        {/* CTA button */}
-        <div style={{...anim(400), marginBottom: '2rem'}}>
+        {/* Magnetic CTA button */}
+        <div style={{...anim(400), marginBottom: '2.5rem', display: 'inline-block'}}>
           <Link
+            ref={btnRef}
             href="/"
-            className="inline-flex items-center gap-2.5 px-8 py-3.5 rounded-xl text-sm font-semibold text-white"
             style={{
+              display: 'inline-flex', alignItems: 'center', gap: '10px',
+              padding: '14px 32px', borderRadius: '14px', fontSize: '14px', fontWeight: 600, color: 'white',
               background: 'linear-gradient(135deg, #2563eb, #4f46e5, #8b5cf6)',
               backgroundSize: '200% 200%',
-              boxShadow: '0 0 0 1px rgba(99,102,241,0.3), 0 0 30px rgba(99,102,241,0.25)',
+              boxShadow: '0 0 0 1px rgba(99,102,241,0.3), 0 0 35px rgba(99,102,241,0.3), 0 8px 32px rgba(0,0,0,0.4)',
               animation: 'gradientShift 4s ease infinite',
-              transition: 'box-shadow 0.3s ease, transform 0.2s ease',
+              transform: `translate(${btnOffset.x}px, ${btnOffset.y}px)`,
+              transition: btnOffset.x === 0 && btnOffset.y === 0
+                ? 'transform 0.5s cubic-bezier(0.16,1,0.3,1), box-shadow 0.3s ease'
+                : 'transform 0.1s ease, box-shadow 0.3s ease',
+              textDecoration: 'none',
             }}
-            onMouseEnter={e => { e.currentTarget.style.boxShadow = '0 0 0 1px rgba(139,92,246,0.6), 0 0 40px rgba(99,102,241,0.5)'; e.currentTarget.style.transform = 'translateY(-1px)' }}
-            onMouseLeave={e => { e.currentTarget.style.boxShadow = '0 0 0 1px rgba(99,102,241,0.3), 0 0 30px rgba(99,102,241,0.25)'; e.currentTarget.style.transform = 'none' }}
+            onMouseEnter={e => { e.currentTarget.style.boxShadow = '0 0 0 1px rgba(139,92,246,0.6), 0 0 50px rgba(99,102,241,0.55), 0 8px 32px rgba(0,0,0,0.4)' }}
+            onMouseLeave={e => { e.currentTarget.style.boxShadow = '0 0 0 1px rgba(99,102,241,0.3), 0 0 35px rgba(99,102,241,0.3), 0 8px 32px rgba(0,0,0,0.4)' }}
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
             </svg>
             {i.cta}
           </Link>
         </div>
 
-        {/* Countdown progress */}
+        {/* Countdown */}
         <div style={{...anim(500)}}>
           <p style={{color: 'rgba(75,85,99,1)', fontSize: '11px', marginBottom: '8px', letterSpacing: '0.05em'}}>
             {i.redirect(countdown)}
           </p>
-          <div style={{
-            width: '120px',
-            height: '2px',
-            borderRadius: '999px',
-            background: 'rgba(255,255,255,0.06)',
-            margin: '0 auto',
-            overflow: 'hidden',
-          }}>
+          <div style={{width: '120px', height: '2px', borderRadius: '999px', background: 'rgba(255,255,255,0.06)', margin: '0 auto', overflow: 'hidden'}}>
             <div style={{
-              height: '100%',
-              borderRadius: '999px',
+              height: '100%', borderRadius: '999px',
               background: 'linear-gradient(90deg, #2563eb, #8b5cf6)',
-              width: `${pct}%`,
-              transition: 'width 1s linear',
+              width: `${pct}%`, transition: 'width 1s linear',
             }} />
           </div>
         </div>
@@ -308,8 +372,8 @@ export default function NotFound() {
           50% { opacity: 0.82; }
         }
         @keyframes bloom {
-          0%, 100% { opacity: 0.45; transform: scale(1); }
-          50% { opacity: 0.85; transform: scale(1.04); }
+          0%, 100% { opacity: 0.5; transform: scale(1); }
+          50% { opacity: 0.9; transform: scale(1.05); }
         }
         @keyframes fadePulse {
           0%, 100% { opacity: 1; }
@@ -322,6 +386,11 @@ export default function NotFound() {
         @keyframes gradientShift {
           0%, 100% { background-position: 0% 50%; }
           50% { background-position: 100% 50%; }
+        }
+        @keyframes floatTag {
+          0%, 100% { transform: translateY(0px) rotate(-1deg); opacity: var(--op, 0.08); }
+          33% { transform: translateY(-12px) rotate(0.5deg); }
+          66% { transform: translateY(-6px) rotate(-0.5deg); }
         }
       `}</style>
     </main>
