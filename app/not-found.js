@@ -2,33 +2,43 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 
+const phrases = {
+  en: [
+    { title: 'This page got rejected by the algorithm.', sub: "Even we can't approve this one. But your ads? Those we can fix." },
+    { title: 'EXIF data found. Page removed for safety.', sub: "Just kidding — this page never existed. Your images, though, we can clean those." },
+    { title: 'This URL has hidden metadata we had to strip.', sub: "Along with the actual page. Try going back home — it's cleaner there." },
+    { title: 'Ad rejected: landing page not found.', sub: "Meta would disapprove of this too. Good thing you have MetaClean for the real stuff." },
+    { title: '404: creative not found.', sub: "Looks like this one didn't make it through review. Your images will, though." },
+    { title: 'This page exceeded the maximum file size.', sub: "We had to compress it out of existence. Go back and upload something real." },
+  ],
+  pt: [
+    { title: 'Esta página foi rejeitada pelo algoritmo.', sub: 'Até nós não conseguimos aprovar esta. Mas os teus anúncios? Esses a gente resolve.' },
+    { title: 'Dados EXIF encontrados. Página removida por segurança.', sub: 'Era de brincadeira — esta página nunca existiu. As tuas imagens, essas sim, limpamos já.' },
+    { title: 'Este URL tinha metadata escondida que tivemos de remover.', sub: 'Junto com a página em si. A página principal é muito mais limpa.' },
+    { title: 'Anúncio rejeitado: página de destino não encontrada.', sub: 'O Meta também não aprovaria isto. Ainda bem que tens o MetaClean para o resto.' },
+    { title: '404: criativo não encontrado.', sub: 'Este não passou na revisão. As tuas imagens vão passar — garante o MetaClean.' },
+    { title: 'Esta página excedeu o tamanho máximo do ficheiro.', sub: 'Tivemos de a comprimir até desaparecer. Volta para a página principal.' },
+  ],
+  es: [
+    { title: 'Esta página fue rechazada por el algoritmo.', sub: 'Ni nosotros podemos aprobar esta. Pero tus anuncios, esos sí los arreglamos.' },
+    { title: 'Datos EXIF encontrados. Página eliminada por seguridad.', sub: 'Era broma — esta página nunca existió. Tus imágenes, esas sí las limpiamos.' },
+    { title: 'Esta URL tenía metadata oculta que tuvimos que eliminar.', sub: 'Junto con la página. La página principal es mucho más limpia.' },
+    { title: 'Anuncio rechazado: página de destino no encontrada.', sub: 'Meta tampoco la aprobaría. Menos mal que tienes MetaClean para lo importante.' },
+    { title: '404: creativo no encontrado.', sub: 'Este no pasó la revisión. Tus imágenes sí pasarán — MetaClean lo garantiza.' },
+    { title: 'Esta página superó el tamaño máximo de archivo.', sub: 'Tuvimos que comprimirla hasta hacerla desaparecer. Vuelve a la página principal.' },
+  ],
+}
+
 const t = {
-  en: {
-    code: '404',
-    title: 'This page got rejected by the algorithm.',
-    sub: "Even we can't approve this one. But your ads? Those we can fix.",
-    cta: 'Back to MetaClean',
-    redirect: (n) => `Redirecting in ${n}s…`,
-  },
-  pt: {
-    code: '404',
-    title: 'Esta página foi rejeitada pelo algoritmo.',
-    sub: 'Até nós não conseguimos aprovar esta. Mas os teus anúncios? Esses a gente resolve.',
-    cta: 'Voltar ao MetaClean',
-    redirect: (n) => `A redirecionar em ${n}s…`,
-  },
-  es: {
-    code: '404',
-    title: 'Esta página fue rechazada por el algoritmo.',
-    sub: 'Ni nosotros podemos aprobar esta. Pero tus anuncios, esos sí los arreglamos.',
-    cta: 'Volver a MetaClean',
-    redirect: (n) => `Redirigiendo en ${n}s…`,
-  },
+  en: { cta: 'Back to MetaClean', redirect: (n) => `Redirecting in ${n}s…` },
+  pt: { cta: 'Voltar ao MetaClean', redirect: (n) => `A redirecionar em ${n}s…` },
+  es: { cta: 'Volver a MetaClean', redirect: (n) => `Redirigiendo en ${n}s…` },
 }
 
 export default function NotFound() {
   const [lang, setLang] = useState('en')
-  const [countdown, setCountdown] = useState(8)
+  const [countdown, setCountdown] = useState(15)
+  const [phrase] = useState(() => Math.floor(Math.random() * 6))
 
   useEffect(() => {
     const saved = localStorage.getItem('metaclean_lang')
@@ -37,11 +47,12 @@ export default function NotFound() {
 
   useEffect(() => {
     if (countdown <= 0) { window.location.href = '/'; return }
-    const t = setTimeout(() => setCountdown(n => n - 1), 1000)
-    return () => clearTimeout(t)
+    const timer = setTimeout(() => setCountdown(n => n - 1), 1000)
+    return () => clearTimeout(timer)
   }, [countdown])
 
   const i = t[lang]
+  const p = phrases[lang][phrase]
 
   return (
     <main className="min-h-screen bg-[#060609] text-white flex flex-col items-center justify-center px-4"
@@ -78,10 +89,10 @@ export default function NotFound() {
         </div>
 
         <h1 className="text-2xl sm:text-3xl font-bold text-white mb-4 leading-snug">
-          {i.title}
+          {p.title}
         </h1>
         <p className="text-gray-400 text-[15px] leading-relaxed mb-10">
-          {i.sub}
+          {p.sub}
         </p>
 
         <Link
