@@ -121,16 +121,54 @@ export default function NotFound() {
     return () => { window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseleave', onLeave) }
   }, [isMobile])
 
-  // Gyroscope for mobile parallax
+  // Gyroscope + touch fallback for mobile
   useEffect(() => {
     if (!isMobile) return
-    const onOrientation = (e) => {
+
+    const applyOrientation = (e) => {
+      if (e.beta === null || e.gamma === null) return
       const x = Math.max(-1, Math.min(1, (e.beta - 45) / 30))
       const y = Math.max(-1, Math.min(1, e.gamma / 30))
       setTilt({ x: x * -8, y: y * 8 })
     }
-    window.addEventListener('deviceorientation', onOrientation)
-    return () => window.removeEventListener('deviceorientation', onOrientation)
+
+    const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent)
+
+    if (isIOS && typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+      // iOS 13+ — request permission on first tap
+      const requestOnTap = () => {
+        DeviceOrientationEvent.requestPermission()
+          .then(state => {
+            if (state === 'granted') {
+              window.addEventListener('deviceorientation', applyOrientation)
+            }
+          })
+          .catch(() => {})
+        window.removeEventListener('touchstart', requestOnTap)
+      }
+      window.addEventListener('touchstart', requestOnTap, { once: true })
+    } else {
+      // Android + older iOS — works directly
+      window.addEventListener('deviceorientation', applyOrientation)
+    }
+
+    // Touch fallback for when gyro data isn't moving (device flat on table etc.)
+    const onTouch = (e) => {
+      const touch = e.touches[0]
+      const cx = window.innerWidth / 2
+      const cy = window.innerHeight / 2
+      setSpotlight({ x: (touch.clientX / window.innerWidth) * 100, y: (touch.clientY / window.innerHeight) * 100 })
+      // Only use touch for tilt if gyro isn't firing
+      const dx = (touch.clientX - cx) / cx
+      const dy = (touch.clientY - cy) / cy
+      setTilt(prev => prev.x === 0 && prev.y === 0 ? { x: dy * -8, y: dx * 8 } : prev)
+    }
+    window.addEventListener('touchmove', onTouch, { passive: true })
+
+    return () => {
+      window.removeEventListener('deviceorientation', applyOrientation)
+      window.removeEventListener('touchmove', onTouch)
+    }
   }, [isMobile])
 
   // Particle canvas
