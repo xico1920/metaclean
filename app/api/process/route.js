@@ -153,13 +153,34 @@ export async function POST(request) {
     const authHeader = request.headers.get('Authorization')
     const GUEST_LIMIT = 2
 
-    // Guest mode — no token, allow up to GUEST_LIMIT images (tracked client-side)
+    // Guest mode — no token, enforce limit server-side by IP
     if (!authHeader?.startsWith('Bearer ')) {
-      const guestCount = parseInt(request.headers.get('X-Guest-Count') || '0', 10)
-      if (guestCount >= GUEST_LIMIT) {
+      const ip =
+        request.headers.get('x-forwarded-for')?.split(',')[0].trim() ||
+        request.headers.get('x-real-ip') ||
+        'unknown'
+
+      const today = new Date().toISOString().split('T')[0]
+
+      const { data: row } = await supabase
+        .from('guest_usage')
+        .select('count, reset_date')
+        .eq('ip', ip)
+        .single()
+
+      const currentCount = (row?.reset_date === today ? row.count : 0)
+
+      if (currentCount >= GUEST_LIMIT) {
         return NextResponse.json({ error: 'Guest limit reached', guestLimitReached: true }, { status: 403 })
       }
-      // Skip profile/limit logic — fall through to processing below
+
+      await supabase.from('guest_usage').upsert({
+        ip,
+        count: currentCount + 1,
+        reset_date: today,
+      }, { onConflict: 'ip' })
+
+      // Fall through to processing below
     } else {
       // ── Authenticated user ────────────────────────────────────────────────
       const token = authHeader.slice(7)
