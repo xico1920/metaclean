@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import SiteNav from '@/app/components/SiteNav'
+import Footer from '@/app/components/Footer'
 
 const t = {
   en: { back: 'Blog', readTime: 'read', cta: 'Try MetaClean free →', ctaSub: 'Strip metadata and resize to every ad format automatically.' },
@@ -50,6 +51,7 @@ export default function BlogPost({ children }) {
           }}>{i.cta}</Link>
         </div>
       </article>
+      <Footer lang={lang} />
     </div>
   )
 }

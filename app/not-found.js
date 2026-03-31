@@ -1,6 +1,7 @@
 'use client'
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
+import Footer from '@/app/components/Footer'
 
 const phrases = {
   en: [
@@ -403,6 +404,8 @@ export default function NotFound() {
         </div>
 
       </div>
+
+      <Footer lang={lang} />
 
       <style>{`
         @keyframes pulse404 {

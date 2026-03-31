@@ -2,6 +2,7 @@
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import SiteNav from '@/app/components/SiteNav'
+import Footer from '@/app/components/Footer'
 
 const t = {
   en: {
@@ -296,6 +297,7 @@ export default function BlogIndex() {
           </Link>
         </div>
       </div>
+      <Footer lang={lang} />
     </div>
   )
 }
