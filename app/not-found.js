@@ -162,67 +162,70 @@ export default function NotFound() {
 
       {/* Background glows */}
       <div className="fixed inset-0 pointer-events-none" style={{zIndex: 0}}>
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[900px] h-[500px]"
-          style={{background: 'radial-gradient(ellipse at top, rgba(99,102,241,0.09) 0%, transparent 65%)'}} />
-        <div className="absolute bottom-0 left-1/4 w-[400px] h-[400px]"
-          style={{background: 'radial-gradient(ellipse, rgba(37,99,235,0.05) 0%, transparent 70%)'}} />
-        <div className="absolute bottom-0 right-1/4 w-[400px] h-[400px]"
-          style={{background: 'radial-gradient(ellipse, rgba(139,92,246,0.05) 0%, transparent 70%)'}} />
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[600px]"
+          style={{background: 'radial-gradient(ellipse at top, rgba(99,102,241,0.18) 0%, transparent 65%)'}} />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px]"
+          style={{background: 'radial-gradient(ellipse, rgba(79,70,229,0.08) 0%, transparent 70%)', animation: 'bloom 5s ease-in-out infinite'}} />
+        <div className="absolute bottom-0 left-1/4 w-[500px] h-[500px]"
+          style={{background: 'radial-gradient(ellipse, rgba(37,99,235,0.09) 0%, transparent 70%)'}} />
+        <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px]"
+          style={{background: 'radial-gradient(ellipse, rgba(139,92,246,0.09) 0%, transparent 70%)'}} />
       </div>
 
       <div className="relative text-center max-w-xl w-full" style={{zIndex: 1}}>
 
-        {/* Glitching 404 */}
+        {/* 404 */}
         <div style={{...anim(0), position: 'relative', display: 'inline-block', marginBottom: '2rem'}}>
+          {/* Glow bloom layers */}
+          <span aria-hidden style={{
+            fontSize: 'clamp(100px, 22vw, 160px)',
+            fontWeight: 800,
+            lineHeight: 1,
+            letterSpacing: '-0.04em',
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            background: 'linear-gradient(135deg, #2563eb, #6366f1, #8b5cf6)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            backgroundClip: 'text',
+            filter: 'blur(18px)',
+            opacity: 0.7,
+            animation: 'bloom 3.5s ease-in-out infinite',
+            pointerEvents: 'none',
+          }}>404</span>
+          <span aria-hidden style={{
+            fontSize: 'clamp(100px, 22vw, 160px)',
+            fontWeight: 800,
+            lineHeight: 1,
+            letterSpacing: '-0.04em',
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            background: 'linear-gradient(135deg, #4f46e5, #8b5cf6)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            backgroundClip: 'text',
+            filter: 'blur(40px)',
+            opacity: 0.45,
+            animation: 'bloom 3.5s ease-in-out infinite 0.4s',
+            pointerEvents: 'none',
+          }}>404</span>
+          {/* Main text */}
           <span style={{
             fontSize: 'clamp(100px, 22vw, 160px)',
             fontWeight: 800,
             lineHeight: 1,
             letterSpacing: '-0.04em',
-            background: 'linear-gradient(135deg, #1d4ed8 0%, #6366f1 45%, #8b5cf6 100%)',
+            background: 'linear-gradient(135deg, #60a5fa 0%, #818cf8 40%, #a78bfa 100%)',
             WebkitBackgroundClip: 'text',
             WebkitTextFillColor: 'transparent',
             backgroundClip: 'text',
             display: 'block',
-            filter: 'drop-shadow(0 0 40px rgba(99,102,241,0.35))',
-            animation: 'pulse404 4s ease-in-out infinite',
-          }}>
-            404
-          </span>
-          {/* Glitch layers */}
-          <span aria-hidden style={{
-            fontSize: 'clamp(100px, 22vw, 160px)',
-            fontWeight: 800,
-            lineHeight: 1,
-            letterSpacing: '-0.04em',
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            background: 'linear-gradient(135deg, #ef4444, #f97316)',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-            backgroundClip: 'text',
-            clipPath: 'inset(30% 0 50% 0)',
-            animation: 'glitch1 5s steps(1) infinite',
-            opacity: 0.7,
-          }}>
-            404
-          </span>
-          <span aria-hidden style={{
-            fontSize: 'clamp(100px, 22vw, 160px)',
-            fontWeight: 800,
-            lineHeight: 1,
-            letterSpacing: '-0.04em',
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            background: 'linear-gradient(135deg, #06b6d4, #3b82f6)',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-            backgroundClip: 'text',
-            clipPath: 'inset(55% 0 20% 0)',
-            animation: 'glitch2 5s steps(1) infinite',
-            opacity: 0.6,
+            position: 'relative',
+            animation: 'pulse404 3.5s ease-in-out infinite',
           }}>
             404
           </span>
@@ -301,22 +304,12 @@ export default function NotFound() {
 
       <style>{`
         @keyframes pulse404 {
-          0%, 100% { filter: drop-shadow(0 0 30px rgba(99,102,241,0.3)); }
-          50% { filter: drop-shadow(0 0 55px rgba(99,102,241,0.55)); }
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.82; }
         }
-        @keyframes glitch1 {
-          0%, 90%, 100% { transform: translate(0); opacity: 0; }
-          91% { transform: translate(-3px, 1px); opacity: 0.7; }
-          92% { transform: translate(3px, -1px); opacity: 0; }
-          93% { transform: translate(-2px, 2px); opacity: 0.6; }
-          94% { transform: translate(0); opacity: 0; }
-        }
-        @keyframes glitch2 {
-          0%, 93%, 100% { transform: translate(0); opacity: 0; }
-          94% { transform: translate(3px, -2px); opacity: 0.6; }
-          95% { transform: translate(-3px, 1px); opacity: 0; }
-          96% { transform: translate(2px, -1px); opacity: 0.5; }
-          97% { transform: translate(0); opacity: 0; }
+        @keyframes bloom {
+          0%, 100% { opacity: 0.45; transform: scale(1); }
+          50% { opacity: 0.85; transform: scale(1.04); }
         }
         @keyframes fadePulse {
           0%, 100% { opacity: 1; }
