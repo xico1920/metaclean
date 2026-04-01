@@ -720,6 +720,7 @@ function DashboardInner() {
   const [cleanDragging, setCleanDragging] = useState(false)
   const [cleanProcessing, setCleanProcessing] = useState(false)
   const [cleanDone, setCleanDone] = useState(false)
+  const [cleanResults, setCleanResults] = useState([])
   const [progressCount, setProgressCount] = useState(0)
   const [progressTotal, setProgressTotal] = useState(0)
   const [progressFile, setProgressFile] = useState('')
@@ -1054,29 +1055,8 @@ function DashboardInner() {
       setProgressCount(cleanIdx + 1)
     }
 
-    if (results.length === 1) {
-      const url = URL.createObjectURL(results[0].blob)
-      const a = document.createElement('a')
-      a.href = url
-      a.download = results[0].filename
-      document.body.appendChild(a)
-      a.click()
-      document.body.removeChild(a)
-      setTimeout(() => URL.revokeObjectURL(url), 1000)
-    } else if (results.length > 0) {
-      const JSZip = (await import('jszip')).default
-      const zip = new JSZip()
-      for (const { blob, filename } of results) zip.file(filename, blob)
-      const zipBlob = await zip.generateAsync({ type: 'blob', compression: 'DEFLATE' })
-      const url = URL.createObjectURL(zipBlob)
-      const a = document.createElement('a')
-      a.href = url
-      a.download = 'metaclean_clean_batch.zip'
-      document.body.appendChild(a)
-      a.click()
-      document.body.removeChild(a)
-      setTimeout(() => URL.revokeObjectURL(url), 1000)
-    }
+    await performDownload(results, 'metaclean_clean_batch.zip')
+    setCleanResults(results)
 
     if (user) { await loadProfile(user.id); await loadHistory(user.id) }
     setCleanProcessing(false)
@@ -1177,6 +1157,9 @@ function DashboardInner() {
     }
 
     const formatCount = allStats.length || selectedFormats.size
+    if (results.length > 0) {
+      await performDownload(results, `metaclean_${selectedPlatform}_batch.zip`)
+    }
     setPendingResults(results.length > 0 ? { results, previewUrl, platform: selectedPlatform, formatCount } : null)
 
     // Refresh stats
@@ -1195,19 +1178,15 @@ function DashboardInner() {
     }
   }
 
-  const triggerDownload = async () => {
-    if (!pendingResults) return
-    const { results, previewUrl, platform } = pendingResults
-    if (previewUrl) URL.revokeObjectURL(previewUrl)
-    setPendingResults(null)
-
+  const performDownload = async (results, zipName) => {
+    if (!results || results.length === 0) return
     if (results.length === 1 && !results[0].isZip) {
       const url = URL.createObjectURL(results[0].blob)
       const a = document.createElement('a')
       a.href = url; a.download = results[0].filename
       document.body.appendChild(a); a.click(); document.body.removeChild(a)
       setTimeout(() => URL.revokeObjectURL(url), 1000)
-    } else if (results.length > 0) {
+    } else {
       const JSZip = (await import('jszip')).default
       const zip = new JSZip()
       for (const { blob, filename, isZip } of results) {
@@ -1223,10 +1202,18 @@ function DashboardInner() {
       const zipBlob = await zip.generateAsync({ type: 'blob', compression: 'DEFLATE' })
       const url = URL.createObjectURL(zipBlob)
       const a = document.createElement('a')
-      a.href = url; a.download = `metaclean_${platform}_batch.zip`
+      a.href = url; a.download = zipName
       document.body.appendChild(a); a.click(); document.body.removeChild(a)
       setTimeout(() => URL.revokeObjectURL(url), 1000)
     }
+  }
+
+  const triggerDownload = async () => {
+    if (!pendingResults) return
+    const { results, previewUrl, platform } = pendingResults
+    if (previewUrl) URL.revokeObjectURL(previewUrl)
+    setPendingResults(null)
+    await performDownload(results, `metaclean_${platform}_batch.zip`)
   }
 
   const handleUpgrade = async () => {
@@ -2064,12 +2051,22 @@ function DashboardInner() {
                         Add more
                         <input type="file" multiple className="hidden" onChange={handleCleanFiles} />
                       </label>
-                      <button onClick={() => { setCleanFiles([]); setCleanDone(false); setLimitReached(false); if (cleanFileInputRef.current) cleanFileInputRef.current.value = '' }} className="px-4 py-3 text-xs text-gray-500 hover:text-gray-300 transition-colors">{i.clear}</button>
+                      <button onClick={() => { setCleanFiles([]); setCleanDone(false); setCleanResults([]); setLimitReached(false); if (cleanFileInputRef.current) cleanFileInputRef.current.value = '' }} className="px-4 py-3 text-xs text-gray-500 hover:text-gray-300 transition-colors">{i.clear}</button>
                     </div>
                   )}
                   {cleanDone && !limitReached && (
-                    <div className="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-medium" style={{background: 'rgba(34,197,94,0.08)', border: '1px solid rgba(34,197,94,0.18)', color: '#86efac'}}>
-                      <IconCheck />{i.clean_success(cleanFiles.length)}
+                    <div className="mt-4 rounded-xl overflow-hidden" style={{border: '1px solid rgba(255,255,255,0.07)', background: 'rgba(255,255,255,0.02)'}}>
+                      <div className="px-4 py-3.5 flex items-center justify-between gap-3 flex-wrap">
+                        <div className="inline-flex items-center gap-2 text-xs font-medium" style={{color: '#86efac'}}>
+                          <IconCheck />{i.clean_success(cleanFiles.length)}
+                        </div>
+                        {cleanResults.length > 0 && (
+                          <button onClick={() => performDownload(cleanResults, 'metaclean_clean_batch.zip')} {...glowHandlers} className="inline-flex items-center gap-2 px-5 py-2 rounded-lg text-xs font-semibold text-white" style={glowStyle}>
+                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+                            Download
+                          </button>
+                        )}
+                      </div>
                     </div>
                   )}
                 </div>
