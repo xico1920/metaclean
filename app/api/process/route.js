@@ -152,6 +152,11 @@ export async function POST(request) {
     // ── Auth ──────────────────────────────────────────────────────────────────
     const authHeader = request.headers.get('Authorization')
     const GUEST_LIMIT = 2
+    const today = new Date().toISOString().split('T')[0]
+
+    // Variables set only for authenticated users — used later to log history
+    let authedUser = null
+    let imagesUsed = 0
 
     // Guest mode — no token, enforce limit server-side by IP
     if (!authHeader?.startsWith('Bearer ')) {
@@ -159,8 +164,6 @@ export async function POST(request) {
         request.headers.get('x-forwarded-for')?.split(',')[0].trim() ||
         request.headers.get('x-real-ip') ||
         'unknown'
-
-      const today = new Date().toISOString().split('T')[0]
 
       const { data: row } = await supabase
         .from('guest_usage')
@@ -188,6 +191,7 @@ export async function POST(request) {
       if (authError || !user) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
       }
+      authedUser = user
 
       // ── Profile + daily reset ───────────────────────────────────────────────
       const { data: profile } = await supabase
@@ -200,8 +204,7 @@ export async function POST(request) {
         return NextResponse.json({ error: 'Profile not found' }, { status: 404 })
       }
 
-      const today = new Date().toISOString().split('T')[0]
-      let imagesUsed = profile.images_used_today
+      imagesUsed = profile.images_used_today
 
       if (profile.last_reset_date !== today) {
         imagesUsed = 0
@@ -260,18 +263,20 @@ export async function POST(request) {
 
     const processedFormats = processedFiles.map(f => f.label)
 
-    // ── Update usage + log history ────────────────────────────────────────────
-    await supabase
-      .from('profiles')
-      .update({ images_used_today: imagesUsed + 1, last_reset_date: today })
-      .eq('id', user.id)
+    // ── Update usage + log history (authenticated users only) ─────────────────
+    if (authedUser) {
+      await supabase
+        .from('profiles')
+        .update({ images_used_today: imagesUsed + 1, last_reset_date: today })
+        .eq('id', authedUser.id)
 
-    await supabase.from('conversion_history').insert({
-      user_id: user.id,
-      filename: originalName,
-      platform,
-      formats: processedFormats,
-    })
+      await supabase.from('conversion_history').insert({
+        user_id: authedUser.id,
+        filename: originalName,
+        platform,
+        formats: processedFormats,
+      })
+    }
 
     const statsHeader = JSON.stringify(
       processedFiles.map(f => ({
