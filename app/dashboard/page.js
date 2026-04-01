@@ -829,31 +829,29 @@ function DashboardInner() {
   useEffect(() => {
     if (!user) return
     const sessionId = crypto.randomUUID()
-    let channel
+    let interval
 
     const register = async () => {
       await supabase.from('profiles').update({ active_session_id: sessionId }).eq('id', user.id)
 
-      channel = supabase
-        .channel(`session:${user.id}`)
-        .on('postgres_changes', {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'profiles',
-          filter: `id=eq.${user.id}`,
-        }, (payload) => {
-          if (payload.new.active_session_id !== sessionId) {
-            setSessionKicked(true)
-          }
-        })
-        .subscribe()
+      // Poll every 8 seconds — if someone else claimed the session, kick this one
+      interval = setInterval(async () => {
+        const { data } = await supabase
+          .from('profiles')
+          .select('active_session_id')
+          .eq('id', user.id)
+          .single()
+        if (data && data.active_session_id !== sessionId) {
+          setSessionKicked(true)
+          clearInterval(interval)
+        }
+      }, 8000)
     }
 
     register()
 
     return () => {
-      if (channel) supabase.removeChannel(channel)
-      // Clear session only if we're still the active one
+      clearInterval(interval)
       supabase.from('profiles')
         .select('active_session_id').eq('id', user.id).single()
         .then(({ data }) => {
