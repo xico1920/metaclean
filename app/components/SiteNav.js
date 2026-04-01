@@ -3,6 +3,8 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
+import Logo from '@/app/components/Logo'
+import { glowStyle, glowHandlers } from '@/lib/glow'
 
 const flags = {
   en: 'https://flagcdn.com/w20/gb.png',
@@ -10,48 +12,7 @@ const flags = {
   es: 'https://flagcdn.com/w20/es.png',
 }
 
-const glowStyle = {
-  background: 'linear-gradient(135deg, #2563eb, #4f46e5, #8b5cf6, #6366f1)',
-  backgroundSize: '300% 300%',
-  backgroundPosition: '0% 50%',
-  transition: 'box-shadow 0.4s ease, background-position 0.1s ease',
-}
-const glowHandlers = {
-  onMouseEnter: (e) => {
-    e.currentTarget.style.backgroundPosition = '100% 50%'
-    e.currentTarget.style.boxShadow = '0 0 0 1px rgba(139,92,246,0.6), 0 0 20px rgba(99,102,241,0.5), 0 0 45px rgba(139,92,246,0.25)'
-  },
-  onMouseLeave: (e) => {
-    e.currentTarget.style.backgroundPosition = '0% 50%'
-    e.currentTarget.style.boxShadow = 'none'
-  },
-  onMouseMove: (e) => {
-    const r = e.currentTarget.getBoundingClientRect()
-    e.currentTarget.style.backgroundPosition = `${((e.clientX - r.left) / r.width * 100).toFixed(1)}% 50%`
-  },
-}
 
-function Logo() {
-  return (
-    <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: '10px', textDecoration: 'none' }}>
-      <svg width="30" height="30" viewBox="0 0 56 56" fill="none">
-        <defs><clipPath id="snClip"><rect width="56" height="56" rx="13" /></clipPath></defs>
-        <rect width="56" height="56" rx="13" fill="#4338ca" />
-        <g clipPath="url(#snClip)">
-          <circle cx="14" cy="18" r="5" fill="rgba(255,255,255,0.9)" />
-          <polygon points="6,52 22,26 38,52" fill="rgba(255,255,255,0.9)" />
-          <polygon points="24,52 36,34 50,52" fill="rgba(255,255,255,0.7)" />
-          <polygon points="34,0 56,0 56,24" fill="#060609" />
-          <line x1="34" y1="0" x2="56" y2="24" stroke="#a5b4fc" strokeWidth="2" strokeLinecap="round" />
-        </g>
-      </svg>
-      <span style={{ fontFamily: '-apple-system,BlinkMacSystemFont,"Helvetica Neue",sans-serif', fontSize: '19px', letterSpacing: '-0.7px', lineHeight: 1 }}>
-        <span style={{ fontWeight: 800, color: 'white' }}>meta</span>
-        <span style={{ fontWeight: 200, color: 'rgba(255,255,255,0.4)' }}>clean</span>
-      </span>
-    </Link>
-  )
-}
 
 export default function SiteNav() {
   const pathname = usePathname()
@@ -121,7 +82,7 @@ export default function SiteNav() {
   return (
     <nav className="relative z-20" style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
       <div className="flex items-center justify-between px-4 sm:px-8 py-4 sm:py-5">
-        <Logo />
+        <Logo clipId="siteNavLogo" />
         <div className="flex items-center gap-2 sm:gap-5">
           {navLink('/features', 'Features')}
           {navLink('/pricing', 'Pricing')}

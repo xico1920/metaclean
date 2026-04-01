@@ -4,51 +4,8 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import Footer from '@/app/components/Footer'
-
-function Logo() {
-  return (
-    <Link href="/" style={{display:'flex', alignItems:'center', gap:'10px', textDecoration:'none'}}>
-      <svg width="30" height="30" viewBox="0 0 56 56" fill="none">
-        <defs><clipPath id="loginClip"><rect width="56" height="56" rx="13"/></clipPath></defs>
-        <rect width="56" height="56" rx="13" fill="#4338ca"/>
-        <g clipPath="url(#loginClip)">
-          <circle cx="14" cy="18" r="5" fill="rgba(255,255,255,0.9)"/>
-          <polygon points="6,52 22,26 38,52" fill="rgba(255,255,255,0.9)"/>
-          <polygon points="24,52 36,34 50,52" fill="rgba(255,255,255,0.7)"/>
-          <polygon points="34,0 56,0 56,24" fill="#060609"/>
-          <line x1="34" y1="0" x2="56" y2="24" stroke="#a5b4fc" strokeWidth="2" strokeLinecap="round"/>
-        </g>
-      </svg>
-      <span style={{fontFamily:'-apple-system,BlinkMacSystemFont,"Helvetica Neue",sans-serif', fontSize:'19px', letterSpacing:'-0.7px', lineHeight:1}}>
-        <span style={{fontWeight:800, color:'white'}}>meta</span>
-        <span style={{fontWeight:200, color:'rgba(255,255,255,0.45)'}}>clean</span>
-      </span>
-    </Link>
-  )
-}
-
-const glowStyle = {
-  background: 'linear-gradient(135deg, #2563eb, #4f46e5, #8b5cf6, #6366f1)',
-  backgroundSize: '300% 300%',
-  backgroundPosition: '0% 50%',
-  transition: 'box-shadow 0.4s ease, background-position 0.1s ease',
-}
-
-const glowHandlers = {
-  onMouseEnter: (e) => {
-    e.currentTarget.style.backgroundPosition = '100% 50%'
-    e.currentTarget.style.boxShadow = '0 0 0 1px rgba(139,92,246,0.6), 0 0 20px rgba(99,102,241,0.5), 0 0 45px rgba(139,92,246,0.25)'
-  },
-  onMouseLeave: (e) => {
-    e.currentTarget.style.backgroundPosition = '0% 50%'
-    e.currentTarget.style.boxShadow = 'none'
-  },
-  onMouseMove: (e) => {
-    const rect = e.currentTarget.getBoundingClientRect()
-    const x = ((e.clientX - rect.left) / rect.width * 100).toFixed(1)
-    e.currentTarget.style.backgroundPosition = `${x}% 50%`
-  },
-}
+import Logo from '@/app/components/Logo'
+import { glowStyle, glowHandlers } from '@/lib/glow'
 
 const benefits = [
   {
@@ -231,7 +188,7 @@ export default function Login() {
         <div className="absolute top-0 left-0 right-0 h-px" style={{background: 'linear-gradient(90deg, transparent, rgba(99,102,241,0.4), transparent)'}} />
 
         <div style={fadeIn(0)}>
-          <Logo />
+          <Logo clipId="loginDesktopLogo" />
         </div>
 
         <div className="relative" style={fadeIn(80)}>
@@ -279,7 +236,7 @@ export default function Login() {
 
         {/* Mobile nav */}
         <div className="lg:hidden flex items-center justify-between px-5 py-4" style={{borderBottom: '1px solid rgba(255,255,255,0.05)', ...fadeIn(0)}}>
-          <Logo />
+          <Logo clipId="loginMobileLogo" />
           <div className="relative">
             <button onClick={() => setLangOpen(o => !o)} className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[12px] text-gray-400 hover:text-gray-200 transition-colors" style={{border: '1px solid rgba(255,255,255,0.07)'}}>
               <img src={flags[lang]} alt={lang} style={{width:'16px', height:'11px', objectFit:'cover', borderRadius:'2px'}} />

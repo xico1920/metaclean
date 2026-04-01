@@ -1,6 +1,7 @@
 'use client'
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import Logo from '@/app/components/Logo'
 
 const t = {
   en: { features: 'Features', pricing: 'Pricing', privacy: 'Privacy', terms: 'Terms', rights: 'All rights reserved.' },
@@ -8,27 +9,6 @@ const t = {
   es: { features: 'Funcionalidades', pricing: 'Precios', privacy: 'Privacidad', terms: 'Términos', rights: 'Todos los derechos reservados.' },
 }
 
-function Logo() {
-  return (
-    <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: '10px', textDecoration: 'none' }}>
-      <svg width="28" height="28" viewBox="0 0 56 56" fill="none">
-        <defs><clipPath id="footerClip"><rect width="56" height="56" rx="13" /></clipPath></defs>
-        <rect width="56" height="56" rx="13" fill="#4338ca" />
-        <g clipPath="url(#footerClip)">
-          <circle cx="14" cy="18" r="5" fill="rgba(255,255,255,0.9)" />
-          <polygon points="6,52 22,26 38,52" fill="rgba(255,255,255,0.9)" />
-          <polygon points="24,52 36,34 50,52" fill="rgba(255,255,255,0.7)" />
-          <polygon points="34,0 56,0 56,24" fill="#060609" />
-          <line x1="34" y1="0" x2="56" y2="24" stroke="#a5b4fc" strokeWidth="2" strokeLinecap="round" />
-        </g>
-      </svg>
-      <span style={{ fontFamily: '-apple-system,BlinkMacSystemFont,"Helvetica Neue",sans-serif', fontSize: '17px', letterSpacing: '-0.6px', lineHeight: 1 }}>
-        <span style={{ fontWeight: 800, color: 'white' }}>meta</span>
-        <span style={{ fontWeight: 200, color: 'rgba(255,255,255,0.4)' }}>clean</span>
-      </span>
-    </Link>
-  )
-}
 
 export default function Footer() {
   const [lang, setLang] = useState('en')
@@ -48,7 +28,7 @@ export default function Footer() {
     <footer className="relative z-10 border-t border-white/5 px-4 sm:px-8 py-6 flex flex-col sm:flex-row items-center justify-between gap-4 sm:gap-0"
       style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif' }}>
 
-      <Logo />
+      <Logo size={28} clipId="footerLogo" />
 
       <div className="flex items-center gap-4 sm:gap-5 text-[12px] text-gray-500 flex-wrap justify-center">
         <Link href="/features" className="hover:text-gray-300 transition-colors">{i.features}</Link>

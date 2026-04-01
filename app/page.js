@@ -5,6 +5,9 @@ import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import SiteNav from '@/app/components/SiteNav'
 import Footer from '@/app/components/Footer'
+import { PLATFORM_CONFIGS, PlatformIcon } from '@/lib/platforms'
+import { glowStyle, glowHandlers } from '@/lib/glow'
+import Reveal from '@/app/components/Reveal'
 
 const cycleWords = {
   en: ['rejected.', 'disapproved.', 'flagged.', 'too large.', 'low quality.'],
@@ -157,59 +160,6 @@ const t = {
 }
 
 
-const glowStyle = {
-  background: 'linear-gradient(135deg, #2563eb, #4f46e5, #8b5cf6, #6366f1)',
-  backgroundSize: '300% 300%',
-  backgroundPosition: '0% 50%',
-  transition: 'box-shadow 0.4s ease, background-position 0.1s ease',
-}
-
-const glowHandlers = {
-  onMouseEnter: (e) => {
-    e.currentTarget.style.backgroundPosition = '100% 50%'
-    e.currentTarget.style.boxShadow = '0 0 0 1px rgba(139,92,246,0.6), 0 0 20px rgba(99,102,241,0.5), 0 0 45px rgba(139,92,246,0.25)'
-    e.currentTarget.style.transform = 'scale(1.02)'
-  },
-  onMouseLeave: (e) => {
-    e.currentTarget.style.backgroundPosition = '0% 50%'
-    e.currentTarget.style.boxShadow = 'none'
-    e.currentTarget.style.transform = 'scale(1)'
-  },
-  onMouseMove: (e) => {
-    const rect = e.currentTarget.getBoundingClientRect()
-    const x = ((e.clientX - rect.left) / rect.width * 100).toFixed(1)
-    e.currentTarget.style.backgroundPosition = `${x}% 50%`
-  },
-}
-
-function Reveal({ children, delay = 0, y = 20, className = '', style: extStyle = {} }) {
-  const ref = useRef(null)
-  const [visible, setVisible] = useState(false)
-  useEffect(() => {
-    const el = ref.current
-    if (!el) return
-    const obs = new IntersectionObserver(
-      ([entry]) => { if (entry.isIntersecting) { setVisible(true); obs.disconnect() } },
-      { threshold: 0.05, rootMargin: '0px 0px -30px 0px' }
-    )
-    obs.observe(el)
-    return () => obs.disconnect()
-  }, [])
-  return (
-    <div
-      ref={ref}
-      className={className}
-      style={{
-        opacity: visible ? 1 : 0,
-        transform: visible ? 'none' : `translateY(${y}px)`,
-        transition: `opacity 0.6s cubic-bezier(0.16,1,0.3,1) ${delay}ms, transform 0.6s cubic-bezier(0.16,1,0.3,1) ${delay}ms`,
-        ...extStyle,
-      }}
-    >
-      {children}
-    </div>
-  )
-}
 
 function IconUpload() {
   return <svg className="w-8 h-8 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.2} d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" /></svg>
@@ -249,54 +199,6 @@ function IconAIExpand() {
 
 function IconAIText() {
   return <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 01.865-.501 48.172 48.172 0 003.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z" /></svg>
-}
-
-function PlatformIcon({ platform }) {
-  const s = { width: 15, height: 15, style: { display: 'block', flexShrink: 0 } }
-  if (platform === 'meta') return (
-    <svg {...s} viewBox="0 0 24 24" fill="none">
-      <path d="M12 9.5c-1.5-2.2-3.2-3.5-5-3.5C4.1 6 2 8.2 2 11c0 1.8.9 3.3 2.3 4.2.9.6 1.8.8 2.7.8 1.8 0 3.5-1.4 5-3.5 1.5 2.1 3.2 3.5 5 3.5.9 0 1.8-.2 2.7-.8C21.1 14.3 22 12.8 22 11c0-2.8-2.1-5-5-5-1.8 0-3.5 1.3-5 3.5z" fill="#1877f2"/>
-    </svg>
-  )
-  if (platform === 'google') return (
-    <svg {...s} viewBox="0 0 24 24">
-      <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-      <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-      <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
-      <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
-    </svg>
-  )
-  if (platform === 'tiktok') return (
-    <svg {...s} viewBox="0 0 24 24">
-      <path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.32 6.32 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.33-6.34V8.69a8.18 8.18 0 004.78 1.52V6.78a4.85 4.85 0 01-1.01-.09z" fill="#ff0050"/>
-    </svg>
-  )
-  if (platform === 'snapchat') return (
-    <svg {...s} viewBox="0 0 24 24">
-      <path d="M12.206.793c.99 0 4.347.276 5.93 3.821.529 1.193.403 3.219.317 4.814l-.004.061c-.004.071-.007.141-.01.211.129.06.264.107.4.117a1.104 1.104 0 00.606-.182c.083-.049.156-.063.225-.063.284 0 .573.211.573.508 0 .395-.3.544-.587.665-.064.028-.134.055-.194.085-.48.247-.646.607-.542.905.262.748 1.177 1.21 1.853 1.482l.06.025c.327.13.614.243.8.38.42.306.634.742.627 1.25-.011.664-.423 1.046-.798 1.046-.153 0-.289-.048-.43-.095-.327-.11-.651-.222-.984-.222-.228 0-.443.044-.645.137-.29.133-.516.308-.734.477-.518.403-1.094.851-2.257.851-.062 0-.127-.003-.194-.009-.527-.049-1.006-.195-1.42-.336-.398-.137-.771-.266-1.141-.266-.37 0-.743.129-1.141.266-.414.141-.893.287-1.42.336-.067.006-.132.009-.194.009-1.163 0-1.739-.448-2.257-.851-.218-.169-.444-.344-.734-.477-.202-.093-.417-.137-.645-.137-.333 0-.657.112-.984.222-.141.047-.277.095-.43.095-.375 0-.787-.382-.798-1.046-.007-.508.207-.944.627-1.25.186-.137.473-.25.8-.38l.06-.025c.676-.272 1.591-.734 1.853-1.482.104-.298-.062-.658-.542-.905-.06-.03-.13-.057-.194-.085-.287-.121-.587-.27-.587-.665 0-.297.289-.508.573-.508.069 0 .142.014.225.063a1.1 1.1 0 00.606.182c.136-.01.271-.057.4-.117l-.01-.211-.004-.061c-.086-1.595-.212-3.621.317-4.814C7.859 1.069 11.216.793 12.206.793z" fill="#fffc00"/>
-    </svg>
-  )
-  if (platform === 'pinterest') return (
-    <svg {...s} viewBox="0 0 24 24" fill="#e60023">
-      <path d="M12 0C5.373 0 0 5.373 0 12c0 5.084 3.163 9.426 7.627 11.174-.105-.949-.2-2.405.042-3.441.218-.937 1.407-5.965 1.407-5.965s-.359-.719-.359-1.782c0-1.668.967-2.914 2.171-2.914 1.023 0 1.518.769 1.518 1.69 0 1.029-.655 2.568-.994 3.995-.283 1.194.599 2.169 1.777 2.169 2.133 0 3.772-2.249 3.772-5.495 0-2.873-2.064-4.882-5.012-4.882-3.414 0-5.418 2.561-5.418 5.207 0 1.031.397 2.138.893 2.738a.36.36 0 01.083.345l-.333 1.36c-.053.22-.174.267-.402.161-1.499-.698-2.436-2.889-2.436-4.649 0-3.785 2.75-7.262 7.929-7.262 4.163 0 7.398 2.967 7.398 6.931 0 4.136-2.607 7.464-6.227 7.464-1.216 0-2.359-.632-2.75-1.378l-.748 2.853c-.271 1.043-1.002 2.35-1.492 3.146C9.57 23.812 10.763 24 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0z"/>
-    </svg>
-  )
-  if (platform === 'linkedin') return (
-    <svg {...s} viewBox="0 0 24 24" fill="#0a66c2">
-      <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
-    </svg>
-  )
-  return <div style={{width:15,height:15,borderRadius:'50%',background:'#6366f1',flexShrink:0}} />
-}
-
-
-const PLATFORM_CONFIGS = {
-  meta:      { name: 'Meta Ads',   color: '#1877f2', formats: ['1:1 · 1080×1080', '4:5 · 1080×1350', '9:16 · 1080×1920', '1.91:1 · 1200×628'] },
-  google:    { name: 'Google Ads', color: '#4285f4', formats: ['1.91:1 · 1200×628', '1:1 · 1200×1200', '4:5 · 1200×1500'] },
-  tiktok:    { name: 'TikTok Ads', color: '#ff0050', formats: ['9:16 · 1080×1920', '1:1 · 1080×1080'] },
-  snapchat:  { name: 'Snapchat',   color: '#fffc00', formats: ['9:16 · 1080×1920'] },
-  pinterest: { name: 'Pinterest',  color: '#e60023', formats: ['2:3 · 1000×1500', '1:1 · 1000×1000'] },
-  linkedin:  { name: 'LinkedIn',   color: '#0a66c2', formats: ['1.91:1 · 1200×628', '1:1 · 1200×1200'] },
 }
 
 function AuthGateModal({ onClose, lang }) {
@@ -638,7 +540,7 @@ export default function Home() {
               <span className="text-[11px] text-gray-600 uppercase tracking-widest">{i.formats_label}:</span>
               {PLATFORM_CONFIGS[selectedPlatform].formats.map((f, idx) => (
                 <span key={idx} className="text-[11px] px-2.5 py-1 rounded-md font-medium" style={{background: 'rgba(99,102,241,0.08)', border: '1px solid rgba(99,102,241,0.18)', color: '#a5b4fc'}}>
-                  {f}
+                  {f.display} · {f.size}
                 </span>
               ))}
               {selectedPlatform === 'tiktok' && (

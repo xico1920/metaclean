@@ -1,75 +1,12 @@
 'use client'
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import SiteNav from '@/app/components/SiteNav'
 import Footer from '@/app/components/Footer'
+import { glowStyle, glowHandlers } from '@/lib/glow'
 import { supabase } from '@/lib/supabase'
-
-// ── Reveal ────────────────────────────────────────────────────────────────────
-function Reveal({ children, delay = 0, y = 18, className = '' }) {
-  const ref = useRef(null)
-  const [v, setV] = useState(false)
-  useEffect(() => {
-    const el = ref.current; if (!el) return
-    const obs = new IntersectionObserver(
-      ([e]) => { if (e.isIntersecting) { setV(true); obs.disconnect() } },
-      { threshold: 0.05, rootMargin: '0px 0px -20px 0px' }
-    )
-    obs.observe(el)
-    return () => obs.disconnect()
-  }, [])
-  return (
-    <div ref={ref} className={className} style={{
-      opacity: v ? 1 : 0,
-      transform: v ? 'none' : `translateY(${y}px)`,
-      transition: `opacity 0.55s cubic-bezier(0.16,1,0.3,1) ${delay}ms, transform 0.55s cubic-bezier(0.16,1,0.3,1) ${delay}ms`,
-    }}>
-      {children}
-    </div>
-  )
-}
-
-// ── Logo ──────────────────────────────────────────────────────────────────────
-function Logo() {
-  return (
-    <Link href="/" style={{display:'flex', alignItems:'center', gap:'10px', textDecoration:'none'}}>
-      <svg width="30" height="30" viewBox="0 0 56 56" fill="none">
-        <defs><clipPath id="pClip"><rect width="56" height="56" rx="13"/></clipPath></defs>
-        <rect width="56" height="56" rx="13" fill="#4338ca"/>
-        <g clipPath="url(#pClip)">
-          <circle cx="14" cy="18" r="5" fill="rgba(255,255,255,0.9)"/>
-          <polygon points="6,52 22,26 38,52" fill="rgba(255,255,255,0.9)"/>
-          <polygon points="24,52 36,34 50,52" fill="rgba(255,255,255,0.7)"/>
-          <polygon points="34,0 56,0 56,24" fill="#060609"/>
-          <line x1="34" y1="0" x2="56" y2="24" stroke="#a5b4fc" strokeWidth="2" strokeLinecap="round"/>
-        </g>
-      </svg>
-      <span style={{fontFamily:'-apple-system,BlinkMacSystemFont,"Helvetica Neue",sans-serif', fontSize:'19px', letterSpacing:'-0.7px', lineHeight:1}}>
-        <span style={{fontWeight:800, color:'white'}}>meta</span>
-        <span style={{fontWeight:200, color:'rgba(255,255,255,0.4)'}}>clean</span>
-      </span>
-    </Link>
-  )
-}
-
-const glowStyle = {
-  background: 'linear-gradient(135deg, #2563eb, #4f46e5, #8b5cf6, #6366f1)',
-  backgroundSize: '300% 300%', backgroundPosition: '0% 50%',
-  transition: 'box-shadow 0.4s ease, background-position 0.1s ease',
-}
-const glowHandlers = {
-  onMouseEnter: (e) => {
-    e.currentTarget.style.backgroundPosition = '100% 50%'
-    e.currentTarget.style.boxShadow = '0 0 0 1px rgba(139,92,246,0.6), 0 0 20px rgba(99,102,241,0.5), 0 0 45px rgba(139,92,246,0.25)'
-    e.currentTarget.style.transform = 'scale(1.02)'
-  },
-  onMouseLeave: (e) => { e.currentTarget.style.backgroundPosition = '0% 50%'; e.currentTarget.style.boxShadow = 'none'; e.currentTarget.style.transform = 'scale(1)' },
-  onMouseMove: (e) => {
-    const r = e.currentTarget.getBoundingClientRect()
-    e.currentTarget.style.backgroundPosition = `${((e.clientX - r.left) / r.width * 100).toFixed(1)}% 50%`
-  },
-}
+import Reveal from '@/app/components/Reveal'
 
 function Check() {
   return <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4.5 12.75l6 6 9-13.5" /></svg>

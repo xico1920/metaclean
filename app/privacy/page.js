@@ -1,53 +1,8 @@
 'use client'
-import { useState, useEffect, useRef } from 'react'
-import Link from 'next/link'
+import { useState, useEffect } from 'react'
 import SiteNav from '@/app/components/SiteNav'
 import Footer from '@/app/components/Footer'
-
-function Reveal({ children, delay = 0, y = 16, className = '' }) {
-  const ref = useRef(null)
-  const [v, setV] = useState(false)
-  useEffect(() => {
-    const el = ref.current; if (!el) return
-    const obs = new IntersectionObserver(
-      ([e]) => { if (e.isIntersecting) { setV(true); obs.disconnect() } },
-      { threshold: 0.04, rootMargin: '0px 0px -16px 0px' }
-    )
-    obs.observe(el)
-    return () => obs.disconnect()
-  }, [])
-  return (
-    <div ref={ref} className={className} style={{
-      opacity: v ? 1 : 0,
-      transform: v ? 'none' : `translateY(${y}px)`,
-      transition: `opacity 0.5s cubic-bezier(0.16,1,0.3,1) ${delay}ms, transform 0.5s cubic-bezier(0.16,1,0.3,1) ${delay}ms`,
-    }}>
-      {children}
-    </div>
-  )
-}
-
-function Logo() {
-  return (
-    <Link href="/" style={{display:'flex', alignItems:'center', gap:'10px', textDecoration:'none'}}>
-      <svg width="30" height="30" viewBox="0 0 56 56" fill="none">
-        <defs><clipPath id="prClip"><rect width="56" height="56" rx="13"/></clipPath></defs>
-        <rect width="56" height="56" rx="13" fill="#4338ca"/>
-        <g clipPath="url(#prClip)">
-          <circle cx="14" cy="18" r="5" fill="rgba(255,255,255,0.9)"/>
-          <polygon points="6,52 22,26 38,52" fill="rgba(255,255,255,0.9)"/>
-          <polygon points="24,52 36,34 50,52" fill="rgba(255,255,255,0.7)"/>
-          <polygon points="34,0 56,0 56,24" fill="#060609"/>
-          <line x1="34" y1="0" x2="56" y2="24" stroke="#a5b4fc" strokeWidth="2" strokeLinecap="round"/>
-        </g>
-      </svg>
-      <span style={{fontFamily:'-apple-system,BlinkMacSystemFont,"Helvetica Neue",sans-serif', fontSize:'19px', letterSpacing:'-0.7px', lineHeight:1}}>
-        <span style={{fontWeight:800, color:'white'}}>meta</span>
-        <span style={{fontWeight:200, color:'rgba(255,255,255,0.4)'}}>clean</span>
-      </span>
-    </Link>
-  )
-}
+import Reveal from '@/app/components/Reveal'
 
 const sections = [
   { title: '1. What we collect', body: 'MetaClean collects only what is necessary to provide the service. When you upload images, they are processed in memory and never written to disk or stored in any database. We do not collect, store, or analyze the content of your images. For account functionality, we collect your email address and payment information (processed by Stripe — we never see your card details).' },
