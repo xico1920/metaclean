@@ -694,6 +694,7 @@ function DashboardInner() {
   const searchParams = useSearchParams()
   const [user, setUser] = useState(null)
   const [profile, setProfile] = useState(null)
+  const [sessionKicked, setSessionKicked] = useState(false)
   const [history, setHistory] = useState([])
   const [loading, setLoading] = useState(true)
   const [loaded, setLoaded] = useState(false)
@@ -823,6 +824,45 @@ function DashboardInner() {
       } catch {}
     })
   }, [router, searchParams])
+
+  // ── Single-session enforcement ────────────────────────────────────────────────
+  useEffect(() => {
+    if (!user) return
+    const sessionId = crypto.randomUUID()
+    let channel
+
+    const register = async () => {
+      await supabase.from('profiles').update({ active_session_id: sessionId }).eq('id', user.id)
+
+      channel = supabase
+        .channel(`session:${user.id}`)
+        .on('postgres_changes', {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'profiles',
+          filter: `id=eq.${user.id}`,
+        }, (payload) => {
+          if (payload.new.active_session_id !== sessionId) {
+            setSessionKicked(true)
+          }
+        })
+        .subscribe()
+    }
+
+    register()
+
+    return () => {
+      if (channel) supabase.removeChannel(channel)
+      // Clear session only if we're still the active one
+      supabase.from('profiles')
+        .select('active_session_id').eq('id', user.id).single()
+        .then(({ data }) => {
+          if (data?.active_session_id === sessionId) {
+            supabase.from('profiles').update({ active_session_id: null }).eq('id', user.id)
+          }
+        })
+    }
+  }, [user])
 
   const loadProfile = async (uid) => {
     const { data } = await supabase.from('profiles').select('*').eq('id', uid).single()
@@ -1245,6 +1285,34 @@ function DashboardInner() {
   const processingActive = processing || cleanProcessing || zipProcessing
   const processingMode = cleanProcessing ? 'clean' : 'ad'
   const processingProgress = progressTotal > 0 ? (progressCount / progressTotal) * 100 : 0
+
+  if (sessionKicked) {
+    return (
+      <main className="min-h-screen bg-[#060609] text-white flex items-center justify-center p-4" style={{fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'}}>
+        <div className="fixed inset-0 pointer-events-none" style={{background: 'radial-gradient(ellipse 60% 40% at 50% 30%, rgba(239,68,68,0.06) 0%, transparent 70%)'}} />
+        <div className="relative z-10 w-full max-w-sm text-center">
+          <div className="w-16 h-16 rounded-2xl mx-auto mb-6 flex items-center justify-center" style={{background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.25)'}}>
+            <svg className="w-8 h-8" fill="none" stroke="#f87171" strokeWidth="1.5" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+            </svg>
+          </div>
+          <h1 className="text-xl font-bold text-white mb-2">Session ended</h1>
+          <p className="text-gray-400 text-sm mb-8 leading-relaxed">
+            Your account was opened on another device.<br />Only one active session is allowed at a time.
+          </p>
+          <button
+            onClick={async () => { await supabase.auth.signOut(); router.push('/login') }}
+            className="w-full py-3 rounded-xl text-sm font-semibold text-white transition-all"
+            style={{background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.3)'}}
+            onMouseEnter={e => { e.currentTarget.style.background = 'rgba(239,68,68,0.25)' }}
+            onMouseLeave={e => { e.currentTarget.style.background = 'rgba(239,68,68,0.15)' }}
+          >
+            Sign out
+          </button>
+        </div>
+      </main>
+    )
+  }
 
   return (
     <main className="min-h-screen bg-[#060609] text-white" style={{fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'}}>
