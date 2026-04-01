@@ -68,8 +68,8 @@ const t = {
     guest_tut_skip: 'Continue as guest',
     session_kicked_title: 'Session ended',
     session_blocked_title: 'Already active elsewhere',
-    session_kicked_body: 'Your account was opened on another device. Only one active session is allowed at a time.',
-    session_blocked_body: 'Your account is already open on another device. Close that session first, then try again.',
+    session_kicked_body: 'Your account was opened on another device. Only one active session is allowed at a time, it may take up to 1 minute to update.',
+    session_blocked_body: 'Your account is already open on another device. Close that session first, then try again. It may take up to 1 minute to update.',
     session_signout: 'Sign out',
   },
   pt: {
@@ -125,8 +125,8 @@ const t = {
     guest_tut_skip: 'Continuar como convidado',
     session_kicked_title: 'Sessão terminada',
     session_blocked_title: 'Conta já ativa noutro dispositivo',
-    session_kicked_body: 'A tua conta foi aberta noutro dispositivo. Só é permitida uma sessão ativa de cada vez.',
-    session_blocked_body: 'A tua conta já está aberta noutro dispositivo. Fecha essa sessão primeiro e tenta novamente.',
+    session_kicked_body: 'A sua conta foi aberta noutro dispositivo. Apenas é permitida uma sessão ativa de cada vez e a atualização pode demorar até 1 minuto.',
+    session_blocked_body: 'A sua conta já está aberta noutro dispositivo. Feche essa sessão primeiro e tente novamente. A atualização pode demorar até 1 minuto.',
     session_signout: 'Terminar sessão',
   },
   es: {
@@ -182,8 +182,8 @@ const t = {
     guest_tut_skip: 'Continuar como invitado',
     session_kicked_title: 'Sesión terminada',
     session_blocked_title: 'Cuenta ya activa en otro dispositivo',
-    session_kicked_body: 'Tu cuenta fue abierta en otro dispositivo. Solo se permite una sesión activa a la vez.',
-    session_blocked_body: 'Tu cuenta ya está abierta en otro dispositivo. Cierra esa sesión primero e inténtalo de nuevo.',
+    session_kicked_body: 'Tu cuenta se abrió en otro dispositivo. Solo se permite una sesión activa a la vez; la actualización puede tardar hasta 1 minuto.',
+    session_blocked_body: 'Tu cuenta ya está abierta en otro dispositivo. Cierra esa sesión primero y luego inténtalo de nuevo. La actualización puede tardar hasta un minuto.',
     session_signout: 'Cerrar sesión',
   },
 }
