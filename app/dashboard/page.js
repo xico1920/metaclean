@@ -832,33 +832,26 @@ function DashboardInner() {
     let interval
 
     const register = async () => {
-      await supabase.from('profiles').update({ active_session_id: sessionId }).eq('id', user.id)
+      await fetch('/api/session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: user.id, sessionId }),
+      })
 
-      // Poll every 8 seconds — if someone else claimed the session, kick this one
       interval = setInterval(async () => {
-        const { data } = await supabase
-          .from('profiles')
-          .select('active_session_id')
-          .eq('id', user.id)
-          .single()
-        if (data && data.active_session_id !== sessionId) {
+        const res = await fetch(`/api/session?userId=${user.id}&sessionId=${sessionId}`)
+        const data = await res.json()
+        if (!data.valid) {
           setSessionKicked(true)
           clearInterval(interval)
         }
-      }, 8000)
+      }, 5000)
     }
 
     register()
 
     return () => {
       clearInterval(interval)
-      supabase.from('profiles')
-        .select('active_session_id').eq('id', user.id).single()
-        .then(({ data }) => {
-          if (data?.active_session_id === sessionId) {
-            supabase.from('profiles').update({ active_session_id: null }).eq('id', user.id)
-          }
-        })
     }
   }, [user])
 
