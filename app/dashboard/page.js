@@ -9,6 +9,7 @@ import Footer from '@/app/components/Footer'
 import Logo from '@/app/components/Logo'
 import { PLATFORM_CONFIGS, PlatformIcon } from '@/lib/platforms'
 import { glowStyle, glowHandlers } from '@/lib/glow'
+import JSZip from 'jszip'
 
 export const dynamic = 'force-dynamic'
 
@@ -1136,23 +1137,10 @@ function DashboardInner() {
       setProgressCount(fileIndex + 1)
     }
 
-    // Build preview URL from first result
+    // Build preview URL from first result (jpeg only — skip zip preview to avoid JSZip client issues)
     let previewUrl = null
-    if (results.length > 0) {
-      try {
-        const first = results[0]
-        if (!first.isZip) {
-          previewUrl = URL.createObjectURL(first.blob)
-        } else {
-          const JSZip = (await import('jszip')).default
-          const inner = await JSZip.loadAsync(first.blob)
-          const firstName = Object.keys(inner.files).find(n => !inner.files[n].dir && /\.(jpe?g|png|webp)$/i.test(n))
-          if (firstName) {
-            const b = await inner.files[firstName].async('blob')
-            previewUrl = URL.createObjectURL(b)
-          }
-        }
-      } catch {}
+    if (results.length > 0 && !results[0].isZip) {
+      try { previewUrl = URL.createObjectURL(results[0].blob) } catch {}
     }
 
     const formatCount = allStats.length || selectedFormats.size
@@ -1173,44 +1161,30 @@ function DashboardInner() {
     }
   }
 
-  const performDownload = async (results, zipName) => {
+  const performDownload = async (results) => {
     if (!results || results.length === 0) return
-    try {
-      if (results.length === 1 && !results[0].isZip) {
-        const url = URL.createObjectURL(results[0].blob)
-        const a = document.createElement('a')
-        a.href = url; a.download = results[0].filename
-        document.body.appendChild(a); a.click(); document.body.removeChild(a)
-        setTimeout(() => URL.revokeObjectURL(url), 1000)
-      } else {
-        const JSZip = (await import('jszip')).default
-        const zip = new JSZip()
-        for (const { blob, filename, isZip } of results) {
-          if (isZip) {
-            const inner = await JSZip.loadAsync(blob)
-            await Promise.all(Object.keys(inner.files).map(async (name) => {
-              if (!inner.files[name].dir) zip.file(name, await inner.files[name].async('blob'))
-            }))
-          } else {
-            zip.file(filename, blob)
-          }
-        }
-        const zipBlob = await zip.generateAsync({ type: 'blob', compression: 'DEFLATE' })
-        const url = URL.createObjectURL(zipBlob)
-        const a = document.createElement('a')
-        a.href = url; a.download = zipName
-        document.body.appendChild(a); a.click(); document.body.removeChild(a)
-        setTimeout(() => URL.revokeObjectURL(url), 1000)
+    const dl = (blob, filename) => {
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url; a.download = filename
+      document.body.appendChild(a); a.click(); document.body.removeChild(a)
+      setTimeout(() => URL.revokeObjectURL(url), 2000)
+    }
+    if (results.length === 1) {
+      dl(results[0].blob, results[0].filename)
+    } else {
+      const zip = new JSZip()
+      for (const { blob, filename } of results) {
+        zip.file(filename, blob)
       }
-    } catch (err) {
-      console.error('performDownload error:', err)
+      const zipBlob = await zip.generateAsync({ type: 'blob', compression: 'DEFLATE' })
+      dl(zipBlob, 'metaclean_batch.zip')
     }
   }
 
   const triggerDownload = async () => {
     if (!pendingResults) return
-    const { results, platform } = pendingResults
-    await performDownload(results, `metaclean_${platform}_batch.zip`)
+    await performDownload(pendingResults.results)
     setPendingResults(null)
   }
 
@@ -2059,7 +2033,7 @@ function DashboardInner() {
                           <IconCheck />{i.clean_success(cleanFiles.length)}
                         </div>
                         {cleanResults.length > 0 && (
-                          <button onClick={() => performDownload(cleanResults, 'metaclean_clean_batch.zip')} {...glowHandlers} className="inline-flex items-center gap-2 px-5 py-2 rounded-lg text-xs font-semibold text-white" style={glowStyle}>
+                          <button onClick={async () => { await performDownload(cleanResults) }} {...glowHandlers} className="inline-flex items-center gap-2 px-5 py-2 rounded-lg text-xs font-semibold text-white" style={glowStyle}>
                             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
                             Download
                           </button>
