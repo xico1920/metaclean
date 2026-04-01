@@ -66,6 +66,11 @@ const t = {
     guest_tut_s3_d: 'Create an account to process 10 images/day, save presets, and track your conversion history.',
     guest_tut_cta: 'Create free account',
     guest_tut_skip: 'Continue as guest',
+    session_kicked_title: 'Session ended',
+    session_blocked_title: 'Already active elsewhere',
+    session_kicked_body: 'Your account was opened on another device. Only one active session is allowed at a time.',
+    session_blocked_body: 'Your account is already open on another device. Close that session first, then try again.',
+    session_signout: 'Sign out',
   },
   pt: {
     plan_free: 'Grátis', plan_pro: 'Pro',
@@ -118,6 +123,11 @@ const t = {
     guest_tut_s3_d: 'Cria uma conta para processar 10 imagens/dia, guardar presets e ver o histórico.',
     guest_tut_cta: 'Criar conta gratuita',
     guest_tut_skip: 'Continuar como convidado',
+    session_kicked_title: 'Sessão terminada',
+    session_blocked_title: 'Conta já ativa noutro dispositivo',
+    session_kicked_body: 'A tua conta foi aberta noutro dispositivo. Só é permitida uma sessão ativa de cada vez.',
+    session_blocked_body: 'A tua conta já está aberta noutro dispositivo. Fecha essa sessão primeiro e tenta novamente.',
+    session_signout: 'Terminar sessão',
   },
   es: {
     plan_free: 'Gratis', plan_pro: 'Pro',
@@ -170,6 +180,11 @@ const t = {
     guest_tut_s3_d: 'Crea una cuenta para procesar 10 imágenes/día, guardar presets y ver tu historial.',
     guest_tut_cta: 'Crear cuenta gratuita',
     guest_tut_skip: 'Continuar como invitado',
+    session_kicked_title: 'Sesión terminada',
+    session_blocked_title: 'Cuenta ya activa en otro dispositivo',
+    session_kicked_body: 'Tu cuenta fue abierta en otro dispositivo. Solo se permite una sesión activa a la vez.',
+    session_blocked_body: 'Tu cuenta ya está abierta en otro dispositivo. Cierra esa sesión primero e inténtalo de nuevo.',
+    session_signout: 'Cerrar sesión',
   },
 }
 
@@ -694,7 +709,7 @@ function DashboardInner() {
   const searchParams = useSearchParams()
   const [user, setUser] = useState(null)
   const [profile, setProfile] = useState(null)
-  const [sessionKicked, setSessionKicked] = useState(false)
+  const [sessionKicked, setSessionKicked] = useState(false) // true = kicked by another device, 'blocked' = tried to enter while session active
   const [history, setHistory] = useState([])
   const [loading, setLoading] = useState(true)
   const [loaded, setLoaded] = useState(false)
@@ -832,20 +847,31 @@ function DashboardInner() {
     let interval
 
     const register = async () => {
-      await fetch('/api/session', {
+      const res = await fetch('/api/session', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: user.id, sessionId }),
+        body: JSON.stringify({ userId: user.id, sessionId, action: 'register' }),
       })
+      const data = await res.json()
 
+      if (data.blocked) {
+        setSessionKicked('blocked')
+        return
+      }
+
+      // Heartbeat every 15s to keep session alive
       interval = setInterval(async () => {
-        const res = await fetch(`/api/session?userId=${user.id}&sessionId=${sessionId}`)
-        const data = await res.json()
-        if (!data.valid) {
+        const hbRes = await fetch('/api/session', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId: user.id, sessionId, action: 'heartbeat' }),
+        })
+        const hbData = await hbRes.json()
+        if (hbData.kicked) {
           setSessionKicked(true)
           clearInterval(interval)
         }
-      }, 5000)
+      }, 15000)
     }
 
     register()
@@ -1287,9 +1313,11 @@ function DashboardInner() {
               <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
             </svg>
           </div>
-          <h1 className="text-xl font-bold text-white mb-2">Session ended</h1>
+          <h1 className="text-xl font-bold text-white mb-2">
+            {sessionKicked === 'blocked' ? i.session_blocked_title : i.session_kicked_title}
+          </h1>
           <p className="text-gray-400 text-sm mb-8 leading-relaxed">
-            Your account was opened on another device.<br />Only one active session is allowed at a time.
+            {sessionKicked === 'blocked' ? i.session_blocked_body : i.session_kicked_body}
           </p>
           <button
             onClick={async () => { await supabase.auth.signOut(); router.push('/login') }}
@@ -1298,7 +1326,7 @@ function DashboardInner() {
             onMouseEnter={e => { e.currentTarget.style.background = 'rgba(239,68,68,0.25)' }}
             onMouseLeave={e => { e.currentTarget.style.background = 'rgba(239,68,68,0.15)' }}
           >
-            Sign out
+            {i.session_signout}
           </button>
         </div>
       </main>
