@@ -1320,30 +1320,95 @@ function DashboardInner() {
   const processingProgress = progressTotal > 0 ? (progressCount / progressTotal) * 100 : 0
 
   if (sessionKicked) {
+    const isBlocked = sessionKicked === 'blocked'
     return (
       <main className="min-h-screen bg-[#060609] text-white flex items-center justify-center p-4" style={{fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'}}>
-        <div className="fixed inset-0 pointer-events-none" style={{background: 'radial-gradient(ellipse 60% 40% at 50% 30%, rgba(239,68,68,0.06) 0%, transparent 70%)'}} />
-        <div className="relative z-10 w-full max-w-sm text-center">
-          <div className="w-16 h-16 rounded-2xl mx-auto mb-6 flex items-center justify-center" style={{background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.25)'}}>
-            <svg className="w-8 h-8" fill="none" stroke="#f87171" strokeWidth="1.5" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
-            </svg>
+
+        {/* Background glows */}
+        <div className="fixed inset-0 pointer-events-none overflow-hidden">
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[700px] h-[400px]" style={{background: 'radial-gradient(ellipse at top, rgba(239,68,68,0.07) 0%, transparent 65%)'}} />
+          <div className="absolute bottom-0 left-1/4 w-[400px] h-[300px]" style={{background: 'radial-gradient(ellipse at bottom, rgba(99,102,241,0.04) 0%, transparent 70%)'}} />
+        </div>
+
+        <div className="relative z-10 w-full max-w-md">
+
+          {/* Card */}
+          <div className="rounded-2xl overflow-hidden" style={{background: '#0d0d14', border: '1px solid rgba(255,255,255,0.07)', boxShadow: '0 40px 80px rgba(0,0,0,0.6)'}}>
+
+            {/* Top red accent bar */}
+            <div style={{height: 3, background: 'linear-gradient(90deg, #ef4444, #f87171, #ef4444)'}} />
+
+            {/* Content */}
+            <div className="p-8 sm:p-10 text-center">
+
+              {/* Icon */}
+              <div className="relative mx-auto mb-7" style={{width: 72, height: 72}}>
+                <div className="absolute inset-0 rounded-2xl" style={{background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)'}} />
+                <div className="absolute inset-0 rounded-2xl animate-ping" style={{background: 'rgba(239,68,68,0.06)', animationDuration: '2.5s'}} />
+                <div className="relative w-full h-full flex items-center justify-center">
+                  {isBlocked ? (
+                    <svg className="w-8 h-8" fill="none" stroke="#f87171" strokeWidth="1.5" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                    </svg>
+                  ) : (
+                    <svg className="w-8 h-8" fill="none" stroke="#f87171" strokeWidth="1.5" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" />
+                    </svg>
+                  )}
+                </div>
+              </div>
+
+              {/* Label */}
+              <p className="text-[10px] font-semibold uppercase tracking-widest mb-3" style={{color: 'rgba(239,68,68,0.7)'}}>
+                {isBlocked ? 'Access denied' : 'Session terminated'}
+              </p>
+
+              {/* Title */}
+              <h1 className="text-2xl font-bold tracking-tight text-white mb-3">
+                {isBlocked ? i.session_blocked_title : i.session_kicked_title}
+              </h1>
+
+              {/* Body */}
+              <p className="text-[14px] leading-relaxed mb-8" style={{color: 'rgba(156,163,175,1)'}}>
+                {isBlocked ? i.session_blocked_body : i.session_kicked_body}
+              </p>
+
+              {/* Info box */}
+              <div className="rounded-xl px-4 py-3.5 mb-8 text-left flex items-start gap-3" style={{background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)'}}>
+                <svg className="w-4 h-4 shrink-0 mt-0.5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
+                </svg>
+                <p className="text-[12px] leading-relaxed" style={{color: 'rgba(107,114,128,1)'}}>
+                  {isBlocked
+                    ? 'MetaClean only allows one active session per account to protect your data.'
+                    : 'Your session was replaced by a new login. Sign out and sign back in to continue.'}
+                </p>
+              </div>
+
+              {/* CTA button */}
+              <button
+                onClick={async () => { await supabase.auth.signOut(); router.push('/login') }}
+                className="w-full py-3.5 rounded-xl text-[14px] font-semibold text-white transition-all"
+                style={{background: 'rgba(239,68,68,0.14)', border: '1px solid rgba(239,68,68,0.28)'}}
+                onMouseEnter={e => { e.currentTarget.style.background = 'rgba(239,68,68,0.24)'; e.currentTarget.style.borderColor = 'rgba(239,68,68,0.45)' }}
+                onMouseLeave={e => { e.currentTarget.style.background = 'rgba(239,68,68,0.14)'; e.currentTarget.style.borderColor = 'rgba(239,68,68,0.28)' }}
+              >
+                {i.session_signout}
+              </button>
+
+              {/* Footer note */}
+              <p className="text-[11px] mt-5" style={{color: 'rgba(75,85,99,1)'}}>
+                {user?.email}
+              </p>
+
+            </div>
           </div>
-          <h1 className="text-xl font-bold text-white mb-2">
-            {sessionKicked === 'blocked' ? i.session_blocked_title : i.session_kicked_title}
-          </h1>
-          <p className="text-gray-400 text-sm mb-8 leading-relaxed">
-            {sessionKicked === 'blocked' ? i.session_blocked_body : i.session_kicked_body}
-          </p>
-          <button
-            onClick={async () => { await supabase.auth.signOut(); router.push('/login') }}
-            className="w-full py-3 rounded-xl text-sm font-semibold text-white transition-all"
-            style={{background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.3)'}}
-            onMouseEnter={e => { e.currentTarget.style.background = 'rgba(239,68,68,0.25)' }}
-            onMouseLeave={e => { e.currentTarget.style.background = 'rgba(239,68,68,0.15)' }}
-          >
-            {i.session_signout}
-          </button>
+
+          {/* Bottom logo */}
+          <div className="flex justify-center mt-6">
+            <Logo size={22} clipId="kickedLogo" />
+          </div>
+
         </div>
       </main>
     )
