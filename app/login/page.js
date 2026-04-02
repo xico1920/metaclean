@@ -123,9 +123,21 @@ export default function Login() {
   const [transitioning, setTransitioning] = useState(false)
   const [lang, setLang] = useState('en')
   const [langOpen, setLangOpen] = useState(false)
+  const [langTransitioning, setLangTransitioning] = useState(false)
 
   const i = t[lang]
   const rules = pwdRules(i)
+
+  const setLangAndSave = (l) => {
+    if (l === lang || langTransitioning) return
+    setLangTransitioning(true)
+    setTimeout(() => {
+      setLang(l)
+      localStorage.setItem('metaclean_lang', l)
+      setLangOpen(false)
+    }, 140)
+    setTimeout(() => setLangTransitioning(false), 155)
+  }
 
   const switchMode = (newMode) => {
     if (newMode === mode || transitioning) return
@@ -265,7 +277,7 @@ export default function Login() {
       <div className="flex flex-1 relative z-10">
 
       {/* ── Left panel (desktop only) ── */}
-      <div className="hidden lg:flex flex-col justify-between w-[420px] xl:w-[480px] shrink-0 px-10 xl:px-14 py-10 relative overflow-hidden"
+      <div className="hidden lg:flex flex-col justify-between w-[420px] xl:w-[480px] shrink-0 px-10 xl:px-14 py-10 relative overflow-hidden h-screen sticky top-0"
         style={{borderRight: '1px solid rgba(255,255,255,0.05)', background: 'linear-gradient(160deg, rgba(13,13,24,0.8) 0%, rgba(6,6,9,1) 100%)'}}>
 
         {/* Subtle grid pattern */}
@@ -278,7 +290,7 @@ export default function Login() {
           <Logo clipId="loginDesktopLogo" />
         </div>
 
-        <div className="relative" style={fadeIn(80)}>
+        <div className="relative" style={{...fadeIn(80), opacity: !mounted ? 0 : langTransitioning ? 0 : 1, filter: langTransitioning ? 'blur(4px)' : 'blur(0px)', transform: !mounted ? 'translateY(16px)' : langTransitioning ? 'translateY(4px)' : 'none', transition: langTransitioning ? 'opacity 0.14s ease, filter 0.14s ease, transform 0.14s ease' : 'opacity 0.55s cubic-bezier(0.16,1,0.3,1) 80ms, filter 0.28s cubic-bezier(0.16,1,0.3,1), transform 0.55s cubic-bezier(0.16,1,0.3,1) 80ms'}}>
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full mb-6 text-[11px] font-semibold uppercase tracking-widest"
             style={{background: 'rgba(99,102,241,0.1)', border: '1px solid rgba(99,102,241,0.2)', color: '#a5b4fc'}}>
             <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-pulse inline-block" />
@@ -339,7 +351,7 @@ export default function Login() {
             {langOpen && (
               <div className="absolute right-0 mt-1.5 w-32 rounded-xl overflow-hidden z-30 anim-pop" style={{background: '#0d0d14', border: '1px solid rgba(255,255,255,0.08)', boxShadow: '0 20px 40px rgba(0,0,0,0.5)'}}>
                 {['en','pt','es'].map((l) => (
-                  <button key={l} onClick={() => { setLang(l); localStorage.setItem('metaclean_lang', l); setLangOpen(false) }} className="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-[12px] hover:bg-white/5 transition-colors">
+                  <button key={l} onClick={() => setLangAndSave(l)} className="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-[12px] hover:bg-white/5 transition-colors">
                     <img src={flags[l]} alt={l} style={{width:'16px', height:'11px', objectFit:'cover', borderRadius:'2px'}} />
                     <span className={`uppercase font-medium tracking-wider ${lang === l ? 'text-blue-400' : 'text-gray-400'}`}>{l}</span>
                     {lang === l && <svg className="w-3 h-3 text-blue-400 ml-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4.5 12.75l6 6 9-13.5" /></svg>}
@@ -361,7 +373,7 @@ export default function Login() {
             {langOpen && (
               <div className="absolute right-0 mt-1.5 w-32 rounded-xl overflow-hidden z-30 anim-pop" style={{background: '#0d0d14', border: '1px solid rgba(255,255,255,0.08)', boxShadow: '0 20px 40px rgba(0,0,0,0.5)'}}>
                 {['en','pt','es'].map((l) => (
-                  <button key={l} onClick={() => { setLang(l); localStorage.setItem('metaclean_lang', l); setLangOpen(false) }} className="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-[12px] hover:bg-white/5 transition-colors">
+                  <button key={l} onClick={() => setLangAndSave(l)} className="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-[12px] hover:bg-white/5 transition-colors">
                     <img src={flags[l]} alt={l} style={{width:'16px', height:'11px', objectFit:'cover', borderRadius:'2px'}} />
                     <span className={`uppercase font-medium tracking-wider ${lang === l ? 'text-blue-400' : 'text-gray-400'}`}>{l}</span>
                     {lang === l && <svg className="w-3 h-3 text-blue-400 ml-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4.5 12.75l6 6 9-13.5" /></svg>}
@@ -377,13 +389,13 @@ export default function Login() {
 
             {/* Heading */}
             <div className="mb-7" style={{
-              opacity: !mounted ? 0 : transitioning ? 0 : 1,
-              filter: transitioning ? 'blur(4px)' : 'blur(0px)',
-              transform: !mounted ? 'translateY(16px)' : transitioning ? 'translateY(5px)' : 'none',
+              opacity: !mounted ? 0 : (transitioning || langTransitioning) ? 0 : 1,
+              filter: (transitioning || langTransitioning) ? 'blur(4px)' : 'blur(0px)',
+              transform: !mounted ? 'translateY(16px)' : (transitioning || langTransitioning) ? 'translateY(5px)' : 'none',
               transition: !mounted
                 ? 'opacity 0.55s cubic-bezier(0.16,1,0.3,1) 60ms, transform 0.55s cubic-bezier(0.16,1,0.3,1) 60ms'
-                : transitioning
-                  ? 'opacity 0.15s ease, filter 0.15s ease, transform 0.15s ease'
+                : (transitioning || langTransitioning)
+                  ? 'opacity 0.14s ease, filter 0.14s ease, transform 0.14s ease'
                   : 'opacity 0.28s cubic-bezier(0.16,1,0.3,1), filter 0.28s cubic-bezier(0.16,1,0.3,1), transform 0.28s cubic-bezier(0.16,1,0.3,1)',
             }}>
               <h1 className="text-2xl font-bold tracking-tight mb-1.5" style={{letterSpacing: '-0.03em'}}>
@@ -425,13 +437,13 @@ export default function Login() {
                 </button>
               </div>
 
-              {/* Transition wrapper — fades/blurs on mode switch */}
+              {/* Transition wrapper — fades/blurs on mode switch or lang switch */}
               <div style={{
-                opacity: transitioning ? 0 : 1,
-                filter: transitioning ? 'blur(6px)' : 'blur(0px)',
-                transform: transitioning ? 'translateY(8px) scale(0.983)' : 'translateY(0) scale(1)',
-                transition: transitioning
-                  ? 'opacity 0.15s ease, filter 0.15s ease, transform 0.15s ease'
+                opacity: (transitioning || langTransitioning) ? 0 : 1,
+                filter: (transitioning || langTransitioning) ? 'blur(6px)' : 'blur(0px)',
+                transform: (transitioning || langTransitioning) ? 'translateY(8px) scale(0.983)' : 'translateY(0) scale(1)',
+                transition: (transitioning || langTransitioning)
+                  ? 'opacity 0.14s ease, filter 0.14s ease, transform 0.14s ease'
                   : 'opacity 0.28s cubic-bezier(0.16,1,0.3,1), filter 0.28s cubic-bezier(0.16,1,0.3,1), transform 0.28s cubic-bezier(0.16,1,0.3,1)',
               }}>
 
