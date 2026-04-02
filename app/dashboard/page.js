@@ -81,6 +81,7 @@ const t = {
     modal_cta: 'Upgrade to Pro · €9/mo',
     modal_dismiss: 'Maybe later',
     modal_resets: 'Free plan resets at midnight',
+    rate_limit: 'Too many requests — please wait a moment and try again.',
   },
   pt: {
     plan_free: 'Grátis', plan_pro: 'Pro',
@@ -148,6 +149,7 @@ const t = {
     modal_cta: 'Upgrade para Pro · €9/mês',
     modal_dismiss: 'Talvez mais tarde',
     modal_resets: 'O plano gratuito renova à meia-noite',
+    rate_limit: 'Demasiados pedidos — aguarda um momento e tenta novamente.',
   },
   es: {
     plan_free: 'Gratis', plan_pro: 'Pro',
@@ -215,6 +217,7 @@ const t = {
     modal_cta: 'Actualizar a Pro · €9/mes',
     modal_dismiss: 'Quizás más tarde',
     modal_resets: 'El plan gratuito se renueva a medianoche',
+    rate_limit: 'Demasiadas solicitudes — espera un momento e inténtalo de nuevo.',
   },
 }
 
@@ -754,6 +757,7 @@ function DashboardInner() {
   const [processing, setProcessing] = useState(false)
   const [done, setDone] = useState(false)
   const [limitReached, setLimitReached] = useState(false)
+  const [rateLimited, setRateLimited] = useState(false)
   const [showUpgradeModal, setShowUpgradeModal] = useState(false)
   const [upgradedNotice, setUpgradedNotice] = useState(false)
   const [step, setStep] = useState('upload') // 'upload' | 'crop'
@@ -957,6 +961,8 @@ function DashboardInner() {
   }
   const MAX_SIZE_MB = 30
   const MAX_SIZE_BYTES = MAX_SIZE_MB * 1024 * 1024
+  const MAX_BATCH_MB = 150
+  const MAX_BATCH_BYTES = MAX_BATCH_MB * 1024 * 1024
 
   const applyFiles = (raw) => {
     const { images, rejected } = splitByType(raw)
@@ -964,10 +970,16 @@ function DashboardInner() {
     const validImages = images.filter(f => f.size <= MAX_SIZE_BYTES)
     const MAX = 50
     let warning = ''
-    let finalImages = validImages
+    let finalImages = validImages.slice(0, MAX)
     if (validImages.length > MAX) {
-      finalImages = validImages.slice(0, MAX)
-      warning = `Too many images — only the first ${MAX} were loaded. Processing more at once may cause timeouts.`
+      warning = `Too many images — only the first ${MAX} were loaded.`
+    }
+    // Total batch size cap
+    const totalBytes = finalImages.reduce((acc, f) => acc + f.size, 0)
+    if (totalBytes > MAX_BATCH_BYTES) {
+      const totalMB = (totalBytes / 1024 / 1024).toFixed(0)
+      warning = `Batch too large (${totalMB}MB total) — maximum is ${MAX_BATCH_MB}MB per batch. Remove some images and try again.`
+      finalImages = []
     }
     setFiles(finalImages); setRejectedFiles(rejected); setOversizedFiles(oversized); setDone(false); setLimitReached(false); setFileWarning(warning)
   }
@@ -1023,6 +1035,7 @@ function DashboardInner() {
         body: formData,
       })
       if (!res.ok) {
+        if (res.status === 429) { setRateLimited(true); return }
         const err = await res.json().catch(() => ({}))
         if (err.limitReached) { setLimitReached(true); setShowUpgradeModal(true) }
         return
@@ -1047,8 +1060,17 @@ function DashboardInner() {
   const applyCleanFiles = (incoming) => {
     const oversized = incoming.filter(f => f.size > MAX_SIZE_BYTES)
     const valid = incoming.filter(f => f.size <= MAX_SIZE_BYTES)
+    setCleanFiles(prev => {
+      const merged = [...prev, ...valid]
+      const totalBytes = merged.reduce((acc, f) => acc + f.size, 0)
+      if (totalBytes > MAX_BATCH_BYTES) {
+        const totalMB = (totalBytes / 1024 / 1024).toFixed(0)
+        setFileWarning(`Batch too large (${totalMB}MB total) — maximum is ${MAX_BATCH_MB}MB per batch. Remove some files and try again.`)
+        return prev // reject the new additions
+      }
+      return merged
+    })
     setOversizedFiles(prev => [...prev, ...oversized])
-    setCleanFiles(prev => [...prev, ...valid])
   }
   const handleCleanFiles = (e) => applyCleanFiles(Array.from(e.target.files))
   const handleCleanDrop = (e) => {
@@ -1148,6 +1170,7 @@ function DashboardInner() {
       })
 
       if (!res.ok) {
+        if (res.status === 429) { setRateLimited(true); break }
         const err = await res.json().catch(() => ({}))
         if (err.limitReached) { setLimitReached(true); setShowUpgradeModal(true); break }
         continue
@@ -1212,6 +1235,7 @@ function DashboardInner() {
       })
 
       if (!res.ok) {
+        if (res.status === 429) { setRateLimited(true); hitLimit = true; break }
         const err = await res.json().catch(() => ({}))
         if (err.limitReached) { setLimitReached(true); setShowUpgradeModal(true); hitLimit = true; break }
         if (err.guestLimitReached) { setShowSignupPrompt(true); hitLimit = true; break }
@@ -1745,6 +1769,15 @@ function DashboardInner() {
       </nav>
 
       <div className="relative z-10 max-w-3xl mx-auto px-4 sm:px-6 py-8 sm:py-12" style={anim(0)}>
+
+        {/* Rate limit notice */}
+        {rateLimited && (
+          <div className="mb-6 flex items-center gap-3 px-4 py-3 rounded-xl text-[13px] text-orange-300" style={{background: 'rgba(251,146,60,0.07)', border: '1px solid rgba(251,146,60,0.2)', animation: 'fadeInUp 0.3s cubic-bezier(0.16,1,0.3,1) both'}}>
+            <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+            {i.rate_limit}
+            <button onClick={() => setRateLimited(false)} className="ml-auto text-orange-400/60 hover:text-orange-400 transition-colors">×</button>
+          </div>
+        )}
 
         {/* Upgraded notice */}
         {upgradedNotice && (
