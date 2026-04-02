@@ -1322,66 +1322,88 @@ function DashboardInner() {
   if (sessionKicked) {
     const isBlocked = sessionKicked === 'blocked'
     return (
-      <main className="min-h-screen bg-[#060609] text-white flex flex-col" style={{fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'}}>
+      <main
+        className="min-h-screen bg-[#060609] text-white flex flex-col overflow-hidden"
+        style={{fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'}}
+        onMouseMove={e => {
+          const glow = document.getElementById('kicked-glow')
+          if (glow) { glow.style.left = e.clientX - 300 + 'px'; glow.style.top = e.clientY - 300 + 'px' }
+        }}
+      >
+        {/* Mouse-follow glow */}
+        <div id="kicked-glow" className="fixed w-[600px] h-[600px] pointer-events-none transition-none" style={{background: 'radial-gradient(circle, rgba(239,68,68,0.055) 0%, transparent 70%)', borderRadius: '50%', zIndex: 0}} />
 
-        {/* Background layers */}
-        <div className="fixed inset-0 pointer-events-none overflow-hidden">
-          {/* Subtle grid */}
-          <div className="absolute inset-0 opacity-[0.018]" style={{backgroundImage: 'linear-gradient(rgba(255,255,255,0.6) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.6) 1px, transparent 1px)', backgroundSize: '48px 48px'}} />
-          {/* Red glow top-center */}
-          <div className="absolute -top-20 left-1/2 -translate-x-1/2 w-[900px] h-[500px]" style={{background: 'radial-gradient(ellipse at top, rgba(239,68,68,0.09) 0%, transparent 60%)'}} />
-          {/* Indigo corner */}
-          <div className="absolute bottom-0 right-0 w-[500px] h-[400px]" style={{background: 'radial-gradient(ellipse at 100% 100%, rgba(99,102,241,0.05) 0%, transparent 65%)'}} />
+        {/* Fixed background */}
+        <div className="fixed inset-0 pointer-events-none">
+          <div className="absolute inset-0 opacity-[0.02]" style={{backgroundImage: 'linear-gradient(rgba(255,255,255,0.7) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.7) 1px, transparent 1px)', backgroundSize: '44px 44px'}} />
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[600px]" style={{background: 'radial-gradient(ellipse at top, rgba(239,68,68,0.08) 0%, transparent 55%)'}} />
+          <div className="absolute bottom-0 left-0 w-[500px] h-[400px]" style={{background: 'radial-gradient(ellipse at bottom left, rgba(99,102,241,0.06) 0%, transparent 60%)'}} />
+          <div className="absolute bottom-0 right-0 w-[400px] h-[350px]" style={{background: 'radial-gradient(ellipse at bottom right, rgba(139,92,246,0.04) 0%, transparent 60%)'}} />
         </div>
 
-        {/* Top line */}
-        <div className="fixed top-0 left-0 right-0 h-px z-20" style={{background: 'linear-gradient(90deg, transparent 0%, rgba(239,68,68,0.5) 50%, transparent 100%)'}} />
+        {/* Top gradient line */}
+        <div className="fixed top-0 left-0 right-0 z-30" style={{height: 1, background: 'linear-gradient(90deg, transparent, rgba(239,68,68,0.6) 40%, rgba(239,68,68,0.6) 60%, transparent)'}}>
+          <div className="h-full w-full" style={{boxShadow: '0 0 20px 1px rgba(239,68,68,0.25)'}} />
+        </div>
 
-        {/* Nav strip */}
-        <div className="relative z-10 flex items-center justify-between px-6 sm:px-10 py-5">
+        {/* Nav */}
+        <div className="relative z-10 flex items-center justify-between px-6 sm:px-10 py-5 anim-nav">
           <Logo size={28} clipId="kickedNavLogo" />
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full" style={{background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.18)'}}>
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full" style={{background: 'rgba(239,68,68,0.07)', border: '1px solid rgba(239,68,68,0.16)'}}>
             <span className="w-1.5 h-1.5 rounded-full bg-red-400 animate-pulse" />
-            <span className="text-[11px] font-semibold text-red-400 uppercase tracking-wider">{isBlocked ? 'Access denied' : 'Session ended'}</span>
+            <span className="text-[11px] font-semibold uppercase tracking-widest" style={{color: 'rgba(248,113,113,0.9)'}}>{isBlocked ? 'Access denied' : 'Session ended'}</span>
           </div>
         </div>
 
-        {/* Main content */}
-        <div className="relative z-10 flex-1 flex items-center justify-center px-4 py-10">
-          <div className="w-full max-w-lg">
+        {/* Content */}
+        <div className="relative z-10 flex-1 flex items-center justify-center px-4 pb-16">
+          <div className="w-full max-w-[420px]">
 
-            {/* Big icon */}
-            <div className="flex justify-center mb-10">
-              <div className="relative">
-                <div className="absolute inset-0 rounded-3xl blur-2xl scale-110" style={{background: 'rgba(239,68,68,0.15)'}} />
-                <div className="relative w-20 h-20 rounded-3xl flex items-center justify-center" style={{background: 'linear-gradient(135deg, rgba(239,68,68,0.15) 0%, rgba(239,68,68,0.06) 100%)', border: '1px solid rgba(239,68,68,0.25)'}}>
+            {/* Icon — floatY animation */}
+            <div className="flex justify-center mb-9" style={{animation: 'fadeInUp 0.6s cubic-bezier(0.16,1,0.3,1) 0.05s both'}}>
+              <div className="relative" style={{animation: 'floatY 4s ease-in-out infinite'}}>
+                {/* Outer ring pulse */}
+                <div className="absolute -inset-3 rounded-[28px]" style={{background: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.1)', animation: 'pulse 3s ease-in-out infinite'}} />
+                {/* Blur glow behind */}
+                <div className="absolute inset-0 rounded-3xl blur-xl" style={{background: 'rgba(239,68,68,0.2)', transform: 'scale(1.3)'}} />
+                {/* Icon box */}
+                <div className="relative w-[72px] h-[72px] rounded-3xl flex items-center justify-center"
+                  style={{background: 'linear-gradient(145deg, rgba(239,68,68,0.18) 0%, rgba(239,68,68,0.08) 100%)', border: '1px solid rgba(239,68,68,0.3)', boxShadow: '0 20px 60px rgba(239,68,68,0.15), inset 0 1px 0 rgba(255,255,255,0.06)'}}>
                   {isBlocked ? (
-                    <svg className="w-9 h-9" fill="none" stroke="#f87171" strokeWidth="1.4" viewBox="0 0 24 24">
+                    <svg className="w-8 h-8" fill="none" stroke="#f87171" strokeWidth="1.5" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
                     </svg>
                   ) : (
-                    <svg className="w-9 h-9" fill="none" stroke="#f87171" strokeWidth="1.4" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M9.75 9.75l4.5 4.5m0-4.5l-4.5 4.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    <svg className="w-8 h-8" fill="none" stroke="#f87171" strokeWidth="1.5" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" />
                     </svg>
                   )}
                 </div>
               </div>
             </div>
 
-            {/* Text */}
-            <div className="text-center mb-10">
-              <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-white mb-4" style={{letterSpacing: '-0.03em'}}>
+            {/* Headline */}
+            <div className="text-center mb-8" style={{animation: 'fadeInUp 0.6s cubic-bezier(0.16,1,0.3,1) 0.12s both'}}>
+              <p className="text-[10px] font-bold uppercase tracking-[0.18em] mb-3" style={{color: 'rgba(248,113,113,0.6)'}}>
+                {isBlocked ? 'Access denied' : 'Session terminated'}
+              </p>
+              <h1 className="text-[28px] sm:text-[32px] font-bold tracking-tight text-white mb-3" style={{letterSpacing: '-0.03em', lineHeight: 1.15}}>
                 {isBlocked ? i.session_blocked_title : i.session_kicked_title}
               </h1>
-              <p className="text-[15px] leading-relaxed max-w-sm mx-auto" style={{color: 'rgba(156,163,175,1)'}}>
+              <p className="text-[14px] leading-relaxed" style={{color: 'rgba(156,163,175,0.85)'}}>
                 {isBlocked ? i.session_blocked_body : i.session_kicked_body}
               </p>
             </div>
 
-            {/* Info card */}
-            <div className="rounded-2xl p-5 mb-6" style={{background: '#0d0d14', border: '1px solid rgba(255,255,255,0.06)'}}>
-              <div className="flex items-start gap-4">
-                <div className="w-9 h-9 rounded-xl shrink-0 flex items-center justify-center" style={{background: 'rgba(99,102,241,0.1)', border: '1px solid rgba(99,102,241,0.15)'}}>
+            {/* Info card — mouse hover glow */}
+            <div
+              className="rounded-2xl p-5 mb-5 hover-lift"
+              style={{background: 'linear-gradient(145deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.015) 100%)', border: '1px solid rgba(255,255,255,0.07)', boxShadow: '0 4px 24px rgba(0,0,0,0.3)', animation: 'fadeInUp 0.6s cubic-bezier(0.16,1,0.3,1) 0.2s both'}}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(239,68,68,0.18)'; e.currentTarget.style.background = 'linear-gradient(145deg, rgba(239,68,68,0.04) 0%, rgba(255,255,255,0.015) 100%)' }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.07)'; e.currentTarget.style.background = 'linear-gradient(145deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.015) 100%)' }}
+            >
+              <div className="flex items-start gap-3.5">
+                <div className="w-8 h-8 rounded-xl shrink-0 flex items-center justify-center mt-0.5" style={{background: 'rgba(99,102,241,0.1)', border: '1px solid rgba(99,102,241,0.18)'}}>
                   <svg className="w-4 h-4 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
                   </svg>
@@ -1390,37 +1412,51 @@ function DashboardInner() {
                   <p className="text-[13px] font-semibold text-white mb-1">Account security</p>
                   <p className="text-[12px] leading-relaxed" style={{color: 'rgba(107,114,128,1)'}}>
                     {isBlocked
-                      ? 'MetaClean enforces one active session per account at all times. This protects your data and prevents unauthorized sharing.'
-                      : 'Your account was accessed from another location. To resume here, sign out of that device or wait 1 minute for the session to expire.'}
+                      ? 'MetaClean enforces one active session per account. This protects your data and prevents unauthorized access.'
+                      : 'Your session was replaced by a new login. Wait 1 minute for it to expire, or sign back in.'}
                   </p>
                 </div>
               </div>
-
               {user?.email && (
                 <>
-                  <div className="my-4" style={{height: 1, background: 'rgba(255,255,255,0.05)'}} />
-                  <div className="flex items-center gap-3">
-                    <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0" style={{background: 'rgba(255,255,255,0.05)'}}>
-                      <svg className="w-3.5 h-3.5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="my-3.5" style={{height: 1, background: 'rgba(255,255,255,0.05)'}} />
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-6 h-6 rounded-lg flex items-center justify-center shrink-0" style={{background: 'rgba(255,255,255,0.04)'}}>
+                      <svg className="w-3 h-3 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
                       </svg>
                     </div>
-                    <span className="text-[12px]" style={{color: 'rgba(107,114,128,1)'}}>{user.email}</span>
+                    <span className="text-[11px] font-medium" style={{color: 'rgba(75,85,99,1)'}}>{user.email}</span>
                   </div>
                 </>
               )}
             </div>
 
-            {/* Button */}
-            <button
-              onClick={async () => { await supabase.auth.signOut(); router.push('/login') }}
-              className="w-full py-4 rounded-2xl text-[14px] font-semibold text-white transition-all"
-              style={{background: 'linear-gradient(135deg, rgba(239,68,68,0.18) 0%, rgba(239,68,68,0.1) 100%)', border: '1px solid rgba(239,68,68,0.3)', boxShadow: '0 0 0 0 rgba(239,68,68,0)'}}
-              onMouseEnter={e => { e.currentTarget.style.background = 'linear-gradient(135deg, rgba(239,68,68,0.28) 0%, rgba(239,68,68,0.18) 100%)'; e.currentTarget.style.boxShadow = '0 0 30px rgba(239,68,68,0.1)' }}
-              onMouseLeave={e => { e.currentTarget.style.background = 'linear-gradient(135deg, rgba(239,68,68,0.18) 0%, rgba(239,68,68,0.1) 100%)'; e.currentTarget.style.boxShadow = '0 0 0 0 rgba(239,68,68,0)' }}
-            >
-              {i.session_signout}
-            </button>
+            {/* CTA button — full glow style */}
+            <div style={{animation: 'fadeInUp 0.6s cubic-bezier(0.16,1,0.3,1) 0.28s both'}}>
+              <button
+                onClick={async () => { await supabase.auth.signOut(); router.push('/login') }}
+                className="w-full py-3.5 rounded-2xl text-[14px] font-semibold text-white hover-scale"
+                style={{
+                  background: 'linear-gradient(135deg, #dc2626, #ef4444, #f87171, #ef4444)',
+                  backgroundSize: '300% 300%',
+                  backgroundPosition: '0% 50%',
+                  border: '1px solid rgba(239,68,68,0.35)',
+                  boxShadow: '0 4px 20px rgba(239,68,68,0.2), inset 0 1px 0 rgba(255,255,255,0.08)',
+                  transition: 'box-shadow 0.3s ease, background-position 0.1s ease, transform 0.15s cubic-bezier(0.16,1,0.3,1)',
+                }}
+                onMouseEnter={e => {
+                  e.currentTarget.style.backgroundPosition = '100% 50%'
+                  e.currentTarget.style.boxShadow = '0 0 0 1px rgba(239,68,68,0.5), 0 0 24px rgba(239,68,68,0.35), 0 0 48px rgba(239,68,68,0.15), 0 8px 24px rgba(239,68,68,0.2)'
+                }}
+                onMouseLeave={e => {
+                  e.currentTarget.style.backgroundPosition = '0% 50%'
+                  e.currentTarget.style.boxShadow = '0 4px 20px rgba(239,68,68,0.2), inset 0 1px 0 rgba(255,255,255,0.08)'
+                }}
+              >
+                {i.session_signout}
+              </button>
+            </div>
 
           </div>
         </div>
