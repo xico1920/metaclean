@@ -2201,36 +2201,74 @@ function DashboardInner() {
                   )}
                   {done && !limitReached && (
                     <div className="mt-5">
-                      {/* Download card — shown whenever there are pending results */}
-                      {pendingResults && (
-                        <div className="mb-4 rounded-xl overflow-hidden" style={{border: '1px solid rgba(99,102,241,0.25)', background: 'rgba(99,102,241,0.05)'}}>
-                          {pendingResults.previewUrl && (
-                            <div className="relative" style={{maxHeight: 200, overflow: 'hidden'}}>
-                              <img src={pendingResults.previewUrl} alt="Preview" style={{width: '100%', height: 200, objectFit: 'cover', display: 'block'}} />
-                              <div style={{position:'absolute',inset:0,background:'linear-gradient(to bottom, transparent 40%, rgba(6,6,9,0.9))'}} />
-                              <div style={{position:'absolute',bottom:10,left:14,fontSize:11,color:'rgba(255,255,255,0.45)'}}>
-                                {pendingResults.formatCount} format{pendingResults.formatCount !== 1 ? 's' : ''} ready
+                      {pendingResults ? (
+                        /* ── Preview + download card ─────────────────────── */
+                        <div className="rounded-2xl overflow-hidden" style={{border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.02)', animation: 'fadeInUp 0.4s cubic-bezier(0.16,1,0.3,1) both'}}>
+
+                          {/* Image preview */}
+                          {pendingResults.previewUrl ? (
+                            <div className="relative bg-black" style={{maxHeight: 280, overflow: 'hidden'}}>
+                              <img
+                                src={pendingResults.previewUrl}
+                                alt="Preview"
+                                style={{width: '100%', maxHeight: 280, objectFit: 'contain', display: 'block', background: '#08080f'}}
+                              />
+                              {/* Corner badges */}
+                              <div className="absolute top-3 left-3 flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-semibold" style={{background: 'rgba(6,6,9,0.75)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.1)', color: '#a5b4fc'}}>
+                                <PlatformIcon platform={pendingResults.platform} />
+                                {platformCfg.name}
+                              </div>
+                              <div className="absolute top-3 right-3 flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-medium" style={{background: 'rgba(34,197,94,0.15)', backdropFilter: 'blur(8px)', border: '1px solid rgba(34,197,94,0.25)', color: '#86efac'}}>
+                                <IconCheck />
+                                Metadata clean
+                              </div>
+                            </div>
+                          ) : (
+                            /* No preview (ZIP with multiple images) */
+                            <div className="flex items-center justify-center gap-3 py-8" style={{background: 'rgba(99,102,241,0.04)', borderBottom: '1px solid rgba(255,255,255,0.06)'}}>
+                              <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{background: 'rgba(99,102,241,0.12)', border: '1px solid rgba(99,102,241,0.2)'}}>
+                                <svg className="w-5 h-5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" /></svg>
+                              </div>
+                              <div>
+                                <p className="text-[13px] font-semibold text-white">{files.length} image{files.length !== 1 ? 's' : ''} processed</p>
+                                <p className="text-[11px] text-gray-500">{pendingResults.formatCount} format{pendingResults.formatCount !== 1 ? 's' : ''} · packed as ZIP</p>
                               </div>
                             </div>
                           )}
-                          <div className="px-4 py-4 flex items-center justify-between gap-3">
-                            <div className="flex items-center gap-2 text-xs" style={{color:'#86efac'}}>
-                              <IconCheck />
-                              <span className="font-medium">{i.success(files.length)}</span>
+
+                          {/* Format chips */}
+                          {processedStats?.formats?.length > 0 && (
+                            <div className="px-4 pt-3 pb-1 flex flex-wrap gap-1.5">
+                              {processedStats.formats.map((f, idx) => (
+                                <div key={idx} className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px]" style={{background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)'}}>
+                                  <span className="font-semibold text-gray-300">{f.w}×{f.h}</span>
+                                  <span className="text-gray-600">·</span>
+                                  <span className="text-gray-500">{f.size > 0 ? `${(f.size / 1024).toFixed(0)}KB` : f.label.split('_').slice(1).join(' ')}</span>
+                                  {f.compressionApplied && <span className="text-yellow-500/70">↓</span>}
+                                </div>
+                              ))}
                             </div>
-                            <button onClick={triggerDownload} {...glowHandlers} className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-semibold text-white" style={glowStyle}>
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+                          )}
+
+                          {/* Download row */}
+                          <div className="px-4 py-4 flex items-center justify-between gap-3">
+                            <div className="text-[12px] text-gray-600">
+                              {pendingResults.formatCount} format{pendingResults.formatCount !== 1 ? 's' : ''} ready
+                            </div>
+                            <button onClick={triggerDownload} {...glowHandlers} className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl text-[13px] font-semibold text-white" style={glowStyle}>
+                              <IconDownload />
                               Download
                             </button>
                           </div>
                         </div>
-                      )}
-                      <div className="flex items-center justify-center gap-2 flex-wrap">
-                        {!pendingResults && (
+                      ) : (
+                        <div className="flex items-center justify-center gap-2 flex-wrap">
                           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-medium" style={{background: 'rgba(34,197,94,0.08)', border: '1px solid rgba(34,197,94,0.18)', color: '#86efac'}}>
                             <IconCheck />{i.success(files.length)}
                           </div>
-                        )}
+                        </div>
+                      )}
+                      <div className="mt-3 flex items-center justify-center">
                         {(() => {
                           const stats = processedStats?.formats ?? platformCfg.formats
                             .filter(f => selectedFormats.has(f.label))
