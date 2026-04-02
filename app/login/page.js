@@ -112,7 +112,8 @@ function getPwdStrength(p, rules) {
 
 export default function Login() {
   const router = useRouter()
-  const [mode, setMode] = useState('login')
+  const [mode, setMode] = useState('login')         // the "real" mode — drives form logic
+  const [displayMode, setDisplayMode] = useState('login') // lags behind mode — only updates after fade-out
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
@@ -129,8 +130,14 @@ export default function Login() {
   const switchMode = (newMode) => {
     if (newMode === mode || transitioning) return
     setTransitioning(true)
-    setTimeout(() => { setMode(newMode); setError('') }, 150)
-    setTimeout(() => setTransitioning(false), 165)
+    // After fade-out completes, swap both mode and displayMode together
+    setTimeout(() => {
+      setMode(newMode)
+      setDisplayMode(newMode)
+      setError('')
+      setPassword('')
+    }, 160)
+    setTimeout(() => setTransitioning(false), 170)
   }
 
   useEffect(() => {
@@ -380,10 +387,10 @@ export default function Login() {
                   : 'opacity 0.28s cubic-bezier(0.16,1,0.3,1), filter 0.28s cubic-bezier(0.16,1,0.3,1), transform 0.28s cubic-bezier(0.16,1,0.3,1)',
             }}>
               <h1 className="text-2xl font-bold tracking-tight mb-1.5" style={{letterSpacing: '-0.03em'}}>
-                {mode === 'login' ? i.welcome : i.create}
+                {displayMode === 'login' ? i.welcome : i.create}
               </h1>
               <p className="text-gray-500 text-[13px]">
-                {mode === 'login' ? i.welcome_sub : i.create_sub}
+                {displayMode === 'login' ? i.welcome_sub : i.create_sub}
               </p>
             </div>
 
@@ -450,13 +457,13 @@ export default function Login() {
                       type="password"
                       placeholder="••••••••"
                       value={password}
-                      autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
+                      autoComplete={displayMode === 'login' ? 'current-password' : 'new-password'}
                       onChange={(e) => setPassword(e.target.value)}
                       style={inputStyle}
                       onFocus={(e) => { e.target.style.borderColor = 'rgba(99,102,241,0.6)'; e.target.style.background = 'rgba(99,102,241,0.04)'; e.target.style.boxShadow = '0 0 0 3px rgba(99,102,241,0.08)' }}
                       onBlur={(e) => { e.target.style.borderColor = 'rgba(255,255,255,0.09)'; e.target.style.background = 'rgba(255,255,255,0.04)'; e.target.style.boxShadow = 'none' }}
                     />
-                    {mode === 'signup' && password.length > 0 && (() => {
+                    {displayMode === 'signup' && password.length > 0 && (() => {
                       const strength = getPwdStrength(password, rules)
                       const labels = ['', i.pwd_weak, i.pwd_fair, i.pwd_good, i.pwd_strong]
                       const colors = ['', '#ef4444', '#f59e0b', '#22c55e', '#10b981']
@@ -500,11 +507,11 @@ export default function Login() {
                 >
                   {loading ? (
                     <><svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg> {i.submitting}</>
-                  ) : mode === 'login' ? i.submit_login : i.submit_signup}
+                  ) : displayMode === 'login' ? i.submit_login : i.submit_signup}
                 </button>
               </form>
 
-              {mode === 'signup' && (
+              {displayMode === 'signup' && (
                 <p className="text-center text-[11px] text-gray-600 mt-4 leading-relaxed">
                   {i.terms_pre}{' '}
                   <Link href="/terms" className="text-gray-500 hover:text-gray-300 transition-colors">{i.terms}</Link>
@@ -539,10 +546,10 @@ export default function Login() {
               <div className="flex items-center gap-3 mt-4">
                 <div className="flex-1 h-px" style={{background: 'rgba(255,255,255,0.06)'}} />
                 <button
-                  onClick={() => switchMode(mode === 'login' ? 'signup' : 'login')}
+                  onClick={() => switchMode(displayMode === 'login' ? 'signup' : 'login')}
                   className="text-[12px] text-gray-500 hover:text-gray-300 transition-colors whitespace-nowrap"
                 >
-                  {mode === 'login' ? i.switch_signup : i.switch_login}
+                  {displayMode === 'login' ? i.switch_signup : i.switch_login}
                 </button>
                 <div className="flex-1 h-px" style={{background: 'rgba(255,255,255,0.06)'}} />
               </div>
