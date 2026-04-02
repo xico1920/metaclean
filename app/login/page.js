@@ -7,32 +7,13 @@ import Footer from '@/app/components/Footer'
 import Logo from '@/app/components/Logo'
 import { glowStyle, glowHandlers } from '@/lib/glow'
 
-const benefits = [
-  {
-    icon: <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" /></svg>,
-    title: 'Metadata stripped',
-    desc: 'EXIF, GPS, timestamps — all gone before upload.',
-    color: '#3b82f6',
-  },
-  {
-    icon: <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9m5.25 11.25h-4.5m4.5 0v-4.5m0 4.5L15 15" /></svg>,
-    title: 'Every ad format',
-    desc: 'Auto-resized for Meta, Google, TikTok and more.',
-    color: '#8b5cf6',
-  },
-  {
-    icon: <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" /></svg>,
-    title: 'AI Autocrop',
-    desc: 'Subject-aware cropping — nothing important gets cut.',
-    color: '#6366f1',
-  },
-  {
-    icon: <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3.75 9.776c.112-.017.227-.026.344-.026h15.812c.117 0 .232.009.344.026m-16.5 0a2.25 2.25 0 00-1.883 2.542l.857 6a2.25 2.25 0 002.227 1.932H19.05a2.25 2.25 0 002.227-1.932l.857-6a2.25 2.25 0 00-1.883-2.542m-16.5 0V6A2.25 2.25 0 016 3.75h3.879a1.5 1.5 0 011.06.44l2.122 2.12a1.5 1.5 0 001.06.44H18A2.25 2.25 0 0120.25 9v.776" /></svg>,
-    title: 'Bulk processing',
-    desc: 'Up to 50 images at once, downloaded in one zip.',
-    color: '#10b981',
-  },
+const benefitIcons = [
+  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" /></svg>,
+  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9m5.25 11.25h-4.5m4.5 0v-4.5m0 4.5L15 15" /></svg>,
+  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" /></svg>,
+  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3.75 9.776c.112-.017.227-.026.344-.026h15.812c.117 0 .232.009.344.026m-16.5 0a2.25 2.25 0 00-1.883 2.542l.857 6a2.25 2.25 0 002.227 1.932H19.05a2.25 2.25 0 002.227-1.932l.857-6a2.25 2.25 0 00-1.883-2.542m-16.5 0V6A2.25 2.25 0 016 3.75h3.879a1.5 1.5 0 011.06.44l2.122 2.12a1.5 1.5 0 001.06.44H18A2.25 2.25 0 0120.25 9v.776" /></svg>,
 ]
+const benefitColors = ['#3b82f6', '#8b5cf6', '#6366f1', '#10b981']
 
 const flags = { en: 'https://flagcdn.com/w20/gb.png', pt: 'https://flagcdn.com/w20/pt.png', es: 'https://flagcdn.com/w20/es.png' }
 
@@ -43,6 +24,12 @@ const t = {
     headline2: 'Win more auctions.',
     sub: 'Strip metadata and resize for every ad platform. One click, no guesswork.',
     social: '50,000+ images processed this month',
+    benefits: [
+      { title: 'Metadata stripped', desc: 'EXIF, GPS, timestamps — all gone before upload.' },
+      { title: 'Every ad format', desc: 'Auto-resized for Meta, Google, TikTok and more.' },
+      { title: 'AI Autocrop', desc: 'Subject-aware cropping — nothing important gets cut.' },
+      { title: 'Bulk processing', desc: 'Up to 50 images at once, downloaded in one zip.' },
+    ],
     login_tab: 'Log in', signup_tab: 'Sign up',
     welcome: 'Welcome back', welcome_sub: 'Log in to your MetaClean account',
     create: 'Create your account', create_sub: 'Start cleaning images for free',
@@ -63,6 +50,12 @@ const t = {
     headline2: 'Mais conversões.',
     sub: 'Remove metadados e redimensiona para cada plataforma de anúncios. Um clique, sem complicações.',
     social: '50.000+ imagens processadas este mês',
+    benefits: [
+      { title: 'Metadados removidos', desc: 'EXIF, GPS, timestamps — tudo eliminado antes do upload.' },
+      { title: 'Todos os formatos', desc: 'Redimensionado para Meta, Google, TikTok e mais.' },
+      { title: 'Autocrop com IA', desc: 'Corte inteligente — nenhum elemento importante é cortado.' },
+      { title: 'Processamento em lote', desc: 'Até 50 imagens de uma vez, num único zip.' },
+    ],
     login_tab: 'Entrar', signup_tab: 'Registar',
     welcome: 'Bem-vindo de volta', welcome_sub: 'Entra na tua conta MetaClean',
     create: 'Cria a tua conta', create_sub: 'Começa a limpar imagens gratuitamente',
@@ -83,6 +76,12 @@ const t = {
     headline2: 'Más conversiones.',
     sub: 'Elimina metadatos y redimensiona para cada plataforma de anuncios. Un clic, sin complicaciones.',
     social: '50.000+ imágenes procesadas este mes',
+    benefits: [
+      { title: 'Metadatos eliminados', desc: 'EXIF, GPS, timestamps — todo borrado antes de subir.' },
+      { title: 'Todos los formatos', desc: 'Redimensionado para Meta, Google, TikTok y más.' },
+      { title: 'Autocrop con IA', desc: 'Recorte inteligente — nada importante queda cortado.' },
+      { title: 'Procesamiento masivo', desc: 'Hasta 50 imágenes a la vez, en un solo zip.' },
+    ],
     login_tab: 'Entrar', signup_tab: 'Registrarse',
     welcome: 'Bienvenido de nuevo', welcome_sub: 'Entra en tu cuenta MetaClean',
     create: 'Crea tu cuenta', create_sub: 'Empieza a limpiar imágenes gratis',
@@ -305,24 +304,27 @@ export default function Login() {
           <p className="text-gray-500 text-[13px] leading-relaxed mb-7">{i.sub}</p>
 
           <div className="space-y-1.5">
-            {benefits.map(({ icon, title, desc, color }, idx) => (
-              <div
-                key={idx}
-                className="flex items-center gap-3 px-2.5 py-2 rounded-xl transition-all duration-200 cursor-default"
-                style={{...fadeIn(120 + idx * 60), border: '1px solid transparent'}}
-                onMouseEnter={e => { e.currentTarget.style.background = `${color}08`; e.currentTarget.style.borderColor = `${color}20`; e.currentTarget.style.transform = 'translateX(4px)' }}
-                onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.borderColor = 'transparent'; e.currentTarget.style.transform = 'translateX(0)' }}
-              >
-                <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0"
-                  style={{background: `${color}15`, color, border: `1px solid ${color}25`}}>
-                  {icon}
+            {i.benefits.map(({ title, desc }, idx) => {
+              const color = benefitColors[idx]
+              return (
+                <div
+                  key={idx}
+                  className="flex items-center gap-3 px-2.5 py-2 rounded-xl transition-all duration-200 cursor-default"
+                  style={{...fadeIn(120 + idx * 60), border: '1px solid transparent'}}
+                  onMouseEnter={e => { e.currentTarget.style.background = `${color}08`; e.currentTarget.style.borderColor = `${color}20`; e.currentTarget.style.transform = 'translateX(4px)' }}
+                  onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.borderColor = 'transparent'; e.currentTarget.style.transform = 'translateX(0)' }}
+                >
+                  <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0"
+                    style={{background: `${color}15`, color, border: `1px solid ${color}25`}}>
+                    {benefitIcons[idx]}
+                  </div>
+                  <div>
+                    <p className="text-[13px] font-semibold text-white leading-none mb-0.5">{title}</p>
+                    <p className="text-[11px] text-gray-500 leading-snug">{desc}</p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-[13px] font-semibold text-white leading-none mb-0.5">{title}</p>
-                  <p className="text-[11px] text-gray-500 leading-snug">{desc}</p>
-                </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
         </div>
 
