@@ -1322,94 +1322,109 @@ function DashboardInner() {
   if (sessionKicked) {
     const isBlocked = sessionKicked === 'blocked'
     return (
-      <main className="min-h-screen bg-[#060609] text-white flex items-center justify-center p-4" style={{fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'}}>
+      <main className="min-h-screen bg-[#060609] text-white flex flex-col" style={{fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'}}>
 
-        {/* Background glows */}
+        {/* Background layers */}
         <div className="fixed inset-0 pointer-events-none overflow-hidden">
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[700px] h-[400px]" style={{background: 'radial-gradient(ellipse at top, rgba(239,68,68,0.07) 0%, transparent 65%)'}} />
-          <div className="absolute bottom-0 left-1/4 w-[400px] h-[300px]" style={{background: 'radial-gradient(ellipse at bottom, rgba(99,102,241,0.04) 0%, transparent 70%)'}} />
+          {/* Subtle grid */}
+          <div className="absolute inset-0 opacity-[0.018]" style={{backgroundImage: 'linear-gradient(rgba(255,255,255,0.6) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.6) 1px, transparent 1px)', backgroundSize: '48px 48px'}} />
+          {/* Red glow top-center */}
+          <div className="absolute -top-20 left-1/2 -translate-x-1/2 w-[900px] h-[500px]" style={{background: 'radial-gradient(ellipse at top, rgba(239,68,68,0.09) 0%, transparent 60%)'}} />
+          {/* Indigo corner */}
+          <div className="absolute bottom-0 right-0 w-[500px] h-[400px]" style={{background: 'radial-gradient(ellipse at 100% 100%, rgba(99,102,241,0.05) 0%, transparent 65%)'}} />
         </div>
 
-        <div className="relative z-10 w-full max-w-md">
+        {/* Top line */}
+        <div className="fixed top-0 left-0 right-0 h-px z-20" style={{background: 'linear-gradient(90deg, transparent 0%, rgba(239,68,68,0.5) 50%, transparent 100%)'}} />
 
-          {/* Card */}
-          <div className="rounded-2xl overflow-hidden" style={{background: '#0d0d14', border: '1px solid rgba(255,255,255,0.07)', boxShadow: '0 40px 80px rgba(0,0,0,0.6)'}}>
+        {/* Nav strip */}
+        <div className="relative z-10 flex items-center justify-between px-6 sm:px-10 py-5">
+          <Logo size={28} clipId="kickedNavLogo" />
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full" style={{background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.18)'}}>
+            <span className="w-1.5 h-1.5 rounded-full bg-red-400 animate-pulse" />
+            <span className="text-[11px] font-semibold text-red-400 uppercase tracking-wider">{isBlocked ? 'Access denied' : 'Session ended'}</span>
+          </div>
+        </div>
 
-            {/* Top red accent bar */}
-            <div style={{height: 3, background: 'linear-gradient(90deg, #ef4444, #f87171, #ef4444)'}} />
+        {/* Main content */}
+        <div className="relative z-10 flex-1 flex items-center justify-center px-4 py-10">
+          <div className="w-full max-w-lg">
 
-            {/* Content */}
-            <div className="p-8 sm:p-10 text-center">
-
-              {/* Icon */}
-              <div className="relative mx-auto mb-7" style={{width: 72, height: 72}}>
-                <div className="absolute inset-0 rounded-2xl" style={{background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)'}} />
-                <div className="absolute inset-0 rounded-2xl animate-ping" style={{background: 'rgba(239,68,68,0.06)', animationDuration: '2.5s'}} />
-                <div className="relative w-full h-full flex items-center justify-center">
+            {/* Big icon */}
+            <div className="flex justify-center mb-10">
+              <div className="relative">
+                <div className="absolute inset-0 rounded-3xl blur-2xl scale-110" style={{background: 'rgba(239,68,68,0.15)'}} />
+                <div className="relative w-20 h-20 rounded-3xl flex items-center justify-center" style={{background: 'linear-gradient(135deg, rgba(239,68,68,0.15) 0%, rgba(239,68,68,0.06) 100%)', border: '1px solid rgba(239,68,68,0.25)'}}>
                   {isBlocked ? (
-                    <svg className="w-8 h-8" fill="none" stroke="#f87171" strokeWidth="1.5" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                    <svg className="w-9 h-9" fill="none" stroke="#f87171" strokeWidth="1.4" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
                     </svg>
                   ) : (
-                    <svg className="w-8 h-8" fill="none" stroke="#f87171" strokeWidth="1.5" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" />
+                    <svg className="w-9 h-9" fill="none" stroke="#f87171" strokeWidth="1.4" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M9.75 9.75l4.5 4.5m0-4.5l-4.5 4.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                   )}
                 </div>
               </div>
+            </div>
 
-              {/* Label */}
-              <p className="text-[10px] font-semibold uppercase tracking-widest mb-3" style={{color: 'rgba(239,68,68,0.7)'}}>
-                {isBlocked ? 'Access denied' : 'Session terminated'}
-              </p>
-
-              {/* Title */}
-              <h1 className="text-2xl font-bold tracking-tight text-white mb-3">
+            {/* Text */}
+            <div className="text-center mb-10">
+              <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-white mb-4" style={{letterSpacing: '-0.03em'}}>
                 {isBlocked ? i.session_blocked_title : i.session_kicked_title}
               </h1>
-
-              {/* Body */}
-              <p className="text-[14px] leading-relaxed mb-8" style={{color: 'rgba(156,163,175,1)'}}>
+              <p className="text-[15px] leading-relaxed max-w-sm mx-auto" style={{color: 'rgba(156,163,175,1)'}}>
                 {isBlocked ? i.session_blocked_body : i.session_kicked_body}
               </p>
+            </div>
 
-              {/* Info box */}
-              <div className="rounded-xl px-4 py-3.5 mb-8 text-left flex items-start gap-3" style={{background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)'}}>
-                <svg className="w-4 h-4 shrink-0 mt-0.5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
-                </svg>
-                <p className="text-[12px] leading-relaxed" style={{color: 'rgba(107,114,128,1)'}}>
-                  {isBlocked
-                    ? 'MetaClean only allows one active session per account to protect your data.'
-                    : 'Your session was replaced by a new login. Sign out and sign back in to continue.'}
-                </p>
+            {/* Info card */}
+            <div className="rounded-2xl p-5 mb-6" style={{background: '#0d0d14', border: '1px solid rgba(255,255,255,0.06)'}}>
+              <div className="flex items-start gap-4">
+                <div className="w-9 h-9 rounded-xl shrink-0 flex items-center justify-center" style={{background: 'rgba(99,102,241,0.1)', border: '1px solid rgba(99,102,241,0.15)'}}>
+                  <svg className="w-4 h-4 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
+                  </svg>
+                </div>
+                <div>
+                  <p className="text-[13px] font-semibold text-white mb-1">Account security</p>
+                  <p className="text-[12px] leading-relaxed" style={{color: 'rgba(107,114,128,1)'}}>
+                    {isBlocked
+                      ? 'MetaClean enforces one active session per account at all times. This protects your data and prevents unauthorized sharing.'
+                      : 'Your account was accessed from another location. To resume here, sign out of that device or wait 1 minute for the session to expire.'}
+                  </p>
+                </div>
               </div>
 
-              {/* CTA button */}
-              <button
-                onClick={async () => { await supabase.auth.signOut(); router.push('/login') }}
-                className="w-full py-3.5 rounded-xl text-[14px] font-semibold text-white transition-all"
-                style={{background: 'rgba(239,68,68,0.14)', border: '1px solid rgba(239,68,68,0.28)'}}
-                onMouseEnter={e => { e.currentTarget.style.background = 'rgba(239,68,68,0.24)'; e.currentTarget.style.borderColor = 'rgba(239,68,68,0.45)' }}
-                onMouseLeave={e => { e.currentTarget.style.background = 'rgba(239,68,68,0.14)'; e.currentTarget.style.borderColor = 'rgba(239,68,68,0.28)' }}
-              >
-                {i.session_signout}
-              </button>
-
-              {/* Footer note */}
-              <p className="text-[11px] mt-5" style={{color: 'rgba(75,85,99,1)'}}>
-                {user?.email}
-              </p>
-
+              {user?.email && (
+                <>
+                  <div className="my-4" style={{height: 1, background: 'rgba(255,255,255,0.05)'}} />
+                  <div className="flex items-center gap-3">
+                    <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0" style={{background: 'rgba(255,255,255,0.05)'}}>
+                      <svg className="w-3.5 h-3.5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+                      </svg>
+                    </div>
+                    <span className="text-[12px]" style={{color: 'rgba(107,114,128,1)'}}>{user.email}</span>
+                  </div>
+                </>
+              )}
             </div>
-          </div>
 
-          {/* Bottom logo */}
-          <div className="flex justify-center mt-6">
-            <Logo size={22} clipId="kickedLogo" />
-          </div>
+            {/* Button */}
+            <button
+              onClick={async () => { await supabase.auth.signOut(); router.push('/login') }}
+              className="w-full py-4 rounded-2xl text-[14px] font-semibold text-white transition-all"
+              style={{background: 'linear-gradient(135deg, rgba(239,68,68,0.18) 0%, rgba(239,68,68,0.1) 100%)', border: '1px solid rgba(239,68,68,0.3)', boxShadow: '0 0 0 0 rgba(239,68,68,0)'}}
+              onMouseEnter={e => { e.currentTarget.style.background = 'linear-gradient(135deg, rgba(239,68,68,0.28) 0%, rgba(239,68,68,0.18) 100%)'; e.currentTarget.style.boxShadow = '0 0 30px rgba(239,68,68,0.1)' }}
+              onMouseLeave={e => { e.currentTarget.style.background = 'linear-gradient(135deg, rgba(239,68,68,0.18) 0%, rgba(239,68,68,0.1) 100%)'; e.currentTarget.style.boxShadow = '0 0 0 0 rgba(239,68,68,0)' }}
+            >
+              {i.session_signout}
+            </button>
 
+          </div>
         </div>
+
       </main>
     )
   }
