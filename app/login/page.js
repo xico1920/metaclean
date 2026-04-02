@@ -105,11 +105,6 @@ const pwdRules = (tr) => [
   { label: tr.pwd_rule_lower, test: p => /[a-z]/.test(p) },
   { label: tr.pwd_rule_num,   test: p => /[0-9]/.test(p) },
 ]
-  { label: 'At least 8 characters', test: p => p.length >= 8 },
-  { label: 'Uppercase letter', test: p => /[A-Z]/.test(p) },
-  { label: 'Lowercase letter', test: p => /[a-z]/.test(p) },
-  { label: 'Number', test: p => /[0-9]/.test(p) },
-]
 
 function getPwdStrength(p, rules) {
   return rules.filter(r => r.test(p)).length
