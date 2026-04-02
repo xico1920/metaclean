@@ -71,6 +71,16 @@ const t = {
     session_kicked_body: 'Your account was opened on another device. Only one active session is allowed at a time, it may take up to 1 minute to update.',
     session_blocked_body: 'Your account is already open on another device. Close that session first, then try again. It may take up to 1 minute to update.',
     session_signout: 'Sign out',
+    modal_eyebrow: 'Free plan limit reached',
+    modal_title: 'You\'ve used your 10 images for today',
+    modal_sub: 'Upgrade to Pro and process unlimited images every day — no caps, no waiting.',
+    modal_feat1_t: 'Unlimited images', modal_feat1_d: 'Process as many as you need, every day',
+    modal_feat2_t: 'All 6 platforms', modal_feat2_d: 'Meta, Google, TikTok, Snapchat, Pinterest, LinkedIn',
+    modal_feat3_t: 'Batch ZIP upload', modal_feat3_d: 'Up to 50 images at once in a single ZIP',
+    modal_feat4_t: 'Priority processing', modal_feat4_d: 'Faster queue, always available',
+    modal_cta: 'Upgrade to Pro · €9/mo',
+    modal_dismiss: 'Maybe later',
+    modal_resets: 'Free plan resets at midnight',
   },
   pt: {
     plan_free: 'Grátis', plan_pro: 'Pro',
@@ -128,6 +138,16 @@ const t = {
     session_kicked_body: 'A sua conta foi aberta noutro dispositivo. Apenas é permitida uma sessão ativa de cada vez e a atualização pode demorar até 1 minuto.',
     session_blocked_body: 'A sua conta já está aberta noutro dispositivo. Feche essa sessão primeiro e tente novamente. A atualização pode demorar até 1 minuto.',
     session_signout: 'Terminar sessão',
+    modal_eyebrow: 'Limite do plano gratuito atingido',
+    modal_title: 'Usaste as tuas 10 imagens de hoje',
+    modal_sub: 'Faz upgrade para Pro e processa imagens ilimitadas todos os dias — sem limites, sem esperas.',
+    modal_feat1_t: 'Imagens ilimitadas', modal_feat1_d: 'Processa o que precisares, todos os dias',
+    modal_feat2_t: 'Todas as 6 plataformas', modal_feat2_d: 'Meta, Google, TikTok, Snapchat, Pinterest, LinkedIn',
+    modal_feat3_t: 'Upload ZIP em lote', modal_feat3_d: 'Até 50 imagens de uma vez num único ZIP',
+    modal_feat4_t: 'Processamento prioritário', modal_feat4_d: 'Fila mais rápida, sempre disponível',
+    modal_cta: 'Upgrade para Pro · €9/mês',
+    modal_dismiss: 'Talvez mais tarde',
+    modal_resets: 'O plano gratuito renova à meia-noite',
   },
   es: {
     plan_free: 'Gratis', plan_pro: 'Pro',
@@ -185,6 +205,16 @@ const t = {
     session_kicked_body: 'Tu cuenta se abrió en otro dispositivo. Solo se permite una sesión activa a la vez; la actualización puede tardar hasta 1 minuto.',
     session_blocked_body: 'Tu cuenta ya está abierta en otro dispositivo. Cierra esa sesión primero y luego inténtalo de nuevo. La actualización puede tardar hasta un minuto.',
     session_signout: 'Cerrar sesión',
+    modal_eyebrow: 'Límite del plan gratuito alcanzado',
+    modal_title: 'Has usado tus 10 imágenes de hoy',
+    modal_sub: 'Actualiza a Pro y procesa imágenes ilimitadas cada día — sin límites, sin esperas.',
+    modal_feat1_t: 'Imágenes ilimitadas', modal_feat1_d: 'Procesa lo que necesites, todos los días',
+    modal_feat2_t: 'Las 6 plataformas', modal_feat2_d: 'Meta, Google, TikTok, Snapchat, Pinterest, LinkedIn',
+    modal_feat3_t: 'Subida ZIP en lote', modal_feat3_d: 'Hasta 50 imágenes a la vez en un solo ZIP',
+    modal_feat4_t: 'Procesamiento prioritario', modal_feat4_d: 'Cola más rápida, siempre disponible',
+    modal_cta: 'Actualizar a Pro · €9/mes',
+    modal_dismiss: 'Quizás más tarde',
+    modal_resets: 'El plan gratuito se renueva a medianoche',
   },
 }
 
@@ -724,6 +754,7 @@ function DashboardInner() {
   const [processing, setProcessing] = useState(false)
   const [done, setDone] = useState(false)
   const [limitReached, setLimitReached] = useState(false)
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false)
   const [upgradedNotice, setUpgradedNotice] = useState(false)
   const [step, setStep] = useState('upload') // 'upload' | 'crop'
   const [rejectedFiles, setRejectedFiles] = useState([]) // non-image files dropped
@@ -993,7 +1024,7 @@ function DashboardInner() {
       })
       if (!res.ok) {
         const err = await res.json().catch(() => ({}))
-        if (err.limitReached) setLimitReached(true)
+        if (err.limitReached) { setLimitReached(true); setShowUpgradeModal(true) }
         return
       }
       const blob = await res.blob()
@@ -1118,7 +1149,7 @@ function DashboardInner() {
 
       if (!res.ok) {
         const err = await res.json().catch(() => ({}))
-        if (err.limitReached) { setLimitReached(true); break }
+        if (err.limitReached) { setLimitReached(true); setShowUpgradeModal(true); break }
         continue
       }
 
@@ -1182,7 +1213,7 @@ function DashboardInner() {
 
       if (!res.ok) {
         const err = await res.json().catch(() => ({}))
-        if (err.limitReached) { setLimitReached(true); hitLimit = true; break }
+        if (err.limitReached) { setLimitReached(true); setShowUpgradeModal(true); hitLimit = true; break }
         if (err.guestLimitReached) { setShowSignupPrompt(true); hitLimit = true; break }
         continue
       }
@@ -2340,6 +2371,100 @@ function DashboardInner() {
       </div>
 
       <Footer />
+
+      {/* ── Upgrade modal ─────────────────────────────────────────────────── */}
+      {showUpgradeModal && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          style={{background: 'rgba(6,6,9,0.85)', backdropFilter: 'blur(20px)'}}
+          onClick={(e) => { if (e.target === e.currentTarget) setShowUpgradeModal(false) }}
+        >
+          {/* Cursor glow */}
+          <div className="absolute inset-0 pointer-events-none overflow-hidden">
+            <div style={{position:'absolute',top:'20%',left:'50%',transform:'translateX(-50%)',width:600,height:600,background:'radial-gradient(circle, rgba(99,102,241,0.08) 0%, transparent 65%)',borderRadius:'50%',pointerEvents:'none'}} />
+          </div>
+
+          <div
+            className="relative w-full max-w-[440px] rounded-2xl overflow-hidden"
+            style={{
+              background: 'linear-gradient(160deg, rgba(13,13,24,0.98) 0%, rgba(6,6,9,1) 100%)',
+              border: '1px solid rgba(255,255,255,0.08)',
+              boxShadow: '0 40px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(99,102,241,0.1)',
+              animation: 'fadeInUp 0.35s cubic-bezier(0.16,1,0.3,1) both',
+            }}
+          >
+            {/* Top indigo gradient line */}
+            <div style={{height:2,background:'linear-gradient(90deg, transparent, #6366f1 30%, #8b5cf6 70%, transparent)',boxShadow:'0 0 20px 2px rgba(99,102,241,0.35)'}} />
+
+            <div className="p-7">
+              {/* Eyebrow */}
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full mb-5 text-[11px] font-semibold uppercase tracking-widest"
+                style={{background: 'rgba(99,102,241,0.1)', border: '1px solid rgba(99,102,241,0.2)', color: '#a5b4fc'}}>
+                <span className="w-1.5 h-1.5 rounded-full bg-indigo-400" style={{animation:'none',boxShadow:'0 0 6px #818cf8'}} />
+                {i.modal_eyebrow}
+              </div>
+
+              {/* Title */}
+              <h2 className="text-[22px] font-bold tracking-tight mb-2" style={{letterSpacing: '-0.03em', lineHeight: 1.2}}>
+                {i.modal_title}
+              </h2>
+              <p className="text-gray-500 text-[13px] leading-relaxed mb-6">{i.modal_sub}</p>
+
+              {/* Feature list */}
+              <div className="space-y-2 mb-7">
+                {[
+                  { title: i.modal_feat1_t, desc: i.modal_feat1_d, color: '#6366f1' },
+                  { title: i.modal_feat2_t, desc: i.modal_feat2_d, color: '#8b5cf6' },
+                  { title: i.modal_feat3_t, desc: i.modal_feat3_d, color: '#2563eb' },
+                  { title: i.modal_feat4_t, desc: i.modal_feat4_d, color: '#10b981' },
+                ].map(({ title, desc, color }, idx) => (
+                  <div key={idx} className="flex items-start gap-3 px-3 py-2.5 rounded-xl"
+                    style={{background: `${color}07`, border: `1px solid ${color}15`}}>
+                    <div className="w-5 h-5 rounded-lg flex items-center justify-center shrink-0 mt-0.5"
+                      style={{background: `${color}18`, color}}>
+                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4.5 12.75l6 6 9-13.5" />
+                      </svg>
+                    </div>
+                    <div>
+                      <p className="text-[12px] font-semibold text-white leading-none mb-0.5">{title}</p>
+                      <p className="text-[11px] text-gray-500 leading-snug">{desc}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* CTA */}
+              <button
+                onClick={handleUpgrade}
+                {...glowHandlers}
+                className="w-full py-3.5 rounded-xl text-[14px] font-semibold text-white mb-3 flex items-center justify-center gap-2"
+                style={glowStyle}
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
+                </svg>
+                {i.modal_cta}
+              </button>
+
+              <button
+                onClick={() => setShowUpgradeModal(false)}
+                className="w-full py-2 text-[12px] text-gray-600 hover:text-gray-400 transition-colors"
+              >
+                {i.modal_dismiss}
+              </button>
+
+              {/* Reset note */}
+              <p className="text-center text-[11px] text-gray-700 mt-3">
+                <svg className="w-3 h-3 inline mr-1 opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                {i.modal_resets}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
     </main>
   )
