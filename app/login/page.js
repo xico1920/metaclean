@@ -165,17 +165,31 @@ export default function Login() {
   }
 
   return (
-    <main className="min-h-screen bg-[#060609] text-white flex flex-col" style={{fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'}}>
+    <main
+      className="min-h-screen bg-[#060609] text-white flex flex-col overflow-hidden"
+      style={{fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'}}
+      onMouseMove={e => {
+        const g = document.getElementById('login-cursor-glow')
+        if (g) { g.style.left = e.clientX - 350 + 'px'; g.style.top = e.clientY - 350 + 'px' }
+      }}
+    >
+      {/* Cursor-follow glow */}
+      <div id="login-cursor-glow" className="fixed w-[700px] h-[700px] pointer-events-none" style={{background: 'radial-gradient(circle, rgba(99,102,241,0.045) 0%, transparent 65%)', borderRadius: '50%', zIndex: 0, transition: 'none'}} />
 
-      {/* Background glows */}
+      {/* Top gradient line */}
+      <div className="fixed top-0 left-0 right-0 z-30" style={{height: 1, background: 'linear-gradient(90deg, transparent, rgba(99,102,241,0.6) 40%, rgba(139,92,246,0.6) 60%, transparent)'}}>
+        <div className="h-full w-full" style={{boxShadow: '0 0 20px 1px rgba(99,102,241,0.2)'}} />
+      </div>
+
+      {/* Fixed background glows */}
       <div className="fixed inset-0 pointer-events-none">
-        <div className="absolute top-0 left-0 w-[600px] h-[500px]" style={{background: 'radial-gradient(ellipse at 0% 0%, rgba(37,99,235,0.08) 0%, transparent 60%)'}} />
-        <div className="absolute bottom-0 right-0 w-[500px] h-[500px]" style={{background: 'radial-gradient(ellipse at 100% 100%, rgba(139,92,246,0.07) 0%, transparent 60%)'}} />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[400px]" style={{background: 'radial-gradient(ellipse at center, rgba(99,102,241,0.04) 0%, transparent 70%)'}} />
+        <div className="absolute inset-0 opacity-[0.02]" style={{backgroundImage: 'linear-gradient(rgba(255,255,255,0.6) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.6) 1px, transparent 1px)', backgroundSize: '44px 44px'}} />
+        <div className="absolute top-0 left-0 w-[600px] h-[500px]" style={{background: 'radial-gradient(ellipse at 0% 0%, rgba(37,99,235,0.07) 0%, transparent 60%)'}} />
+        <div className="absolute bottom-0 right-0 w-[500px] h-[500px]" style={{background: 'radial-gradient(ellipse at 100% 100%, rgba(139,92,246,0.06) 0%, transparent 60%)'}} />
       </div>
 
       {/* ── Panels row ── */}
-      <div className="flex flex-1">
+      <div className="flex flex-1 relative z-10">
 
       {/* ── Left panel (desktop only) ── */}
       <div className="hidden lg:flex flex-col justify-between w-[420px] xl:w-[480px] shrink-0 px-10 xl:px-14 py-10 relative overflow-hidden"
@@ -185,7 +199,7 @@ export default function Login() {
         <div className="absolute inset-0 pointer-events-none opacity-[0.025]" style={{backgroundImage: 'linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px)', backgroundSize: '40px 40px'}} />
 
         {/* Top glow accent */}
-        <div className="absolute top-0 left-0 right-0 h-px" style={{background: 'linear-gradient(90deg, transparent, rgba(99,102,241,0.4), transparent)'}} />
+        <div className="absolute top-0 left-0 right-0 h-px" style={{background: 'linear-gradient(90deg, transparent, rgba(99,102,241,0.5), transparent)', boxShadow: '0 0 12px rgba(99,102,241,0.2)'}} />
 
         <div style={fadeIn(0)}>
           <Logo clipId="loginDesktopLogo" />
@@ -197,7 +211,7 @@ export default function Login() {
             <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-pulse inline-block" />
             Free to start
           </div>
-          <h2 className="text-[26px] xl:text-[30px] font-bold tracking-tight leading-tight mb-3">
+          <h2 className="text-[26px] xl:text-[30px] font-bold tracking-tight leading-tight mb-3" style={{letterSpacing: '-0.03em'}}>
             Clean images.<br/>
             <span style={{background: 'linear-gradient(135deg, #93c5fd, #a5b4fc, #c084fc)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text'}}>
               Win more auctions.
@@ -205,10 +219,16 @@ export default function Login() {
           </h2>
           <p className="text-gray-500 text-[14px] leading-relaxed mb-10">Strip metadata and resize for every ad platform. One click, no guesswork.</p>
 
-          <div className="space-y-4">
+          <div className="space-y-3">
             {benefits.map(({ icon, title, desc, color }, idx) => (
-              <div key={idx} className="flex items-start gap-3.5" style={fadeIn(120 + idx * 60)}>
-                <div className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 mt-0.5"
+              <div
+                key={idx}
+                className="flex items-start gap-3.5 p-3 rounded-xl transition-all duration-200 cursor-default"
+                style={{...fadeIn(120 + idx * 60), border: '1px solid transparent'}}
+                onMouseEnter={e => { e.currentTarget.style.background = `${color}08`; e.currentTarget.style.borderColor = `${color}20`; e.currentTarget.style.transform = 'translateX(4px)' }}
+                onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.borderColor = 'transparent'; e.currentTarget.style.transform = 'translateX(0)' }}
+              >
+                <div className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 mt-0.5 transition-all duration-200"
                   style={{background: `${color}15`, color, border: `1px solid ${color}25`}}>
                   {icon}
                 </div>
@@ -224,7 +244,7 @@ export default function Login() {
         <div className="relative flex items-center gap-3" style={fadeIn(400)}>
           <div className="flex -space-x-2">
             {['#4338ca','#7c3aed','#2563eb','#0891b2'].map((c, i) => (
-              <div key={i} className="w-7 h-7 rounded-full border-2 border-[#060609]" style={{background: `linear-gradient(135deg, ${c}, ${c}88)`}} />
+              <div key={i} className="w-7 h-7 rounded-full border-2 border-[#060609] hover-scale transition-transform" style={{background: `linear-gradient(135deg, ${c}, ${c}88)`}} />
             ))}
           </div>
           <p className="text-[12px] text-gray-600">50,000+ images processed this month</p>
@@ -244,7 +264,7 @@ export default function Login() {
               <svg className="w-3 h-3 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
             </button>
             {langOpen && (
-              <div className="absolute right-0 mt-1.5 w-32 rounded-xl overflow-hidden z-30" style={{background: '#0d0d14', border: '1px solid rgba(255,255,255,0.08)', boxShadow: '0 20px 40px rgba(0,0,0,0.5)'}}>
+              <div className="absolute right-0 mt-1.5 w-32 rounded-xl overflow-hidden z-30 anim-pop" style={{background: '#0d0d14', border: '1px solid rgba(255,255,255,0.08)', boxShadow: '0 20px 40px rgba(0,0,0,0.5)'}}>
                 {['en','pt','es'].map((l) => (
                   <button key={l} onClick={() => { setLang(l); localStorage.setItem('metaclean_lang', l); setLangOpen(false) }} className="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-[12px] hover:bg-white/5 transition-colors">
                     <img src={flags[l]} alt={l} style={{width:'16px', height:'11px', objectFit:'cover', borderRadius:'2px'}} />
@@ -266,7 +286,7 @@ export default function Login() {
               <svg className="w-3 h-3 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
             </button>
             {langOpen && (
-              <div className="absolute right-0 mt-1.5 w-32 rounded-xl overflow-hidden z-30" style={{background: '#0d0d14', border: '1px solid rgba(255,255,255,0.08)', boxShadow: '0 20px 40px rgba(0,0,0,0.5)'}}>
+              <div className="absolute right-0 mt-1.5 w-32 rounded-xl overflow-hidden z-30 anim-pop" style={{background: '#0d0d14', border: '1px solid rgba(255,255,255,0.08)', boxShadow: '0 20px 40px rgba(0,0,0,0.5)'}}>
                 {['en','pt','es'].map((l) => (
                   <button key={l} onClick={() => { setLang(l); localStorage.setItem('metaclean_lang', l); setLangOpen(false) }} className="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-[12px] hover:bg-white/5 transition-colors">
                     <img src={flags[l]} alt={l} style={{width:'16px', height:'11px', objectFit:'cover', borderRadius:'2px'}} />
@@ -293,7 +313,7 @@ export default function Login() {
                   ? 'opacity 0.15s ease, filter 0.15s ease, transform 0.15s ease'
                   : 'opacity 0.28s cubic-bezier(0.16,1,0.3,1), filter 0.28s cubic-bezier(0.16,1,0.3,1), transform 0.28s cubic-bezier(0.16,1,0.3,1)',
             }}>
-              <h1 className="text-2xl font-bold tracking-tight mb-1.5">
+              <h1 className="text-2xl font-bold tracking-tight mb-1.5" style={{letterSpacing: '-0.03em'}}>
                 {mode === 'login' ? 'Welcome back' : 'Create your account'}
               </h1>
               <p className="text-gray-500 text-[13px]">
@@ -311,9 +331,9 @@ export default function Login() {
                   className="flex-1 py-2 rounded-lg text-[13px] font-medium transition-all duration-200"
                   style={{
                     background: mode === 'login' ? 'rgba(255,255,255,0.09)' : 'transparent',
-                    color: mode === 'login' ? 'white' : 'rgba(255,255,255,0.4)',
-                    boxShadow: mode === 'login' ? '0 1px 3px rgba(0,0,0,0.3)' : 'none',
-                    transform: mode !== 'login' ? 'scale(0.98)' : 'scale(1)',
+                    color: mode === 'login' ? 'white' : 'rgba(255,255,255,0.35)',
+                    boxShadow: mode === 'login' ? '0 1px 3px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.06)' : 'none',
+                    transform: mode !== 'login' ? 'scale(0.97)' : 'scale(1)',
                   }}
                 >
                   Log in
@@ -323,9 +343,9 @@ export default function Login() {
                   className="flex-1 py-2 rounded-lg text-[13px] font-medium transition-all duration-200"
                   style={{
                     background: mode === 'signup' ? 'rgba(255,255,255,0.09)' : 'transparent',
-                    color: mode === 'signup' ? 'white' : 'rgba(255,255,255,0.4)',
-                    boxShadow: mode === 'signup' ? '0 1px 3px rgba(0,0,0,0.3)' : 'none',
-                    transform: mode !== 'signup' ? 'scale(0.98)' : 'scale(1)',
+                    color: mode === 'signup' ? 'white' : 'rgba(255,255,255,0.35)',
+                    boxShadow: mode === 'signup' ? '0 1px 3px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.06)' : 'none',
+                    transform: mode !== 'signup' ? 'scale(0.97)' : 'scale(1)',
                   }}
                 >
                   Sign up
@@ -354,8 +374,8 @@ export default function Login() {
                       autoComplete="email"
                       onChange={(e) => setEmail(e.target.value)}
                       style={inputStyle}
-                      onFocus={(e) => { e.target.style.borderColor = 'rgba(99,102,241,0.55)'; e.target.style.background = 'rgba(255,255,255,0.06)' }}
-                      onBlur={(e) => { e.target.style.borderColor = 'rgba(255,255,255,0.09)'; e.target.style.background = 'rgba(255,255,255,0.04)' }}
+                      onFocus={(e) => { e.target.style.borderColor = 'rgba(99,102,241,0.6)'; e.target.style.background = 'rgba(99,102,241,0.04)'; e.target.style.boxShadow = '0 0 0 3px rgba(99,102,241,0.08)' }}
+                      onBlur={(e) => { e.target.style.borderColor = 'rgba(255,255,255,0.09)'; e.target.style.background = 'rgba(255,255,255,0.04)'; e.target.style.boxShadow = 'none' }}
                     />
                   </div>
                   <div>
@@ -367,8 +387,8 @@ export default function Login() {
                       autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
                       onChange={(e) => setPassword(e.target.value)}
                       style={inputStyle}
-                      onFocus={(e) => { e.target.style.borderColor = 'rgba(99,102,241,0.55)'; e.target.style.background = 'rgba(255,255,255,0.06)' }}
-                      onBlur={(e) => { e.target.style.borderColor = 'rgba(255,255,255,0.09)'; e.target.style.background = 'rgba(255,255,255,0.04)' }}
+                      onFocus={(e) => { e.target.style.borderColor = 'rgba(99,102,241,0.6)'; e.target.style.background = 'rgba(99,102,241,0.04)'; e.target.style.boxShadow = '0 0 0 3px rgba(99,102,241,0.08)' }}
+                      onBlur={(e) => { e.target.style.borderColor = 'rgba(255,255,255,0.09)'; e.target.style.background = 'rgba(255,255,255,0.04)'; e.target.style.boxShadow = 'none' }}
                     />
                     {mode === 'signup' && password.length > 0 && (() => {
                       const strength = getPwdStrength(password)
@@ -379,14 +399,14 @@ export default function Login() {
                           <div className="flex gap-1 mb-1.5">
                             {[1,2,3,4].map(i => (
                               <div key={i} className="h-1 flex-1 rounded-full transition-all duration-300"
-                                style={{background: i <= strength ? colors[strength] : 'rgba(255,255,255,0.08)'}} />
+                                style={{background: i <= strength ? colors[strength] : 'rgba(255,255,255,0.08)', boxShadow: i <= strength ? `0 0 6px ${colors[strength]}55` : 'none'}} />
                             ))}
                           </div>
                           <div className="flex items-center justify-between">
                             <p className="text-[11px] font-medium" style={{color: colors[strength]}}>{labels[strength]}</p>
                             <div className="flex gap-2">
                               {pwdRules.map((r, i) => (
-                                <span key={i} className="text-[10px] transition-colors" style={{color: r.test(password) ? '#6ee7b7' : 'rgba(255,255,255,0.2)'}}>
+                                <span key={i} className="text-[10px] transition-colors duration-200" style={{color: r.test(password) ? '#6ee7b7' : 'rgba(255,255,255,0.2)'}}>
                                   {r.test(password) ? '✓' : '·'} {i === 0 ? '8+' : i === 1 ? 'A' : i === 2 ? 'a' : '0-9'}
                                 </span>
                               ))}
@@ -399,7 +419,7 @@ export default function Login() {
                 </div>
 
                 {error && (
-                  <div className="mb-4 px-3.5 py-2.5 rounded-xl text-[12px] text-red-300 flex items-start gap-2.5" style={{background: 'rgba(239,68,68,0.07)', border: '1px solid rgba(239,68,68,0.2)'}}>
+                  <div className="mb-4 px-3.5 py-2.5 rounded-xl text-[12px] text-red-300 flex items-start gap-2.5 anim-pop" style={{background: 'rgba(239,68,68,0.07)', border: '1px solid rgba(239,68,68,0.2)'}}>
                     <svg className="w-3.5 h-3.5 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" /></svg>
                     {error}
                   </div>
@@ -436,10 +456,10 @@ export default function Login() {
 
               <button
                 onClick={handleGoogleLogin}
-                className="w-full py-2.5 rounded-xl text-[13px] text-gray-300 flex items-center justify-center gap-2.5 transition-all"
-                style={{border: '1px solid rgba(255,255,255,0.10)', background: 'rgba(255,255,255,0.04)'}}
-                onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.08)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.16)'; e.currentTarget.style.color = 'white' }}
-                onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.10)'; e.currentTarget.style.color = '' }}
+                className="w-full py-2.5 rounded-xl text-[13px] text-gray-300 flex items-center justify-center gap-2.5 hover-scale"
+                style={{border: '1px solid rgba(255,255,255,0.10)', background: 'rgba(255,255,255,0.04)', transition: 'background 0.2s, border-color 0.2s, color 0.2s, transform 0.15s cubic-bezier(0.16,1,0.3,1)'}}
+                onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.07)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.18)'; e.currentTarget.style.color = 'white'; e.currentTarget.style.boxShadow = '0 4px 16px rgba(0,0,0,0.3)' }}
+                onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.10)'; e.currentTarget.style.color = ''; e.currentTarget.style.boxShadow = 'none' }}
               >
                 <svg width="16" height="16" viewBox="0 0 24 24">
                   <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
