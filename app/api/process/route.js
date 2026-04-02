@@ -237,6 +237,11 @@ export async function POST(request) {
       return NextResponse.json({ error: 'No image provided' }, { status: 400 })
     }
 
+    const MAX_SIZE_BYTES = 30 * 1024 * 1024
+    if (file.size > MAX_SIZE_BYTES) {
+      return NextResponse.json({ error: 'File too large. Maximum size is 30MB.' }, { status: 413 })
+    }
+
     const config = PLATFORMS[platform] || PLATFORMS.meta
     const inputBuffer = Buffer.from(await file.arrayBuffer())
     const baseName = originalName.replace(/\.[^.]+$/, '')

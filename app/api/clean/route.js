@@ -42,6 +42,11 @@ export async function POST(request) {
     const originalName = formData.get('name') || file?.name || 'file'
     if (!file) return NextResponse.json({ error: 'No file provided' }, { status: 400 })
 
+    const MAX_SIZE_BYTES = 30 * 1024 * 1024
+    if (file.size > MAX_SIZE_BYTES) {
+      return NextResponse.json({ error: 'File too large. Maximum size is 30MB.' }, { status: 413 })
+    }
+
     const inputBuffer = Buffer.from(await file.arrayBuffer())
     const mimeType = file.type || ''
     const ext = originalName.split('.').pop()?.toLowerCase() || 'bin'

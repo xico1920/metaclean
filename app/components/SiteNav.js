@@ -12,7 +12,11 @@ const flags = {
   es: 'https://flagcdn.com/w20/es.png',
 }
 
-
+const t = {
+  en: { features: 'Features', pricing: 'Pricing', blog: 'Blog', login: 'Login', dashboard: 'Dashboard', get_started: 'Get started' },
+  pt: { features: 'Funcionalidades', pricing: 'Preços', blog: 'Blog', login: 'Entrar', dashboard: 'Dashboard', get_started: 'Começar grátis' },
+  es: { features: 'Funcionalidades', pricing: 'Precios', blog: 'Blog', login: 'Entrar', dashboard: 'Dashboard', get_started: 'Empezar gratis' },
+}
 
 export default function SiteNav() {
   const pathname = usePathname()
@@ -69,25 +73,27 @@ export default function SiteNav() {
     </Link>
   )
 
+  const i = t[lang]
+
   const authCta = mounted
     ? session
-      ? <Link href="/dashboard" {...glowHandlers} className="px-4 sm:px-5 py-2 rounded-lg text-[13px] font-semibold text-white" style={glowStyle}>Dashboard</Link>
-      : <Link href="/login" {...glowHandlers} className="px-4 sm:px-5 py-2 rounded-lg text-[13px] font-semibold text-white" style={glowStyle}>Get started</Link>
+      ? <Link href="/dashboard" {...glowHandlers} className="px-4 sm:px-5 py-2 rounded-lg text-[13px] font-semibold text-white" style={glowStyle}>{i.dashboard}</Link>
+      : <Link href="/login" {...glowHandlers} className="px-4 sm:px-5 py-2 rounded-lg text-[13px] font-semibold text-white" style={glowStyle}>{i.get_started}</Link>
     : <div style={{ width: 88, height: 34 }} />
 
   const mobileAuthCta = mounted && session
-    ? <Link href="/dashboard" onClick={() => setMenuOpen(false)} className="block px-3 py-2.5 rounded-lg text-[13px] font-medium text-indigo-400 hover:bg-white/5 transition-colors">Dashboard →</Link>
-    : <Link href="/login" onClick={() => setMenuOpen(false)} className="block px-3 py-2.5 rounded-lg text-[13px] text-gray-400 hover:text-gray-200 hover:bg-white/5 transition-colors">Login</Link>
+    ? <Link href="/dashboard" onClick={() => setMenuOpen(false)} className="block px-3 py-2.5 rounded-lg text-[13px] font-medium text-indigo-400 hover:bg-white/5 transition-colors">{i.dashboard} →</Link>
+    : <Link href="/login" onClick={() => setMenuOpen(false)} className="block px-3 py-2.5 rounded-lg text-[13px] text-gray-400 hover:text-gray-200 hover:bg-white/5 transition-colors">{i.login}</Link>
 
   return (
     <nav className="relative z-20" style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
       <div className="flex items-center justify-between px-4 sm:px-8 py-4 sm:py-5">
         <Logo clipId="siteNavLogo" />
         <div className="flex items-center gap-2 sm:gap-5">
-          {navLink('/features', 'Features')}
-          {navLink('/pricing', 'Pricing')}
-          {navLink('/blog', 'Blog')}
-          {!session && mounted && navLink('/login', 'Login')}
+          {navLink('/features', i.features)}
+          {navLink('/pricing', i.pricing)}
+          {navLink('/blog', i.blog)}
+          {!session && mounted && navLink('/login', i.login)}
 
           {/* Language selector */}
           <div className="relative">
@@ -139,9 +145,9 @@ export default function SiteNav() {
       {menuOpen && (
         <div className="sm:hidden pb-2" style={{ background: 'rgba(6,6,9,0.98)', backdropFilter: 'blur(12px)', borderTop: '1px solid rgba(255,255,255,0.05)', animation: 'fadeInDown 0.2s cubic-bezier(0.16,1,0.3,1) both' }}>
           <div className="px-4 py-2 space-y-1">
-            {mobileLink('/features', 'Features')}
-            {mobileLink('/pricing', 'Pricing')}
-            {mobileLink('/blog', 'Blog')}
+            {mobileLink('/features', i.features)}
+            {mobileLink('/pricing', i.pricing)}
+            {mobileLink('/blog', i.blog)}
             {mobileAuthCta}
           </div>
         </div>

@@ -7,7 +7,7 @@ import Reveal from '@/app/components/Reveal'
 const sections = [
   { title: '1. Acceptance of terms', body: 'By using MetaClean, you agree to these terms. If you do not agree, do not use the service. These terms apply to all users including free and paid subscribers.' },
   { title: '2. Description of service', body: 'MetaClean provides image processing tools including metadata removal and format resizing for use in digital advertising. The service is provided as-is and features may change over time.' },
-  { title: '3. Account responsibilities', body: 'You are responsible for maintaining the security of your account credentials. You must not share your account with others or use the service for any purpose that violates applicable laws.' },
+  { title: '3. Account responsibilities', body: 'You are responsible for maintaining the security of your account credentials. You must not share your account with others or use the service for any purpose that violates applicable laws. Each account may only be used on one device at a time. MetaClean enforces a single active session per account — if your account is opened on a second device, the new session will be blocked until the existing session ends.' },
   { title: '4. Acceptable use', body: 'You may only use MetaClean to process images that you own or have the right to process. You may not use the service to process images that are illegal, infringe third-party rights, or violate any platform policies.' },
   { title: '5. Free plan limitations', body: 'The free plan allows up to 10 image processing operations per day. We reserve the right to adjust this limit. Abuse of the free plan may result in account suspension.' },
   { title: '6. Payments and refunds', body: 'Pro subscriptions are billed monthly. Payments are processed by Stripe. We offer a 7-day refund for new Pro subscriptions if the service does not meet your expectations. Contact us within 7 days of purchase.' },
@@ -41,7 +41,7 @@ export default function Terms() {
         <div className="mb-10 sm:mb-12" style={en(60)}>
           <p className="text-[10px] text-gray-600 uppercase tracking-widest mb-3 font-medium">Legal</p>
           <h1 className="text-2xl sm:text-3xl font-bold tracking-tight mb-2">Terms of Service</h1>
-          <p className="text-gray-500 text-sm">Last updated: January 2025</p>
+          <p className="text-gray-500 text-sm">Last updated: April 2026</p>
         </div>
 
         <div className="space-y-8 sm:space-y-10">

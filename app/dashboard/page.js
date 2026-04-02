@@ -727,6 +727,7 @@ function DashboardInner() {
   const [upgradedNotice, setUpgradedNotice] = useState(false)
   const [step, setStep] = useState('upload') // 'upload' | 'crop'
   const [rejectedFiles, setRejectedFiles] = useState([]) // non-image files dropped
+  const [oversizedFiles, setOversizedFiles] = useState([]) // files >30MB
   const [hoveredPlatform, setHoveredPlatform] = useState(null)
   const [hoveredFormat, setHoveredFormat] = useState(null)
   const [fileWarning, setFileWarning] = useState('')
@@ -843,7 +844,11 @@ function DashboardInner() {
   // ── Single-session enforcement ────────────────────────────────────────────────
   useEffect(() => {
     if (!user) return
-    const sessionId = crypto.randomUUID()
+    let sessionId = sessionStorage.getItem('metaclean_session_id')
+    if (!sessionId) {
+      sessionId = crypto.randomUUID()
+      sessionStorage.setItem('metaclean_session_id', sessionId)
+    }
     let interval
 
     const register = async () => {
@@ -919,16 +924,21 @@ function DashboardInner() {
     const rejected = raw.filter(f => !f.type.startsWith('image/'))
     return { images, rejected }
   }
+  const MAX_SIZE_MB = 30
+  const MAX_SIZE_BYTES = MAX_SIZE_MB * 1024 * 1024
+
   const applyFiles = (raw) => {
     const { images, rejected } = splitByType(raw)
+    const oversized = images.filter(f => f.size > MAX_SIZE_BYTES)
+    const validImages = images.filter(f => f.size <= MAX_SIZE_BYTES)
     const MAX = 50
     let warning = ''
-    let finalImages = images
-    if (images.length > MAX) {
-      finalImages = images.slice(0, MAX)
+    let finalImages = validImages
+    if (validImages.length > MAX) {
+      finalImages = validImages.slice(0, MAX)
       warning = `Too many images — only the first ${MAX} were loaded. Processing more at once may cause timeouts.`
     }
-    setFiles(finalImages); setRejectedFiles(rejected); setDone(false); setLimitReached(false); setFileWarning(warning)
+    setFiles(finalImages); setRejectedFiles(rejected); setOversizedFiles(oversized); setDone(false); setLimitReached(false); setFileWarning(warning)
   }
   const handleFiles = (e) => applyFiles(Array.from(e.target.files))
   const handleDrop = (e) => {
@@ -1003,11 +1013,17 @@ function DashboardInner() {
     }
   }
 
-  const handleCleanFiles = (e) => setCleanFiles(prev => [...prev, ...Array.from(e.target.files)])
+  const applyCleanFiles = (incoming) => {
+    const oversized = incoming.filter(f => f.size > MAX_SIZE_BYTES)
+    const valid = incoming.filter(f => f.size <= MAX_SIZE_BYTES)
+    setOversizedFiles(prev => [...prev, ...oversized])
+    setCleanFiles(prev => [...prev, ...valid])
+  }
+  const handleCleanFiles = (e) => applyCleanFiles(Array.from(e.target.files))
   const handleCleanDrop = (e) => {
     e.preventDefault()
     setCleanDragging(false)
-    setCleanFiles(prev => [...prev, ...Array.from(e.dataTransfer.files)])
+    applyCleanFiles(Array.from(e.dataTransfer.files))
   }
 
   const extractFileMeta = async (file) => {
@@ -1832,6 +1848,28 @@ function DashboardInner() {
           )}
 
           {/* Rejected files */}
+          {oversizedFiles.length > 0 && (
+            <div className="px-5 pb-2">
+              <div className="flex items-start justify-between gap-3 px-4 py-3 rounded-xl" style={{background: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.18)'}}>
+                <div className="min-w-0">
+                  <p className="text-[12px] font-semibold text-red-300 mb-1 flex items-center gap-1.5">
+                    <svg className="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" /></svg>
+                    {oversizedFiles.length} file{oversizedFiles.length > 1 ? 's' : ''} too large — max 30MB each
+                  </p>
+                  <p className="text-[11px] text-red-400/60 mb-1.5">Please upload smaller versions of these files.</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {oversizedFiles.map((f, idx) => (
+                      <span key={idx} className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] text-red-400/70" style={{background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.15)'}}>
+                        {f.name} <span className="text-red-400/40">({(f.size/1024/1024).toFixed(1)}MB)</span>
+                      </span>
+                    ))}
+                  </div>
+                </div>
+                <button onClick={() => setOversizedFiles([])} className="text-red-400/50 hover:text-red-400 transition-colors text-lg leading-none shrink-0 mt-0.5">×</button>
+              </div>
+            </div>
+          )}
+
           {rejectedFiles.length > 0 && (
             <div className="px-5 pb-4">
               <div className="flex items-start justify-between gap-3 px-4 py-3 rounded-xl" style={{background: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.18)'}}>
@@ -1996,7 +2034,7 @@ function DashboardInner() {
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
                         Edit crops →
                       </button>
-                      <button onClick={() => { setFiles([]); setDone(false); setLimitReached(false); setStep('upload'); setProcessedStats(null); setPendingResults(null); if (fileInputRef.current) fileInputRef.current.value = '' }} className="px-4 py-3 text-xs text-gray-500 hover:text-gray-300 transition-colors">{i.clear}</button>
+                      <button onClick={() => { setFiles([]); setOversizedFiles([]); setRejectedFiles([]); setDone(false); setLimitReached(false); setStep('upload'); setProcessedStats(null); setPendingResults(null); if (fileInputRef.current) fileInputRef.current.value = '' }} className="px-4 py-3 text-xs text-gray-500 hover:text-gray-300 transition-colors">{i.clear}</button>
                     </div>
                   )}
                   {done && !limitReached && (
@@ -2110,7 +2148,7 @@ function DashboardInner() {
                         Add more
                         <input type="file" multiple className="hidden" onChange={handleCleanFiles} />
                       </label>
-                      <button onClick={() => { setCleanFiles([]); setCleanDone(false); setCleanResults([]); setLimitReached(false); if (cleanFileInputRef.current) cleanFileInputRef.current.value = '' }} className="px-4 py-3 text-xs text-gray-500 hover:text-gray-300 transition-colors">{i.clear}</button>
+                      <button onClick={() => { setCleanFiles([]); setCleanDone(false); setCleanResults([]); setOversizedFiles([]); setLimitReached(false); if (cleanFileInputRef.current) cleanFileInputRef.current.value = '' }} className="px-4 py-3 text-xs text-gray-500 hover:text-gray-300 transition-colors">{i.clear}</button>
                     </div>
                   )}
                   {cleanDone && !limitReached && (
