@@ -36,15 +36,83 @@ const benefits = [
 
 const flags = { en: 'https://flagcdn.com/w20/gb.png', pt: 'https://flagcdn.com/w20/pt.png', es: 'https://flagcdn.com/w20/es.png' }
 
-const pwdRules = [
+const t = {
+  en: {
+    badge: 'Free to start',
+    headline1: 'Clean images.',
+    headline2: 'Win more auctions.',
+    sub: 'Strip metadata and resize for every ad platform. One click, no guesswork.',
+    social: '50,000+ images processed this month',
+    login_tab: 'Log in', signup_tab: 'Sign up',
+    welcome: 'Welcome back', welcome_sub: 'Log in to your MetaClean account',
+    create: 'Create your account', create_sub: 'Start cleaning images for free',
+    email_label: 'Email', pwd_label: 'Password',
+    submit_login: 'Log in', submit_signup: 'Create account', submitting: 'Please wait…',
+    google: 'Continue with Google',
+    switch_signup: 'No account? Sign up', switch_login: 'Have an account? Log in',
+    terms_pre: 'By signing up you agree to our', terms: 'Terms', and: 'and', privacy: 'Privacy Policy',
+    pwd_weak: 'Weak', pwd_fair: 'Fair', pwd_good: 'Good', pwd_strong: 'Strong',
+    pwd_rule_len: 'At least 8 characters', pwd_rule_upper: 'Uppercase letter', pwd_rule_lower: 'Lowercase letter', pwd_rule_num: 'Number',
+    err_fields: 'Please fill in all fields.',
+    err_cancel: 'Sign in was cancelled.',
+    err_duplicate: 'An account with this email already exists. Please log in instead.',
+  },
+  pt: {
+    badge: 'Grátis para começar',
+    headline1: 'Imagens limpas.',
+    headline2: 'Mais conversões.',
+    sub: 'Remove metadados e redimensiona para cada plataforma de anúncios. Um clique, sem complicações.',
+    social: '50.000+ imagens processadas este mês',
+    login_tab: 'Entrar', signup_tab: 'Registar',
+    welcome: 'Bem-vindo de volta', welcome_sub: 'Entra na tua conta MetaClean',
+    create: 'Cria a tua conta', create_sub: 'Começa a limpar imagens gratuitamente',
+    email_label: 'Email', pwd_label: 'Password',
+    submit_login: 'Entrar', submit_signup: 'Criar conta', submitting: 'Aguarda…',
+    google: 'Continuar com Google',
+    switch_signup: 'Sem conta? Regista-te', switch_login: 'Já tens conta? Entra',
+    terms_pre: 'Ao registares-te, concordas com os nossos', terms: 'Termos', and: 'e', privacy: 'Política de Privacidade',
+    pwd_weak: 'Fraca', pwd_fair: 'Razoável', pwd_good: 'Boa', pwd_strong: 'Forte',
+    pwd_rule_len: 'Pelo menos 8 caracteres', pwd_rule_upper: 'Maiúscula', pwd_rule_lower: 'Minúscula', pwd_rule_num: 'Número',
+    err_fields: 'Por favor preenche todos os campos.',
+    err_cancel: 'O login foi cancelado.',
+    err_duplicate: 'Já existe uma conta com este email. Faz login.',
+  },
+  es: {
+    badge: 'Gratis para empezar',
+    headline1: 'Imágenes limpias.',
+    headline2: 'Más conversiones.',
+    sub: 'Elimina metadatos y redimensiona para cada plataforma de anuncios. Un clic, sin complicaciones.',
+    social: '50.000+ imágenes procesadas este mes',
+    login_tab: 'Entrar', signup_tab: 'Registrarse',
+    welcome: 'Bienvenido de nuevo', welcome_sub: 'Entra en tu cuenta MetaClean',
+    create: 'Crea tu cuenta', create_sub: 'Empieza a limpiar imágenes gratis',
+    email_label: 'Email', pwd_label: 'Contraseña',
+    submit_login: 'Entrar', submit_signup: 'Crear cuenta', submitting: 'Espera…',
+    google: 'Continuar con Google',
+    switch_signup: '¿Sin cuenta? Regístrate', switch_login: '¿Ya tienes cuenta? Entra',
+    terms_pre: 'Al registrarte aceptas nuestros', terms: 'Términos', and: 'y', privacy: 'Política de Privacidad',
+    pwd_weak: 'Débil', pwd_fair: 'Regular', pwd_good: 'Buena', pwd_strong: 'Fuerte',
+    pwd_rule_len: 'Al menos 8 caracteres', pwd_rule_upper: 'Mayúscula', pwd_rule_lower: 'Minúscula', pwd_rule_num: 'Número',
+    err_fields: 'Por favor rellena todos los campos.',
+    err_cancel: 'El inicio de sesión fue cancelado.',
+    err_duplicate: 'Ya existe una cuenta con este email. Inicia sesión.',
+  },
+}
+
+const pwdRules = (tr) => [
+  { label: tr.pwd_rule_len,   test: p => p.length >= 8 },
+  { label: tr.pwd_rule_upper, test: p => /[A-Z]/.test(p) },
+  { label: tr.pwd_rule_lower, test: p => /[a-z]/.test(p) },
+  { label: tr.pwd_rule_num,   test: p => /[0-9]/.test(p) },
+]
   { label: 'At least 8 characters', test: p => p.length >= 8 },
   { label: 'Uppercase letter', test: p => /[A-Z]/.test(p) },
   { label: 'Lowercase letter', test: p => /[a-z]/.test(p) },
   { label: 'Number', test: p => /[0-9]/.test(p) },
 ]
 
-function getPwdStrength(p) {
-  return pwdRules.filter(r => r.test(p)).length
+function getPwdStrength(p, rules) {
+  return rules.filter(r => r.test(p)).length
 }
 
 export default function Login() {
@@ -60,6 +128,9 @@ export default function Login() {
   const [lang, setLang] = useState('en')
   const [langOpen, setLangOpen] = useState(false)
 
+  const i = t[lang]
+  const rules = pwdRules(i)
+
   const switchMode = (newMode) => {
     if (newMode === mode || transitioning) return
     setTransitioning(true)
@@ -72,7 +143,7 @@ export default function Login() {
     const params = new URLSearchParams(window.location.search)
     if (params.get('mode') === 'signup') setMode('signup')
     if (params.get('error')) {
-      setError('Sign in was cancelled.')
+      setError(t[localStorage.getItem('metaclean_lang') || 'en']?.err_cancel || 'Sign in was cancelled.')
       window.history.replaceState({}, '', window.location.pathname)
     }
 
@@ -90,7 +161,7 @@ export default function Login() {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    if (!email || !password) { setError('Please fill in all fields.'); return }
+    if (!email || !password) { setError(i.err_fields); return }
     setError('')
     setLoading(true)
 
@@ -99,13 +170,13 @@ export default function Login() {
         const { error: signInError } = await supabase.auth.signInWithPassword({ email, password })
         if (signInError) throw signInError
       } else {
-        const unmet = pwdRules.filter(r => !r.test(password))
+        const unmet = rules.filter(r => !r.test(password))
         if (unmet.length > 0) { setError(`Password must include: ${unmet.map(r => r.label.toLowerCase()).join(', ')}.`); setLoading(false); return }
         const { data, error: signUpError } = await supabase.auth.signUp({ email, password })
         if (signUpError) throw signUpError
         // Supabase returns a fake user instead of an error for duplicate emails
         if (data.user && data.user.identities?.length === 0) {
-          throw new Error('An account with this email already exists. Please log in instead.')
+          throw new Error(i.err_duplicate)
         }
         if (data.user) {
           await supabase.from('profiles').upsert({
@@ -209,32 +280,32 @@ export default function Login() {
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full mb-6 text-[11px] font-semibold uppercase tracking-widest"
             style={{background: 'rgba(99,102,241,0.1)', border: '1px solid rgba(99,102,241,0.2)', color: '#a5b4fc'}}>
             <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-pulse inline-block" />
-            Free to start
+            {i.badge}
           </div>
-          <h2 className="text-[26px] xl:text-[30px] font-bold tracking-tight leading-tight mb-3" style={{letterSpacing: '-0.03em'}}>
-            Clean images.<br/>
+          <h2 className="text-[24px] xl:text-[28px] font-bold tracking-tight leading-tight mb-2" style={{letterSpacing: '-0.03em'}}>
+            {i.headline1}<br/>
             <span style={{background: 'linear-gradient(135deg, #93c5fd, #a5b4fc, #c084fc)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text'}}>
-              Win more auctions.
+              {i.headline2}
             </span>
           </h2>
-          <p className="text-gray-500 text-[14px] leading-relaxed mb-10">Strip metadata and resize for every ad platform. One click, no guesswork.</p>
+          <p className="text-gray-500 text-[13px] leading-relaxed mb-7">{i.sub}</p>
 
-          <div className="space-y-3">
+          <div className="space-y-1.5">
             {benefits.map(({ icon, title, desc, color }, idx) => (
               <div
                 key={idx}
-                className="flex items-start gap-3.5 p-3 rounded-xl transition-all duration-200 cursor-default"
+                className="flex items-center gap-3 px-2.5 py-2 rounded-xl transition-all duration-200 cursor-default"
                 style={{...fadeIn(120 + idx * 60), border: '1px solid transparent'}}
                 onMouseEnter={e => { e.currentTarget.style.background = `${color}08`; e.currentTarget.style.borderColor = `${color}20`; e.currentTarget.style.transform = 'translateX(4px)' }}
                 onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.borderColor = 'transparent'; e.currentTarget.style.transform = 'translateX(0)' }}
               >
-                <div className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 mt-0.5 transition-all duration-200"
+                <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0"
                   style={{background: `${color}15`, color, border: `1px solid ${color}25`}}>
                   {icon}
                 </div>
                 <div>
-                  <p className="text-[13px] font-semibold text-white mb-0.5">{title}</p>
-                  <p className="text-[12px] text-gray-500 leading-relaxed">{desc}</p>
+                  <p className="text-[13px] font-semibold text-white leading-none mb-0.5">{title}</p>
+                  <p className="text-[11px] text-gray-500 leading-snug">{desc}</p>
                 </div>
               </div>
             ))}
@@ -243,11 +314,11 @@ export default function Login() {
 
         <div className="relative flex items-center gap-3" style={fadeIn(400)}>
           <div className="flex -space-x-2">
-            {['#4338ca','#7c3aed','#2563eb','#0891b2'].map((c, i) => (
-              <div key={i} className="w-7 h-7 rounded-full border-2 border-[#060609] hover-scale transition-transform" style={{background: `linear-gradient(135deg, ${c}, ${c}88)`}} />
+            {['#4338ca','#7c3aed','#2563eb','#0891b2'].map((c, idx) => (
+              <div key={idx} className="w-7 h-7 rounded-full border-2 border-[#060609] hover-scale transition-transform" style={{background: `linear-gradient(135deg, ${c}, ${c}88)`}} />
             ))}
           </div>
-          <p className="text-[12px] text-gray-600">50,000+ images processed this month</p>
+          <p className="text-[12px] text-gray-600">{i.social}</p>
         </div>
       </div>
 
@@ -314,10 +385,10 @@ export default function Login() {
                   : 'opacity 0.28s cubic-bezier(0.16,1,0.3,1), filter 0.28s cubic-bezier(0.16,1,0.3,1), transform 0.28s cubic-bezier(0.16,1,0.3,1)',
             }}>
               <h1 className="text-2xl font-bold tracking-tight mb-1.5" style={{letterSpacing: '-0.03em'}}>
-                {mode === 'login' ? 'Welcome back' : 'Create your account'}
+                {mode === 'login' ? i.welcome : i.create}
               </h1>
               <p className="text-gray-500 text-[13px]">
-                {mode === 'login' ? 'Log in to your MetaClean account' : 'Start cleaning images for free'}
+                {mode === 'login' ? i.welcome_sub : i.create_sub}
               </p>
             </div>
 
@@ -336,7 +407,7 @@ export default function Login() {
                     transform: mode !== 'login' ? 'scale(0.97)' : 'scale(1)',
                   }}
                 >
-                  Log in
+                  {i.login_tab}
                 </button>
                 <button
                   onClick={() => switchMode('signup')}
@@ -348,7 +419,7 @@ export default function Login() {
                     transform: mode !== 'signup' ? 'scale(0.97)' : 'scale(1)',
                   }}
                 >
-                  Sign up
+                  {i.signup_tab}
                 </button>
               </div>
 
@@ -366,7 +437,7 @@ export default function Login() {
               <form onSubmit={handleSubmit}>
                 <div className="space-y-3.5 mb-5">
                   <div>
-                    <label className="block text-[11px] text-gray-500 mb-1.5 font-semibold uppercase tracking-wider">Email</label>
+                    <label className="block text-[11px] text-gray-500 mb-1.5 font-semibold uppercase tracking-wider">{i.email_label}</label>
                     <input
                       type="email"
                       placeholder="you@example.com"
@@ -379,7 +450,7 @@ export default function Login() {
                     />
                   </div>
                   <div>
-                    <label className="block text-[11px] text-gray-500 mb-1.5 font-semibold uppercase tracking-wider">Password</label>
+                    <label className="block text-[11px] text-gray-500 mb-1.5 font-semibold uppercase tracking-wider">{i.pwd_label}</label>
                     <input
                       type="password"
                       placeholder="••••••••"
@@ -391,23 +462,23 @@ export default function Login() {
                       onBlur={(e) => { e.target.style.borderColor = 'rgba(255,255,255,0.09)'; e.target.style.background = 'rgba(255,255,255,0.04)'; e.target.style.boxShadow = 'none' }}
                     />
                     {mode === 'signup' && password.length > 0 && (() => {
-                      const strength = getPwdStrength(password)
-                      const labels = ['', 'Weak', 'Fair', 'Good', 'Strong']
+                      const strength = getPwdStrength(password, rules)
+                      const labels = ['', i.pwd_weak, i.pwd_fair, i.pwd_good, i.pwd_strong]
                       const colors = ['', '#ef4444', '#f59e0b', '#22c55e', '#10b981']
                       return (
                         <div className="mt-2">
                           <div className="flex gap-1 mb-1.5">
-                            {[1,2,3,4].map(i => (
-                              <div key={i} className="h-1 flex-1 rounded-full transition-all duration-300"
-                                style={{background: i <= strength ? colors[strength] : 'rgba(255,255,255,0.08)', boxShadow: i <= strength ? `0 0 6px ${colors[strength]}55` : 'none'}} />
+                            {[1,2,3,4].map(n => (
+                              <div key={n} className="h-1 flex-1 rounded-full transition-all duration-300"
+                                style={{background: n <= strength ? colors[strength] : 'rgba(255,255,255,0.08)', boxShadow: n <= strength ? `0 0 6px ${colors[strength]}55` : 'none'}} />
                             ))}
                           </div>
                           <div className="flex items-center justify-between">
                             <p className="text-[11px] font-medium" style={{color: colors[strength]}}>{labels[strength]}</p>
                             <div className="flex gap-2">
-                              {pwdRules.map((r, i) => (
-                                <span key={i} className="text-[10px] transition-colors duration-200" style={{color: r.test(password) ? '#6ee7b7' : 'rgba(255,255,255,0.2)'}}>
-                                  {r.test(password) ? '✓' : '·'} {i === 0 ? '8+' : i === 1 ? 'A' : i === 2 ? 'a' : '0-9'}
+                              {rules.map((r, n) => (
+                                <span key={n} className="text-[10px] transition-colors duration-200" style={{color: r.test(password) ? '#6ee7b7' : 'rgba(255,255,255,0.2)'}}>
+                                  {r.test(password) ? '✓' : '·'} {n === 0 ? '8+' : n === 1 ? 'A' : n === 2 ? 'a' : '0-9'}
                                 </span>
                               ))}
                             </div>
@@ -433,17 +504,17 @@ export default function Login() {
                   style={glowStyle}
                 >
                   {loading ? (
-                    <><svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg> Please wait…</>
-                  ) : mode === 'login' ? 'Log in' : 'Create account'}
+                    <><svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg> {i.submitting}</>
+                  ) : mode === 'login' ? i.submit_login : i.submit_signup}
                 </button>
               </form>
 
               {mode === 'signup' && (
                 <p className="text-center text-[11px] text-gray-600 mt-4 leading-relaxed">
-                  By signing up you agree to our{' '}
-                  <Link href="/terms" className="text-gray-500 hover:text-gray-300 transition-colors">Terms</Link>
-                  {' '}and{' '}
-                  <Link href="/privacy" className="text-gray-500 hover:text-gray-300 transition-colors">Privacy Policy</Link>
+                  {i.terms_pre}{' '}
+                  <Link href="/terms" className="text-gray-500 hover:text-gray-300 transition-colors">{i.terms}</Link>
+                  {' '}{i.and}{' '}
+                  <Link href="/privacy" className="text-gray-500 hover:text-gray-300 transition-colors">{i.privacy}</Link>
                 </p>
               )}
 
@@ -467,7 +538,7 @@ export default function Login() {
                   <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
                   <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
                 </svg>
-                Continue with Google
+                {i.google}
               </button>
 
               <div className="flex items-center gap-3 mt-4">
@@ -476,7 +547,7 @@ export default function Login() {
                   onClick={() => switchMode(mode === 'login' ? 'signup' : 'login')}
                   className="text-[12px] text-gray-500 hover:text-gray-300 transition-colors whitespace-nowrap"
                 >
-                  {mode === 'login' ? "No account? Sign up" : 'Have an account? Log in'}
+                  {mode === 'login' ? i.switch_signup : i.switch_login}
                 </button>
                 <div className="flex-1 h-px" style={{background: 'rgba(255,255,255,0.06)'}} />
               </div>
