@@ -174,7 +174,7 @@ export default function Features() {
           title="Bulk processing"
           intro="Stop processing images one by one. Drop your entire creative batch and get everything back clean in one go."
           items={[
-            { title: 'Up to 50MB per file', desc: 'Works with large, high-resolution images without compression loss.' },
+            { title: 'Up to 4MB per file', desc: 'MetaClean is an early-stage project — we\'ll raise this limit as we grow.' },
             { title: 'Multiple files simultaneously', desc: 'Upload your entire batch — all files are processed in parallel.' },
             { title: 'Batch download', desc: 'All processed images download automatically as soon as they are ready.' },
             { title: 'Format preservation', desc: 'Input format is preserved — JPG stays JPG, PNG stays PNG, WEBP stays WEBP.' },
