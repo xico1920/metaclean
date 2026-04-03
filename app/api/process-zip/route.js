@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import sharp from 'sharp'
 import JSZip from 'jszip'
 import { getSupabaseAdmin } from '@/lib/supabaseAdmin'
+import * as Sentry from '@sentry/nextjs'
 
 const PLATFORMS = {
   meta:      { quality: 90, maxSizeKB: 1024 },
@@ -195,6 +196,7 @@ export async function POST(request) {
       },
     })
   } catch (error) {
+    Sentry.captureException(error)
     console.error('process-zip error:', error)
     return NextResponse.json({ error: 'Processing failed' }, { status: 500 })
   }

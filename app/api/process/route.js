@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import sharp from 'sharp'
 import JSZip from 'jszip'
 import { getSupabaseAdmin } from '@/lib/supabaseAdmin'
+import * as Sentry from '@sentry/nextjs'
 
 /*
   Required Supabase tables:
@@ -318,6 +319,7 @@ export async function POST(request) {
       },
     })
   } catch (error) {
+    Sentry.captureException(error)
     console.error(error)
     return NextResponse.json({ error: 'Processing failed' }, { status: 500 })
   }

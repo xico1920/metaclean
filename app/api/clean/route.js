@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import sharp from 'sharp'
 import { getSupabaseAdmin } from '@/lib/supabaseAdmin'
 import { PDFDocument } from 'pdf-lib'
+import * as Sentry from '@sentry/nextjs'
 
 const FREE_LIMIT = 10
 
@@ -109,6 +110,7 @@ export async function POST(request) {
       },
     })
   } catch (error) {
+    Sentry.captureException(error)
     console.error(error)
     return NextResponse.json({ error: 'Processing failed' }, { status: 500 })
   }
