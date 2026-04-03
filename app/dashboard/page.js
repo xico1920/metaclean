@@ -82,6 +82,7 @@ const t = {
     modal_dismiss: 'Maybe later',
     modal_resets: 'Free plan resets at midnight',
     rate_limit: 'Too many requests — please wait a moment and try again.',
+    file_too_large: 'File too large — maximum is 30MB per file.',
   },
   pt: {
     plan_free: 'Grátis', plan_pro: 'Pro',
@@ -150,6 +151,7 @@ const t = {
     modal_dismiss: 'Talvez mais tarde',
     modal_resets: 'O plano gratuito renova à meia-noite',
     rate_limit: 'Demasiados pedidos — aguarda um momento e tenta novamente.',
+    file_too_large: 'Ficheiro demasiado grande — máximo 30MB por ficheiro.',
   },
   es: {
     plan_free: 'Gratis', plan_pro: 'Pro',
@@ -218,6 +220,7 @@ const t = {
     modal_dismiss: 'Quizás más tarde',
     modal_resets: 'El plan gratuito se renueva a medianoche',
     rate_limit: 'Demasiadas solicitudes — espera un momento e inténtalo de nuevo.',
+    file_too_large: 'Archivo demasiado grande — máximo 30MB por archivo.',
   },
 }
 
@@ -758,6 +761,7 @@ function DashboardInner() {
   const [done, setDone] = useState(false)
   const [limitReached, setLimitReached] = useState(false)
   const [rateLimited, setRateLimited] = useState(false)
+  const [fileTooLarge, setFileTooLarge] = useState(false)
   const [showUpgradeModal, setShowUpgradeModal] = useState(false)
   const [upgradedNotice, setUpgradedNotice] = useState(false)
   const [step, setStep] = useState('upload') // 'upload' | 'crop'
@@ -1020,6 +1024,7 @@ function DashboardInner() {
 
   const processZip = async () => {
     if (!zipUploadFile) return
+    if (zipUploadFile.size > MAX_SIZE_BYTES) { setFileTooLarge(true); return }
     setZipProcessing(true)
     setLimitReached(false)
     try {
@@ -1036,6 +1041,7 @@ function DashboardInner() {
       })
       if (!res.ok) {
         if (res.status === 429) { setRateLimited(true); return }
+        if (res.status === 413) { setFileTooLarge(true); return }
         const err = await res.json().catch(() => ({}))
         if (err.limitReached) { setLimitReached(true); setShowUpgradeModal(true) }
         return
@@ -1171,6 +1177,7 @@ function DashboardInner() {
 
       if (!res.ok) {
         if (res.status === 429) { setRateLimited(true); break }
+        if (res.status === 413) { setFileTooLarge(true); break }
         const err = await res.json().catch(() => ({}))
         if (err.limitReached) { setLimitReached(true); setShowUpgradeModal(true); break }
         continue
@@ -1236,6 +1243,7 @@ function DashboardInner() {
 
       if (!res.ok) {
         if (res.status === 429) { setRateLimited(true); hitLimit = true; break }
+        if (res.status === 413) { setFileTooLarge(true); hitLimit = true; break }
         const err = await res.json().catch(() => ({}))
         if (err.limitReached) { setLimitReached(true); setShowUpgradeModal(true); hitLimit = true; break }
         if (err.guestLimitReached) { setShowSignupPrompt(true); hitLimit = true; break }
@@ -1769,6 +1777,15 @@ function DashboardInner() {
       </nav>
 
       <div className="relative z-10 max-w-3xl mx-auto px-4 sm:px-6 py-8 sm:py-12" style={anim(0)}>
+
+        {/* File too large notice */}
+        {fileTooLarge && (
+          <div className="mb-6 flex items-center gap-3 px-4 py-3 rounded-xl text-[13px] text-red-300" style={{background: 'rgba(239,68,68,0.07)', border: '1px solid rgba(239,68,68,0.2)', animation: 'fadeInUp 0.3s cubic-bezier(0.16,1,0.3,1) both'}}>
+            <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" /></svg>
+            {i.file_too_large}
+            <button onClick={() => setFileTooLarge(false)} className="ml-auto text-red-400/60 hover:text-red-400 transition-colors">×</button>
+          </div>
+        )}
 
         {/* Rate limit notice */}
         {rateLimited && (
