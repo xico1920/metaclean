@@ -82,7 +82,7 @@ const t = {
     modal_dismiss: 'Maybe later',
     modal_resets: 'Free plan resets at midnight',
     rate_limit: 'Too many requests — please wait a moment and try again.',
-    file_too_large: 'File too large — maximum is 30MB per file.',
+    file_too_large: 'File too large — maximum is 4MB. MetaClean is an early-stage project and server capacity is currently limited. We\'ll raise this as we grow — thank you for understanding.',
   },
   pt: {
     plan_free: 'Grátis', plan_pro: 'Pro',
@@ -151,7 +151,7 @@ const t = {
     modal_dismiss: 'Talvez mais tarde',
     modal_resets: 'O plano gratuito renova à meia-noite',
     rate_limit: 'Demasiados pedidos — aguarda um momento e tenta novamente.',
-    file_too_large: 'Ficheiro demasiado grande — máximo 30MB por ficheiro.',
+    file_too_large: 'Ficheiro demasiado grande — máximo 4MB. O MetaClean é um projeto em fase inicial e a capacidade do servidor é ainda limitada. Vamos aumentar este limite à medida que crescemos — obrigado pela compreensão.',
   },
   es: {
     plan_free: 'Gratis', plan_pro: 'Pro',
@@ -220,7 +220,7 @@ const t = {
     modal_dismiss: 'Quizás más tarde',
     modal_resets: 'El plan gratuito se renueva a medianoche',
     rate_limit: 'Demasiadas solicitudes — espera un momento e inténtalo de nuevo.',
-    file_too_large: 'Archivo demasiado grande — máximo 30MB por archivo.',
+    file_too_large: 'Archivo demasiado grande — máximo 4MB. MetaClean es un proyecto en fase inicial y la capacidad del servidor es aún limitada. Aumentaremos este límite a medida que crezcamos — gracias por tu comprensión.',
   },
 }
 
@@ -766,7 +766,7 @@ function DashboardInner() {
   const [upgradedNotice, setUpgradedNotice] = useState(false)
   const [step, setStep] = useState('upload') // 'upload' | 'crop'
   const [rejectedFiles, setRejectedFiles] = useState([]) // non-image files dropped
-  const [oversizedFiles, setOversizedFiles] = useState([]) // files >30MB
+  const [oversizedFiles, setOversizedFiles] = useState([]) // files >4MB
   const [hoveredPlatform, setHoveredPlatform] = useState(null)
   const [hoveredFormat, setHoveredFormat] = useState(null)
   const [fileWarning, setFileWarning] = useState('')
@@ -963,9 +963,9 @@ function DashboardInner() {
     const rejected = raw.filter(f => !f.type.startsWith('image/'))
     return { images, rejected }
   }
-  const MAX_SIZE_MB = 30
+  const MAX_SIZE_MB = 4
   const MAX_SIZE_BYTES = MAX_SIZE_MB * 1024 * 1024
-  const MAX_BATCH_MB = 150
+  const MAX_BATCH_MB = 50
   const MAX_BATCH_BYTES = MAX_BATCH_MB * 1024 * 1024
 
   const applyFiles = (raw) => {
@@ -2066,7 +2066,7 @@ function DashboardInner() {
                 <div className="min-w-0">
                   <p className="text-[12px] font-semibold text-red-300 mb-1 flex items-center gap-1.5">
                     <svg className="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" /></svg>
-                    {oversizedFiles.length} file{oversizedFiles.length > 1 ? 's' : ''} too large — max 30MB each
+                    {oversizedFiles.length} file{oversizedFiles.length > 1 ? 's' : ''} too large — max 4MB each
                   </p>
                   <p className="text-[11px] text-red-400/60 mb-1.5">Please upload smaller versions of these files.</p>
                   <div className="flex flex-wrap gap-1.5">

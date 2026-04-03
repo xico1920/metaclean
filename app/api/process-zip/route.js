@@ -102,9 +102,9 @@ export async function POST(request) {
 
     if (!zipFile) return NextResponse.json({ error: 'No ZIP file provided' }, { status: 400 })
 
-    const MAX_SIZE_BYTES = 30 * 1024 * 1024
+    const MAX_SIZE_BYTES = 4 * 1024 * 1024
     if (zipFile.size > MAX_SIZE_BYTES) {
-      return NextResponse.json({ error: 'ZIP file too large. Maximum size is 30MB.' }, { status: 413 })
+      return NextResponse.json({ error: 'ZIP file too large. Maximum size is 4MB.' }, { status: 413 })
     }
 
     // ── Extract ZIP ───────────────────────────────────────────────────────────
