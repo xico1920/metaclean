@@ -184,7 +184,7 @@ export default function AccountPage() {
     }
   }
 
-  const isPro = profile?.plan === 'pro' || user?.email === process.env.NEXT_PUBLIC_ADMIN_EMAIL
+  const isPro = profile?.plan === 'pro' || profile?.is_admin === true
   const usagePct = Math.min(100, ((profile?.images_used_today || 0) / FREE_LIMIT) * 100)
 
   const fadeIn = (delay = 0) => ({

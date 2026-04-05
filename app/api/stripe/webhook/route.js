@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import Stripe from 'stripe'
 import { getSupabaseAdmin } from '@/lib/supabaseAdmin'
+import * as Sentry from '@sentry/nextjs'
 
 export async function POST(request) {
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
@@ -16,6 +17,16 @@ export async function POST(request) {
   }
 
   const supabase = getSupabaseAdmin()
+
+  // Idempotency: skip already-processed events
+  const { data: processed } = await supabase
+    .from('stripe_events')
+    .select('id')
+    .eq('event_id', event.id)
+    .single()
+  if (processed) return NextResponse.json({ received: true })
+
+  await supabase.from('stripe_events').insert({ event_id: event.id })
 
   if (event.type === 'checkout.session.completed') {
     const session = event.data.object
@@ -37,7 +48,10 @@ export async function POST(request) {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email: profile.email }),
-        }).catch(() => {})
+        }).catch((err) => {
+          Sentry.captureException(err, { extra: { context: 'upgrade_email', userId } })
+          console.error('upgrade email failed:', err.message)
+        })
       }
     }
   }

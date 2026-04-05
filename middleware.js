@@ -17,6 +17,8 @@ const LIMITS = {
   '/api/process':     60,
   '/api/process-zip': 10,
   '/api/clean':       60,
+  '/api/admin':       30,
+  '/api/waitlist':    10,
 }
 
 // Map<key, { count, windowStart }>
@@ -96,5 +98,5 @@ export function middleware(request) {
 }
 
 export const config = {
-  matcher: ['/api/process', '/api/process/:path*', '/api/clean'],
+  matcher: ['/api/process', '/api/process/:path*', '/api/clean', '/api/admin/:path*', '/api/waitlist'],
 }

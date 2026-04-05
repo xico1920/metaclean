@@ -208,11 +208,15 @@ export async function POST(request) {
       imagesUsed = profile.images_used_today
 
       if (profile.last_reset_date !== today) {
-        imagesUsed = 0
-        await supabase
+        // Conditional update: only reset if another request hasn't already done it
+        const { data: resetData } = await supabase
           .from('profiles')
           .update({ images_used_today: 0, last_reset_date: today })
           .eq('id', user.id)
+          .neq('last_reset_date', today)
+          .select('images_used_today')
+          .single()
+        imagesUsed = resetData ? 0 : 0 // reset happened or was already reset
       }
 
       // ── Usage limit check ─────────────────────────────────────────────────
@@ -228,11 +232,21 @@ export async function POST(request) {
     const platform = formData.get('platform') || 'meta'
     const originalName = formData.get('name') || 'image'
     const formatsParam = formData.get('formats')
-    const selectedFormats = formatsParam ? JSON.parse(formatsParam) : null
+    let selectedFormats = null
+    if (formatsParam) {
+      try { selectedFormats = JSON.parse(formatsParam) } catch {
+        return NextResponse.json({ error: 'Invalid formats parameter' }, { status: 400 })
+      }
+    }
 
     // cropData: { [formatLabel]: { xPct, yPct, autocrop } }
     const cropDataParam = formData.get('cropData')
-    const cropData = cropDataParam ? JSON.parse(cropDataParam) : {}
+    let cropData = {}
+    if (cropDataParam) {
+      try { cropData = JSON.parse(cropDataParam) } catch {
+        return NextResponse.json({ error: 'Invalid cropData parameter' }, { status: 400 })
+      }
+    }
 
     if (!file) {
       return NextResponse.json({ error: 'No image provided' }, { status: 400 })

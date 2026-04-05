@@ -28,8 +28,11 @@ export async function POST(request) {
     const today = new Date().toISOString().split('T')[0]
     let imagesUsed = profile.images_used_today
     if (profile.last_reset_date !== today) {
+      await supabase.from('profiles')
+        .update({ images_used_today: 0, last_reset_date: today })
+        .eq('id', user.id)
+        .neq('last_reset_date', today)
       imagesUsed = 0
-      await supabase.from('profiles').update({ images_used_today: 0, last_reset_date: today }).eq('id', user.id)
     }
 
     const isAdmin = user.email === process.env.ADMIN_EMAIL

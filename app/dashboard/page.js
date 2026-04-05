@@ -11,6 +11,7 @@ import { PLATFORM_CONFIGS, PlatformIcon } from '@/lib/platforms'
 import { glowStyle, glowHandlers } from '@/lib/glow'
 import JSZip from 'jszip'
 import LangDropdown from '@/app/components/LangDropdown'
+import ErrorBoundary from '@/app/components/ErrorBoundary'
 
 export const dynamic = 'force-dynamic'
 
@@ -731,13 +732,15 @@ function CropEditor({ files, selectedFormats, platformCfg, onProcess, onBack, pr
 // ─── Main component ───────────────────────────────────────────────────────────
 export default function Dashboard() {
   return (
-    <Suspense fallback={
-      <main className="min-h-screen bg-[#060609] flex items-center justify-center">
-        <div className="w-5 h-5 rounded-full border-2 border-indigo-500 border-t-transparent animate-spin" />
-      </main>
-    }>
-      <DashboardInner />
-    </Suspense>
+    <ErrorBoundary>
+      <Suspense fallback={
+        <main className="min-h-screen bg-[#060609] flex items-center justify-center">
+          <div className="w-5 h-5 rounded-full border-2 border-indigo-500 border-t-transparent animate-spin" />
+        </main>
+      }>
+        <DashboardInner />
+      </Suspense>
+    </ErrorBoundary>
   )
 }
 
@@ -924,8 +927,15 @@ function DashboardInner() {
 
     register()
 
+    // Clear session when tab/browser closes
+    const clearSession = () => {
+      navigator.sendBeacon('/api/session/clear', JSON.stringify({ userId: user.id, sessionId }))
+    }
+    window.addEventListener('beforeunload', clearSession)
+
     return () => {
       clearInterval(interval)
+      window.removeEventListener('beforeunload', clearSession)
     }
   }, [user])
 
@@ -1239,11 +1249,19 @@ function DashboardInner() {
         ? { 'Authorization': `Bearer ${token}` }
         : { 'X-Guest-Count': String(guestCount) }
 
-      const res = await fetch('/api/process', {
-        method: 'POST',
-        headers,
-        body: formData,
-      })
+      const controller = new AbortController()
+      const timeout = setTimeout(() => controller.abort(), 120_000) // 2 min max
+      let res
+      try {
+        res = await fetch('/api/process', {
+          method: 'POST',
+          headers,
+          body: formData,
+          signal: controller.signal,
+        })
+      } finally {
+        clearTimeout(timeout)
+      }
 
       if (!res.ok) {
         if (res.status === 429) { setRateLimited(true); hitLimit = true; break }
@@ -1379,7 +1397,7 @@ function DashboardInner() {
     )
   }
 
-  const isAdmin = !!user && user.email === process.env.NEXT_PUBLIC_ADMIN_EMAIL
+  const isAdmin = !!user && profile?.is_admin === true
   const isPro = isAdmin || profile?.plan === 'pro'
   const imagesUsed = profile?.images_used_today ?? 0
   const usageLimit = isPro ? null : FREE_LIMIT
