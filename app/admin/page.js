@@ -6,16 +6,78 @@ import Logo from '@/app/components/Logo'
 
 // ─── CSS ──────────────────────────────────────────────────────────────────────
 const CSS = `
-@keyframes fadeUp   { from { opacity:0; transform:translateY(18px) } to { opacity:1; transform:translateY(0) } }
+@keyframes fadeUp   { from { opacity:0; transform:translateY(22px) } to { opacity:1; transform:translateY(0) } }
 @keyframes fadeIn   { from { opacity:0 } to { opacity:1 } }
-@keyframes scaleIn  { from { opacity:0; transform:scale(0.96) } to { opacity:1; transform:scale(1) } }
-@keyframes slideRight { from { width:0 } to { width:var(--bar-w) } }
-@keyframes growBar  { from { height:0 } to { height:var(--bar-h) } }
-.anim-up   { animation: fadeUp   0.45s cubic-bezier(0.16,1,0.3,1) both }
-.anim-in   { animation: fadeIn   0.35s ease both }
-.anim-scale{ animation: scaleIn  0.3s  cubic-bezier(0.16,1,0.3,1) both }
-.bar-anim  { animation: slideRight 0.8s cubic-bezier(0.16,1,0.3,1) both }
-.col-anim  { animation: growBar  0.6s  cubic-bezier(0.16,1,0.3,1) both }
+@keyframes scaleIn  { from { opacity:0; transform:scale(0.95) } to { opacity:1; transform:scale(1) } }
+@keyframes pulse    { 0%,100%{opacity:1} 50%{opacity:0.4} }
+@keyframes spin     { to{transform:rotate(360deg)} }
+
+.anim-up    { animation: fadeUp  0.5s cubic-bezier(0.16,1,0.3,1) both }
+.anim-in    { animation: fadeIn  0.35s ease both }
+.anim-scale { animation: scaleIn 0.32s cubic-bezier(0.16,1,0.3,1) both }
+
+/* scroll-reveal — hidden until JS adds .revealed */
+.reveal { opacity:0; transform:translateY(24px); transition: opacity 0.55s cubic-bezier(0.16,1,0.3,1), transform 0.55s cubic-bezier(0.16,1,0.3,1) }
+.revealed { opacity:1; transform:translateY(0) }
+
+/* stat card hover */
+.stat-card {
+  transition: transform 0.25s cubic-bezier(0.16,1,0.3,1), box-shadow 0.25s ease, border-color 0.25s ease;
+  cursor: default;
+}
+.stat-card:hover {
+  transform: translateY(-3px) scale(1.015);
+  box-shadow: 0 12px 40px rgba(0,0,0,0.35);
+  border-color: rgba(99,102,241,0.22) !important;
+}
+.stat-card .glow-layer {
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+.stat-card:hover .glow-layer {
+  opacity: 1;
+}
+
+/* top-user row hover */
+.top-user-row {
+  transition: background 0.18s ease, transform 0.18s ease;
+  border-radius: 10px;
+}
+.top-user-row:hover {
+  background: rgba(99,102,241,0.07) !important;
+  transform: translateX(4px);
+}
+
+/* table row hover — left border slide-in */
+.table-row {
+  border-left: 2px solid transparent;
+  transition: background 0.15s ease, border-color 0.2s ease;
+}
+.table-row:hover {
+  background: rgba(255,255,255,0.025) !important;
+  border-color: #6366f1;
+}
+
+/* filter button */
+.filter-btn { transition: all 0.18s ease }
+.filter-btn:hover { transform: translateY(-1px) }
+
+/* action button in modal */
+.action-btn { transition: all 0.18s cubic-bezier(0.16,1,0.3,1) }
+.action-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.2) }
+.action-btn:active { transform: scale(0.97) }
+
+/* refresh btn spin on click */
+.refresh-btn { transition: all 0.2s ease }
+.refresh-btn:hover { transform: rotate(30deg) }
+
+/* chart tab */
+.chart-tab { transition: all 0.2s ease }
+.chart-tab:hover { transform: translateY(-1px) }
+
+/* activity row */
+.activity-row { transition: background 0.15s ease }
+.activity-row:hover { background: rgba(255,255,255,0.02) !important }
 `
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -35,6 +97,30 @@ function timeAgo(d) {
 function fmtDate(d) {
   if (!d) return '–'
   return new Date(d).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
+}
+
+// Scroll-reveal hook — adds .revealed when element enters viewport
+function useReveal(ref, { threshold = 0.12, delay = 0 } = {}) {
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    el.classList.add('reveal')
+    const obs = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting) {
+        setTimeout(() => el.classList.add('revealed'), delay)
+        obs.disconnect()
+      }
+    }, { threshold })
+    obs.observe(el)
+    return () => obs.disconnect()
+  }, [ref, threshold, delay])
+}
+
+// Convenience wrapper component
+function Reveal({ children, delay = 0, style = {} }) {
+  const ref = useRef(null)
+  useReveal(ref, { delay })
+  return <div ref={ref} style={style}>{children}</div>
 }
 
 function useCountUp(target, delay = 0) {
@@ -117,9 +203,10 @@ function Num({ value, prefix = '', suffix = '', delay = 0 }) {
   return <span>{prefix}{v.toLocaleString()}{suffix}</span>
 }
 
-// Stat card with glow + count-up + entrance animation
+// Stat card with glow + count-up + scroll reveal + hover lift
 function StatCard({ label, value, sub, delta, accent = '#6366f1', delay = 0, children, big }) {
   const ref  = useRef(null)
+  useReveal(ref, { delay })
   const move = e => {
     const r = ref.current?.getBoundingClientRect()
     if (!r) return
@@ -127,9 +214,8 @@ function StatCard({ label, value, sub, delta, accent = '#6366f1', delay = 0, chi
     ref.current.style.setProperty('--my', `${e.clientY - r.top}px`)
   }
   return (
-    <div ref={ref} onMouseMove={move} className="anim-up" style={{
+    <div ref={ref} onMouseMove={move} className="stat-card" style={{
       '--mx': '50%', '--my': '50%',
-      animationDelay: `${delay}ms`,
       position: 'relative', overflow: 'hidden', borderRadius: 18,
       border: '1px solid rgba(255,255,255,0.07)',
       background: 'rgba(255,255,255,0.025)',
@@ -137,12 +223,11 @@ function StatCard({ label, value, sub, delta, accent = '#6366f1', delay = 0, chi
     }}>
       {/* top accent line */}
       <div style={{ position: 'absolute', top: 0, left: 24, right: 24, height: 1, background: `linear-gradient(90deg,transparent,${accent}66,transparent)` }} />
-      {/* mouse glow */}
-      <div style={{
+      {/* mouse-follow glow */}
+      <div className="glow-layer" style={{
         position: 'absolute', inset: 0, pointerEvents: 'none',
-        background: 'radial-gradient(260px circle at var(--mx) var(--my), rgba(99,102,241,0.07), transparent 70%)',
-        opacity: 0, transition: 'opacity 0.4s',
-      }} className="group-hover-glow" />
+        background: `radial-gradient(280px circle at var(--mx) var(--my), ${accent}12, transparent 70%)`,
+      }} />
 
       <div style={{ position: 'relative' }}>
         <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.32)', marginBottom: 8 }}>
@@ -444,31 +529,32 @@ export default function AdminPage() {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 12 }}>
 
           {/* MRR — biggest card */}
-          <div className="anim-up" style={{ animationDelay: '0ms', position: 'relative', overflow: 'hidden', borderRadius: 20, border: '1px solid rgba(139,92,246,0.25)', background: 'linear-gradient(135deg, rgba(99,102,241,0.1) 0%, rgba(139,92,246,0.06) 100%)', padding: '24px 26px' }}>
-            <div style={{ position: 'absolute', top: 0, left: 24, right: 24, height: 1, background: 'linear-gradient(90deg,transparent,#8b5cf6,transparent)' }} />
-            <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#a78bfa', marginBottom: 6 }}>
-              Monthly recurring revenue
+          <Reveal delay={0}>
+            <div className="stat-card" style={{ position: 'relative', overflow: 'hidden', borderRadius: 20, border: '1px solid rgba(139,92,246,0.25)', background: 'linear-gradient(135deg, rgba(99,102,241,0.1) 0%, rgba(139,92,246,0.06) 100%)', padding: '24px 26px' }}>
+              <div style={{ position: 'absolute', top: 0, left: 24, right: 24, height: 1, background: 'linear-gradient(90deg,transparent,#8b5cf6,transparent)' }} />
+              <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#a78bfa', marginBottom: 6 }}>
+                Monthly recurring revenue
+              </div>
+              <div style={{ fontSize: 44, fontWeight: 900, color: '#fff', lineHeight: 1, fontVariantNumeric: 'tabular-nums' }}>
+                €<Num value={stats.mrr_estimate} delay={100} />
+              </div>
+              <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', marginTop: 8 }}>
+                <Num value={stats.pro_users} delay={200} /> pro user{stats.pro_users !== 1 ? 's' : ''} × €9/mo
+              </div>
+              <div style={{ marginTop: 14, display: 'flex', gap: 6 }}>
+                {[1,2,3,4,5,6].map(i => (
+                  <div key={i} style={{
+                    flex: 1, borderRadius: 4, height: 3,
+                    background: i <= Math.min(Math.ceil((stats.pro_users || 0) / 2), 6) ? '#8b5cf6' : 'rgba(255,255,255,0.08)',
+                    transition: 'background 0.5s',
+                  }} />
+                ))}
+              </div>
+              <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.25)', marginTop: 6 }}>
+                +<Num value={ms.this_month_pro_added} delay={300} /> new pro this month
+              </div>
             </div>
-            <div style={{ fontSize: 44, fontWeight: 900, color: '#fff', lineHeight: 1, fontVariantNumeric: 'tabular-nums' }}>
-              €<Num value={stats.mrr_estimate} delay={100} />
-            </div>
-            <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', marginTop: 8 }}>
-              <Num value={stats.pro_users} delay={200} /> pro user{stats.pro_users !== 1 ? 's' : ''} × €9/mo
-            </div>
-            <div style={{ marginTop: 14, display: 'flex', gap: 6 }}>
-              {[1,2,3,4,5,6].map(i => (
-                <div key={i} style={{
-                  flex: 1, borderRadius: 4,
-                  height: 3,
-                  background: i <= Math.min(Math.ceil((stats.pro_users || 0) / 2), 6) ? '#8b5cf6' : 'rgba(255,255,255,0.08)',
-                  transition: 'background 0.5s',
-                }} />
-              ))}
-            </div>
-            <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.25)', marginTop: 6 }}>
-              +<Num value={ms.this_month_pro_added} delay={300} /> new pro this month
-            </div>
-          </div>
+          </Reveal>
 
           {/* Conversions this month */}
           <StatCard
@@ -528,15 +614,16 @@ export default function AdminPage() {
         </div>
 
         {/* ── 30-day chart ──────────────────────────────────────────────────── */}
-        <div className="anim-up" style={{ animationDelay: '200ms', borderRadius: 18, border: '1px solid rgba(255,255,255,0.07)', background: 'rgba(255,255,255,0.02)', padding: '20px 22px' }}>
+        <Reveal delay={80}>
+        <div style={{ borderRadius: 18, border: '1px solid rgba(255,255,255,0.07)', background: 'rgba(255,255,255,0.02)', padding: '20px 22px' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4, flexWrap: 'wrap', gap: 8 }}>
             <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.3)' }}>
               Last 30 days
             </div>
             <div style={{ display: 'flex', gap: 4 }}>
               {[['conversions', '#6366f1'], ['signups', '#3b82f6']].map(([mode, color]) => (
-                <button key={mode} onClick={() => setChartMode(mode)} style={{
-                  padding: '4px 10px', borderRadius: 8, fontSize: 11, fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s',
+                <button key={mode} onClick={() => setChartMode(mode)} className="chart-tab" style={{
+                  padding: '4px 10px', borderRadius: 8, fontSize: 11, fontWeight: 600, cursor: 'pointer',
                   border: chartMode === mode ? `1px solid ${color}66` : '1px solid rgba(255,255,255,0.08)',
                   background: chartMode === mode ? `${color}18` : 'transparent',
                   color: chartMode === mode ? color : 'rgba(255,255,255,0.3)',
@@ -557,192 +644,196 @@ export default function AdminPage() {
             height={64}
           />
         </div>
+        </Reveal>
 
         {/* ── Platform breakdown + Top users ───────────────────────────────── */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 12 }}>
 
-          <div className="anim-up" style={{ animationDelay: '240ms', borderRadius: 18, border: '1px solid rgba(255,255,255,0.07)', background: 'rgba(255,255,255,0.02)', padding: '20px 22px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-              <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.3)' }}>Platform breakdown</div>
-              <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.2)' }}>all time</div>
+          <Reveal delay={100}>
+            <div style={{ borderRadius: 18, border: '1px solid rgba(255,255,255,0.07)', background: 'rgba(255,255,255,0.02)', padding: '20px 22px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+                <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.3)' }}>Platform breakdown</div>
+                <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.2)' }}>all time</div>
+              </div>
+              {Object.keys(platform_alltime).length === 0
+                ? <div style={{ color: 'rgba(255,255,255,0.2)', fontSize: 13 }}>No data yet.</div>
+                : <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                    {Object.entries(platform_alltime).sort(([,a],[,b])=>b-a).map(([p, n], i) => (
+                      <PlatformRow key={p} platform={p} count={n} maxCount={maxPlatAlltime} delay={i * 50} />
+                    ))}
+                  </div>
+              }
             </div>
-            {Object.keys(platform_alltime).length === 0
-              ? <div style={{ color: 'rgba(255,255,255,0.2)', fontSize: 13 }}>No data yet.</div>
-              : <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                  {Object.entries(platform_alltime).sort(([,a],[,b])=>b-a).map(([p, n], i) => (
-                    <PlatformRow key={p} platform={p} count={n} maxCount={maxPlatAlltime} delay={i * 50} />
-                  ))}
-                </div>
-            }
-          </div>
+          </Reveal>
 
-          <div className="anim-up" style={{ animationDelay: '280ms', borderRadius: 18, border: '1px solid rgba(255,255,255,0.07)', background: 'rgba(255,255,255,0.02)', padding: '20px 22px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-              <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.3)' }}>Top users</div>
-              <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.2)' }}>by conversions</div>
+          <Reveal delay={150}>
+            <div style={{ borderRadius: 18, border: '1px solid rgba(255,255,255,0.07)', background: 'rgba(255,255,255,0.02)', padding: '20px 22px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+                <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.3)' }}>Top users</div>
+                <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.2)' }}>by conversions</div>
+              </div>
+              {top_users.length === 0
+                ? <div style={{ color: 'rgba(255,255,255,0.2)', fontSize: 13 }}>No data yet.</div>
+                : <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    {top_users.map((u, i) => (
+                      <div key={u.id} onClick={() => openUser(u)} className="top-user-row" style={{
+                        display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer',
+                        padding: '7px 8px',
+                      }}>
+                        <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.2)', width: 14, textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{i + 1}</span>
+                        <Avatar email={u.email} size="sm" />
+                        <span style={{ flex: 1, fontSize: 12, color: 'rgba(255,255,255,0.65)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{u.email}</span>
+                        <span style={{ fontSize: 10, padding: '2px 6px', borderRadius: 99, border: '1px solid', fontWeight: 700, flexShrink: 0, ...(u.plan === 'pro' ? { background: 'rgba(139,92,246,0.12)', color: '#c4b5fd', borderColor: 'rgba(139,92,246,0.25)' } : { background: 'rgba(255,255,255,0.04)', color: 'rgba(255,255,255,0.25)', borderColor: 'rgba(255,255,255,0.08)' }) }}>
+                          {u.plan}
+                        </span>
+                        <span style={{ fontSize: 13, fontWeight: 700, color: 'rgba(255,255,255,0.55)', fontVariantNumeric: 'tabular-nums', flexShrink: 0 }}>{u.total_conversions.toLocaleString()}</span>
+                      </div>
+                    ))}
+                  </div>
+              }
             </div>
-            {top_users.length === 0
-              ? <div style={{ color: 'rgba(255,255,255,0.2)', fontSize: 13 }}>No data yet.</div>
-              : <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                  {top_users.map((u, i) => (
-                    <div key={u.id} onClick={() => openUser(u)} className="anim-up" style={{
-                      animationDelay: `${280 + i * 50}ms`,
-                      display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer',
-                      padding: '6px 8px', borderRadius: 10, transition: 'background 0.2s',
-                    }}
-                    onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.03)'}
-                    onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
-                    >
-                      <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.2)', width: 14, textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{i + 1}</span>
-                      <Avatar email={u.email} size="sm" />
-                      <span style={{ flex: 1, fontSize: 12, color: 'rgba(255,255,255,0.65)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{u.email}</span>
-                      <span style={{ fontSize: 10, padding: '2px 6px', borderRadius: 99, border: '1px solid', fontWeight: 700, flexShrink: 0, ...(u.plan === 'pro' ? { background: 'rgba(139,92,246,0.12)', color: '#c4b5fd', borderColor: 'rgba(139,92,246,0.25)' } : { background: 'rgba(255,255,255,0.04)', color: 'rgba(255,255,255,0.25)', borderColor: 'rgba(255,255,255,0.08)' }) }}>
-                        {u.plan}
-                      </span>
-                      <span style={{ fontSize: 13, fontWeight: 700, color: 'rgba(255,255,255,0.55)', fontVariantNumeric: 'tabular-nums', flexShrink: 0 }}>{u.total_conversions.toLocaleString()}</span>
-                    </div>
-                  ))}
-                </div>
-            }
-          </div>
+          </Reveal>
         </div>
 
         {/* ── Today's activity feed ─────────────────────────────────────────── */}
-        <div className="anim-up" style={{ animationDelay: '320ms', borderRadius: 18, border: '1px solid rgba(255,255,255,0.07)', background: 'rgba(255,255,255,0.02)', overflow: 'hidden' }}>
-          <button onClick={() => setShowActivity(v => !v)} style={{
-            width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-            padding: '16px 22px', background: 'transparent', border: 'none', color: '#fff',
-            cursor: 'pointer', textAlign: 'left',
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', transition: 'transform 0.2s', display: 'inline-block', transform: showActivity ? 'rotate(90deg)' : 'none' }}>▶</span>
-              <span style={{ fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.6)' }}>Today's activity</span>
-              <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
-                {Object.entries(platform_today).sort(([,a],[,b])=>b-a).slice(0,4).map(([p,n]) => {
-                  const c = gp(p)
-                  return (
-                    <span key={p} style={{ fontSize: 10, padding: '2px 6px', borderRadius: 5, background: c.bg, color: c.text, border: `1px solid ${c.border}`, fontWeight: 600 }}>
-                      {p} ×{n}
-                    </span>
-                  )
-                })}
+        <Reveal delay={80}>
+          <div style={{ borderRadius: 18, border: '1px solid rgba(255,255,255,0.07)', background: 'rgba(255,255,255,0.02)', overflow: 'hidden' }}>
+            <button onClick={() => setShowActivity(v => !v)} style={{
+              width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              padding: '16px 22px', background: 'transparent', border: 'none', color: '#fff',
+              cursor: 'pointer', textAlign: 'left', transition: 'background 0.2s',
+            }}
+            onMouseEnter={e=>e.currentTarget.style.background='rgba(255,255,255,0.015)'}
+            onMouseLeave={e=>e.currentTarget.style.background='transparent'}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', transition: 'transform 0.25s cubic-bezier(0.16,1,0.3,1)', display: 'inline-block', transform: showActivity ? 'rotate(90deg)' : 'rotate(0deg)' }}>▶</span>
+                <span style={{ fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.6)' }}>Today's activity</span>
+                <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
+                  {Object.entries(platform_today).sort(([,a],[,b])=>b-a).slice(0,4).map(([p,n]) => {
+                    const c = gp(p)
+                    return (
+                      <span key={p} style={{ fontSize: 10, padding: '2px 6px', borderRadius: 5, background: c.bg, color: c.text, border: `1px solid ${c.border}`, fontWeight: 600 }}>
+                        {p} ×{n}
+                      </span>
+                    )
+                  })}
+                </div>
               </div>
-            </div>
-            <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.2)' }}>{today_activity.length} conversions</span>
-          </button>
+              <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.2)' }}>{today_activity.length} conversions</span>
+            </button>
 
-          {showActivity && (
-            <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }} className="anim-in">
-              <div style={{ maxHeight: 260, overflowY: 'auto' }}>
-                {today_activity.length === 0
-                  ? <div style={{ padding: '24px', textAlign: 'center', color: 'rgba(255,255,255,0.2)', fontSize: 13 }}>No activity yet today.</div>
-                  : <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11 }}>
-                      <thead style={{ position: 'sticky', top: 0, background: '#07070e', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-                        <tr style={{ color: 'rgba(255,255,255,0.22)' }}>
-                          {['Time','User','File','Platform','Formats'].map(h => (
-                            <th key={h} style={{ textAlign: 'left', padding: '10px 18px', fontWeight: 600, fontSize: 10, letterSpacing: '0.06em', textTransform: 'uppercase' }}>{h}</th>
-                          ))}
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {today_activity.map((a, i) => (
-                          <tr key={i} style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}
-                            onMouseEnter={e=>e.currentTarget.style.background='rgba(255,255,255,0.015)'}
-                            onMouseLeave={e=>e.currentTarget.style.background='transparent'}>
-                            <td style={{ padding: '8px 18px', color: 'rgba(255,255,255,0.28)', whiteSpace: 'nowrap' }}>{timeAgo(a.created_at)}</td>
-                            <td style={{ padding: '8px 18px', color: 'rgba(255,255,255,0.5)', maxWidth: 160, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{a.user_email}</td>
-                            <td style={{ padding: '8px 18px', color: 'rgba(255,255,255,0.35)', maxWidth: 140, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{a.filename}</td>
-                            <td style={{ padding: '8px 18px' }}><PlatformBadge platform={a.platform} /></td>
-                            <td style={{ padding: '8px 18px', color: 'rgba(255,255,255,0.22)', maxWidth: 160, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{(a.formats||[]).join(', ')}</td>
+            {showActivity && (
+              <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }} className="anim-in">
+                <div style={{ maxHeight: 260, overflowY: 'auto' }}>
+                  {today_activity.length === 0
+                    ? <div style={{ padding: '24px', textAlign: 'center', color: 'rgba(255,255,255,0.2)', fontSize: 13 }}>No activity yet today.</div>
+                    : <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11 }}>
+                        <thead style={{ position: 'sticky', top: 0, background: '#07070e', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+                          <tr style={{ color: 'rgba(255,255,255,0.22)' }}>
+                            {['Time','User','File','Platform','Formats'].map(h => (
+                              <th key={h} style={{ textAlign: 'left', padding: '10px 18px', fontWeight: 600, fontSize: 10, letterSpacing: '0.06em', textTransform: 'uppercase' }}>{h}</th>
+                            ))}
                           </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                }
+                        </thead>
+                        <tbody>
+                          {today_activity.map((a, i) => (
+                            <tr key={i} className="activity-row" style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+                              <td style={{ padding: '8px 18px', color: 'rgba(255,255,255,0.28)', whiteSpace: 'nowrap' }}>{timeAgo(a.created_at)}</td>
+                              <td style={{ padding: '8px 18px', color: 'rgba(255,255,255,0.5)', maxWidth: 160, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{a.user_email}</td>
+                              <td style={{ padding: '8px 18px', color: 'rgba(255,255,255,0.35)', maxWidth: 140, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{a.filename}</td>
+                              <td style={{ padding: '8px 18px' }}><PlatformBadge platform={a.platform} /></td>
+                              <td style={{ padding: '8px 18px', color: 'rgba(255,255,255,0.22)', maxWidth: 160, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{(a.formats||[]).join(', ')}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                  }
+                </div>
               </div>
-            </div>
-          )}
-        </div>
+            )}
+          </div>
+        </Reveal>
 
         {/* ── Filters + Search ─────────────────────────────────────────────── */}
-        <div className="anim-up" style={{ animationDelay: '360ms', display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 8 }}>
-          {[['all','All',data?.users?.length??0],['free','Free',stats.free_users??0],['pro','Pro',stats.pro_users??0],['active','Active today',stats.active_today??0]].map(([val,label,count]) => (
-            <button key={val} onClick={() => setFilter(val)} style={{
-              display: 'flex', alignItems: 'center', gap: 6,
-              padding: '6px 12px', borderRadius: 10, fontSize: 12, fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s',
-              border: filter === val ? '1px solid rgba(99,102,241,0.4)' : '1px solid rgba(255,255,255,0.08)',
-              background: filter === val ? 'rgba(99,102,241,0.1)' : 'transparent',
-              color: filter === val ? '#a5b4fc' : 'rgba(255,255,255,0.35)',
-            }}>
-              {label}
-              <span style={{ padding: '1px 5px', borderRadius: 6, fontSize: 10, background: filter===val?'rgba(99,102,241,0.2)':'rgba(255,255,255,0.05)', color: filter===val?'#a5b4fc':'rgba(255,255,255,0.25)' }}>
-                {count}
-              </span>
-            </button>
-          ))}
-          <input
-            type="text" placeholder="Search by email…" value={search} onChange={e=>setSearch(e.target.value)}
-            style={{ marginLeft: 'auto', padding: '7px 14px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.03)', color: '#fff', fontSize: 12, outline: 'none', minWidth: 180, maxWidth: 280, transition: 'border-color 0.2s' }}
-            onFocus={e=>e.target.style.borderColor='rgba(99,102,241,0.4)'}
-            onBlur={e=>e.target.style.borderColor='rgba(255,255,255,0.08)'}
-          />
-          {search && <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.2)' }}>{filteredUsers.length} result{filteredUsers.length!==1?'s':''}</span>}
-        </div>
+        <Reveal delay={60}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 8 }}>
+            {[['all','All',data?.users?.length??0],['free','Free',stats.free_users??0],['pro','Pro',stats.pro_users??0],['active','Active today',stats.active_today??0]].map(([val,label,count]) => (
+              <button key={val} onClick={() => setFilter(val)} className="filter-btn" style={{
+                display: 'flex', alignItems: 'center', gap: 6,
+                padding: '6px 12px', borderRadius: 10, fontSize: 12, fontWeight: 600, cursor: 'pointer',
+                border: filter === val ? '1px solid rgba(99,102,241,0.4)' : '1px solid rgba(255,255,255,0.08)',
+                background: filter === val ? 'rgba(99,102,241,0.1)' : 'transparent',
+                color: filter === val ? '#a5b4fc' : 'rgba(255,255,255,0.35)',
+              }}>
+                {label}
+                <span style={{ padding: '1px 5px', borderRadius: 6, fontSize: 10, background: filter===val?'rgba(99,102,241,0.2)':'rgba(255,255,255,0.05)', color: filter===val?'#a5b4fc':'rgba(255,255,255,0.25)' }}>
+                  {count}
+                </span>
+              </button>
+            ))}
+            <input
+              type="text" placeholder="Search by email…" value={search} onChange={e=>setSearch(e.target.value)}
+              style={{ marginLeft: 'auto', padding: '7px 14px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.03)', color: '#fff', fontSize: 12, outline: 'none', minWidth: 180, maxWidth: 280, transition: 'border-color 0.2s' }}
+              onFocus={e=>e.target.style.borderColor='rgba(99,102,241,0.4)'}
+              onBlur={e=>e.target.style.borderColor='rgba(255,255,255,0.08)'}
+            />
+            {search && <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.2)' }}>{filteredUsers.length} result{filteredUsers.length!==1?'s':''}</span>}
+          </div>
+        </Reveal>
 
         {/* ── Users table ──────────────────────────────────────────────────── */}
-        <div className="anim-up" style={{ animationDelay: '400ms', borderRadius: 18, border: '1px solid rgba(255,255,255,0.07)', overflow: 'hidden' }}>
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
-              <thead style={{ background: '#070710', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-                <tr>
-                  <th style={{ textAlign: 'left', padding: '12px 16px', fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.25)' }}>User</th>
-                  <th style={{ textAlign: 'left', padding: '12px 16px', fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.25)' }}>Plan</th>
-                  <SortTh label="Usage today"    col="usage"       sort={sort} dir={sortDir} onClick={()=>toggleSort('usage')} />
-                  <SortTh label="All-time conv." col="conversions" sort={sort} dir={sortDir} onClick={()=>toggleSort('conversions')} />
-                  <SortTh label="Joined"         col="joined"      sort={sort} dir={sortDir} onClick={()=>toggleSort('joined')} />
-                  <SortTh label="Last login"     col="last_active" sort={sort} dir={sortDir} onClick={()=>toggleSort('last_active')} />
-                  <th style={{ textAlign: 'left', padding: '12px 16px', fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.25)' }}>Auth</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredUsers.length === 0 ? (
-                  <tr><td colSpan={7} style={{ textAlign: 'center', padding: '48px 16px', color: 'rgba(255,255,255,0.18)', fontSize: 13 }}>No users found.</td></tr>
-                ) : filteredUsers.map((u) => (
-                  <tr key={u.id} onClick={() => openUser(u)} style={{ borderBottom: '1px solid rgba(255,255,255,0.04)', cursor: 'pointer', transition: 'background 0.15s' }}
-                    onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.025)'; e.currentTarget.style.borderLeft = '2px solid #6366f1' }}
-                    onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.borderLeft = 'none' }}
-                  >
-                    <td style={{ padding: '12px 16px' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                        <Avatar email={u.email} />
-                        <span style={{ color: 'rgba(255,255,255,0.7)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 200 }}>{u.email}</span>
-                      </div>
-                    </td>
-                    <td style={{ padding: '12px 16px' }}>
-                      <span style={{
-                        fontSize: 10, padding: '2px 7px', borderRadius: 99, fontWeight: 700, border: '1px solid',
-                        ...(u.plan==='pro' ? { background:'rgba(139,92,246,0.12)', color:'#c4b5fd', borderColor:'rgba(139,92,246,0.25)' } : { background:'rgba(255,255,255,0.04)', color:'rgba(255,255,255,0.25)', borderColor:'rgba(255,255,255,0.08)' })
-                      }}>{u.plan==='pro'?'Pro':'Free'}</span>
-                    </td>
-                    <td style={{ padding: '12px 16px', fontVariantNumeric: 'tabular-nums' }}>
-                      {u.last_reset_date===today && u.images_used_today>0
-                        ? <span style={{ color: '#34d399', fontWeight: 700 }}>{u.images_used_today}</span>
-                        : <span style={{ color: 'rgba(255,255,255,0.2)' }}>0</span>}
-                      {u.plan==='free' && <span style={{ color: 'rgba(255,255,255,0.15)', fontSize: 11 }}>/10</span>}
-                    </td>
-                    <td style={{ padding: '12px 16px', color: 'rgba(255,255,255,0.55)', fontVariantNumeric: 'tabular-nums', fontWeight: 600 }}>{u.total_conversions.toLocaleString()}</td>
-                    <td style={{ padding: '12px 16px', color: 'rgba(255,255,255,0.25)', fontSize: 11, whiteSpace: 'nowrap' }}>{timeAgo(u.created_at)}</td>
-                    <td style={{ padding: '12px 16px', color: 'rgba(255,255,255,0.25)', fontSize: 11, whiteSpace: 'nowrap' }}>{timeAgo(u.last_sign_in_at)}</td>
-                    <td style={{ padding: '12px 16px', color: 'rgba(255,255,255,0.2)', fontSize: 11, textTransform: 'capitalize' }}>{u.provider}</td>
+        <Reveal delay={40}>
+          <div style={{ borderRadius: 18, border: '1px solid rgba(255,255,255,0.07)', overflow: 'hidden' }}>
+            <div style={{ overflowX: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+                <thead style={{ background: '#070710', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+                  <tr>
+                    <th style={{ textAlign: 'left', padding: '12px 16px', fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.25)' }}>User</th>
+                    <th style={{ textAlign: 'left', padding: '12px 16px', fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.25)' }}>Plan</th>
+                    <SortTh label="Usage today"    col="usage"       sort={sort} dir={sortDir} onClick={()=>toggleSort('usage')} />
+                    <SortTh label="All-time conv." col="conversions" sort={sort} dir={sortDir} onClick={()=>toggleSort('conversions')} />
+                    <SortTh label="Joined"         col="joined"      sort={sort} dir={sortDir} onClick={()=>toggleSort('joined')} />
+                    <SortTh label="Last login"     col="last_active" sort={sort} dir={sortDir} onClick={()=>toggleSort('last_active')} />
+                    <th style={{ textAlign: 'left', padding: '12px 16px', fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.25)' }}>Auth</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {filteredUsers.length === 0 ? (
+                    <tr><td colSpan={7} style={{ textAlign: 'center', padding: '48px 16px', color: 'rgba(255,255,255,0.18)', fontSize: 13 }}>No users found.</td></tr>
+                  ) : filteredUsers.map((u) => (
+                    <tr key={u.id} onClick={() => openUser(u)} className="table-row" style={{ borderBottom: '1px solid rgba(255,255,255,0.04)', cursor: 'pointer' }}>
+                      <td style={{ padding: '12px 16px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                          <Avatar email={u.email} />
+                          <span style={{ color: 'rgba(255,255,255,0.7)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 200 }}>{u.email}</span>
+                        </div>
+                      </td>
+                      <td style={{ padding: '12px 16px' }}>
+                        <span style={{
+                          fontSize: 10, padding: '2px 7px', borderRadius: 99, fontWeight: 700, border: '1px solid',
+                          ...(u.plan==='pro' ? { background:'rgba(139,92,246,0.12)', color:'#c4b5fd', borderColor:'rgba(139,92,246,0.25)' } : { background:'rgba(255,255,255,0.04)', color:'rgba(255,255,255,0.25)', borderColor:'rgba(255,255,255,0.08)' })
+                        }}>{u.plan==='pro'?'Pro':'Free'}</span>
+                      </td>
+                      <td style={{ padding: '12px 16px', fontVariantNumeric: 'tabular-nums' }}>
+                        {u.last_reset_date===today && u.images_used_today>0
+                          ? <span style={{ color: '#34d399', fontWeight: 700 }}>{u.images_used_today}</span>
+                          : <span style={{ color: 'rgba(255,255,255,0.2)' }}>0</span>}
+                        {u.plan==='free' && <span style={{ color: 'rgba(255,255,255,0.15)', fontSize: 11 }}>/10</span>}
+                      </td>
+                      <td style={{ padding: '12px 16px', color: 'rgba(255,255,255,0.55)', fontVariantNumeric: 'tabular-nums', fontWeight: 600 }}>{u.total_conversions.toLocaleString()}</td>
+                      <td style={{ padding: '12px 16px', color: 'rgba(255,255,255,0.25)', fontSize: 11, whiteSpace: 'nowrap' }}>{timeAgo(u.created_at)}</td>
+                      <td style={{ padding: '12px 16px', color: 'rgba(255,255,255,0.25)', fontSize: 11, whiteSpace: 'nowrap' }}>{timeAgo(u.last_sign_in_at)}</td>
+                      <td style={{ padding: '12px 16px', color: 'rgba(255,255,255,0.2)', fontSize: 11, textTransform: 'capitalize' }}>{u.provider}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <div style={{ padding: '10px 18px', borderTop: '1px solid rgba(255,255,255,0.04)', fontSize: 10, color: 'rgba(255,255,255,0.14)', textAlign: 'center' }}>
+              {filteredUsers.length} user{filteredUsers.length!==1?'s':''} · MetaClean Admin
+            </div>
           </div>
-          <div style={{ padding: '10px 18px', borderTop: '1px solid rgba(255,255,255,0.04)', fontSize: 10, color: 'rgba(255,255,255,0.14)', textAlign: 'center' }}>
-            {filteredUsers.length} user{filteredUsers.length!==1?'s':''} · MetaClean Admin
-          </div>
-        </div>
+        </Reveal>
 
       </div>
 
