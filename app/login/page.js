@@ -203,7 +203,7 @@ export default function Login() {
         const { data, error: signUpError } = await supabase.auth.signUp({ email, password })
         if (signUpError) throw signUpError
         // Supabase returns a fake user instead of an error for duplicate emails
-        if (data.user && data.user.identities?.length === 0) {
+        if (data.user && (data.user.identities ?? []).length === 0) {
           throw new Error(i.err_duplicate)
         }
         if (data.user) {

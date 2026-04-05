@@ -43,7 +43,7 @@ function getRateLimit(ip, path) {
   }
 
   entry.count++
-  return { allowed: true, remaining: limit - entry.count, limit }
+  return { allowed: true, remaining: Math.max(0, limit - entry.count), limit }
 }
 
 // Periodically prune stale entries to avoid unbounded memory growth

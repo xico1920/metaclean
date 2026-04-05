@@ -209,14 +209,12 @@ export async function POST(request) {
 
       if (profile.last_reset_date !== today) {
         // Conditional update: only reset if another request hasn't already done it
-        const { data: resetData } = await supabase
+        await supabase
           .from('profiles')
           .update({ images_used_today: 0, last_reset_date: today })
           .eq('id', user.id)
           .neq('last_reset_date', today)
-          .select('images_used_today')
-          .single()
-        imagesUsed = resetData ? 0 : 0 // reset happened or was already reset
+        imagesUsed = 0
       }
 
       // ── Usage limit check ─────────────────────────────────────────────────
@@ -229,7 +227,8 @@ export async function POST(request) {
     // ── Process ───────────────────────────────────────────────────────────────
     const formData = await request.formData()
     const file = formData.get('image')
-    const platform = formData.get('platform') || 'meta'
+    const rawPlatform = formData.get('platform') || 'meta'
+    const platform = Object.prototype.hasOwnProperty.call(PLATFORMS, rawPlatform) ? rawPlatform : 'meta'
     const originalName = formData.get('name') || 'image'
     const formatsParam = formData.get('formats')
     let selectedFormats = null

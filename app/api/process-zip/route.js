@@ -95,10 +95,16 @@ export async function POST(request) {
 
     // ── Parse request ─────────────────────────────────────────────────────────
     const formData      = await request.formData()
-    const zipFile       = formData.get('zip')
-    const platform      = formData.get('platform') || 'meta'
-    const formatsParam  = formData.get('formats')
-    const selectedFmts  = formatsParam ? JSON.parse(formatsParam) : null
+    const zipFile      = formData.get('zip')
+    const rawPlatform  = formData.get('platform') || 'meta'
+    const platform     = Object.prototype.hasOwnProperty.call(PLATFORMS, rawPlatform) ? rawPlatform : 'meta'
+    const formatsParam = formData.get('formats')
+    let selectedFmts   = null
+    if (formatsParam) {
+      try { selectedFmts = JSON.parse(formatsParam) } catch {
+        return NextResponse.json({ error: 'Invalid formats parameter' }, { status: 400 })
+      }
+    }
 
     if (!zipFile) return NextResponse.json({ error: 'No ZIP file provided' }, { status: 400 })
 
@@ -138,8 +144,11 @@ export async function POST(request) {
     const today = new Date().toISOString().split('T')[0]
     let imagesUsed = profile.images_used_today
     if (profile.last_reset_date !== today) {
+      await supabase.from('profiles')
+        .update({ images_used_today: 0, last_reset_date: today })
+        .eq('id', user.id)
+        .neq('last_reset_date', today)
       imagesUsed = 0
-      await supabase.from('profiles').update({ images_used_today: 0, last_reset_date: today }).eq('id', user.id)
     }
 
     if (!isAdmin && !isPro && imagesUsed >= FREE_DAILY_LIMIT) {
@@ -152,7 +161,7 @@ export async function POST(request) {
     // ── Process images ────────────────────────────────────────────────────────
     const cfg        = PLATFORMS[platform] || PLATFORMS.meta
     const formats    = (FORMAT_SPECS[platform] || FORMAT_SPECS.meta).filter(
-      f => !selectedFmts || selectedFmts.some(sf => sf.startsWith(f.label))
+      f => !selectedFmts || selectedFmts.includes(f.label)
     )
     const outputZip  = new JSZip()
     let   processed  = 0

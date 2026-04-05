@@ -35,14 +35,23 @@ export async function GET(request) {
     const last7 = last30.slice(-7)
 
     // ── Fetch in parallel ─────────────────────────────────────────────────────
+    // Paginate auth users to handle > 1000 accounts
+    let authUsers = []
+    let page = 1
+    while (true) {
+      const { data } = await supabase.auth.admin.listUsers({ perPage: 1000, page })
+      const batch = data?.users || []
+      authUsers = authUsers.concat(batch)
+      if (batch.length < 1000) break
+      page++
+    }
+
     const [
-      authListResult,
       profilesResult,
       todayConvResult,
       totalCountResult,
       allConvsResult,
     ] = await Promise.all([
-      supabase.auth.admin.listUsers({ perPage: 1000, page: 1 }),
       supabase.from('profiles').select('*'),
       supabase
         .from('conversion_history')
@@ -54,7 +63,6 @@ export async function GET(request) {
       supabase.from('conversion_history').select('user_id, platform, created_at'),
     ])
 
-    const authUsers        = authListResult.data?.users || []
     const profiles         = profilesResult.data        || []
     const todayConvs       = todayConvResult.data        || []
     const totalConversions = totalCountResult.count      || 0

@@ -5,7 +5,8 @@ export async function POST(request) {
   try {
     const { email } = await request.json()
 
-    if (!email || !email.includes('@')) {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!email || !emailRegex.test(email)) {
       return NextResponse.json({ error: 'Invalid email' }, { status: 400 })
     }
 

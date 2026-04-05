@@ -5,7 +5,8 @@ export async function POST(request) {
   try {
     const resend = new Resend(process.env.RESEND_API_KEY)
     const { email } = await request.json()
-    if (!email) return NextResponse.json({ error: 'Missing email' }, { status: 400 })
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!email || !emailRegex.test(email)) return NextResponse.json({ error: 'Invalid email' }, { status: 400 })
 
     await resend.emails.send({
       from: 'MetaClean <hello@metaclean.pro>',
