@@ -4,6 +4,7 @@ import SiteNav from '@/app/components/SiteNav'
 import Footer from '@/app/components/Footer'
 import { glowStyle, glowHandlers } from '@/lib/glow'
 import Reveal from '@/app/components/Reveal'
+import WaitlistModal from '@/app/components/WaitlistModal'
 
 
 
@@ -75,6 +76,7 @@ function Section({ id, icon, title, badge, badgeColor, intro, items, note }) {
 // ── Page ─────────────────────────────────────────────────────────────────────
 export default function Features() {
   const [mounted, setMounted] = useState(false)
+  const [showWaitlist, setShowWaitlist] = useState(false)
   useEffect(() => {
     const t = setTimeout(() => setMounted(true), 30)
     return () => clearTimeout(t)
@@ -228,10 +230,10 @@ export default function Features() {
           <div className="flex items-center gap-3 mb-10 px-5 py-3.5 rounded-2xl" style={{background: 'linear-gradient(135deg, rgba(99,102,241,0.07), rgba(139,92,246,0.07))', border: '1px solid rgba(139,92,246,0.2)'}}>
             <span className="w-2 h-2 rounded-full bg-violet-400 animate-pulse shrink-0" />
             <p className="text-[13px] text-gray-300 font-medium">AI features below are <span style={{color: '#c084fc'}}>coming soon</span> — available in the upcoming AI Studio tier.</p>
-            <a href="mailto:hello@metaclean.pro?subject=AI%20Waitlist" className="ml-auto shrink-0 text-[12px] font-medium px-3 py-1.5 rounded-lg transition-colors" style={{background: 'rgba(139,92,246,0.15)', border: '1px solid rgba(139,92,246,0.3)', color: '#c084fc'}}
+            <button onClick={() => setShowWaitlist(true)} className="ml-auto shrink-0 text-[12px] font-medium px-3 py-1.5 rounded-lg transition-colors" style={{background: 'rgba(139,92,246,0.15)', border: '1px solid rgba(139,92,246,0.3)', color: '#c084fc', cursor: 'pointer'}}
               onMouseEnter={e => e.currentTarget.style.background = 'rgba(139,92,246,0.25)'}
               onMouseLeave={e => e.currentTarget.style.background = 'rgba(139,92,246,0.15)'}
-            >Join waitlist →</a>
+            >Join waitlist →</button>
           </div>
         </Reveal>
 
@@ -275,6 +277,7 @@ export default function Features() {
 
       <Footer />
 
+      <WaitlistModal open={showWaitlist} onClose={() => setShowWaitlist(false)} lang="en" />
     </main>
   )
 }

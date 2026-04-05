@@ -8,6 +8,7 @@ import Footer from '@/app/components/Footer'
 import { PLATFORM_CONFIGS, PlatformIcon } from '@/lib/platforms'
 import { glowStyle, glowHandlers } from '@/lib/glow'
 import Reveal from '@/app/components/Reveal'
+import WaitlistModal from '@/app/components/WaitlistModal'
 
 const cycleWords = {
   en: ['rejected.', 'disapproved.', 'flagged.', 'too large.', 'low quality.'],
@@ -277,6 +278,7 @@ export default function Home() {
   const [selectedPlatform, setSelectedPlatform] = useState('meta')
   const [session, setSession] = useState(null)
   const [showGate, setShowGate] = useState(false)
+  const [showWaitlist, setShowWaitlist] = useState(false)
   const fileInputRef = useRef(null)
   const homeMode = 'ad'
   const [cleanFiles, setCleanFiles] = useState([])
@@ -886,18 +888,18 @@ export default function Home() {
                 <p className="text-white font-semibold text-[14px] mb-0.5">{i.ai_waitlist_note}</p>
                 <p className="text-gray-500 text-[12px]">Early access · Priority onboarding · Founding price locked in.</p>
               </div>
-              <a
-                href="mailto:hello@metaclean.pro?subject=AI%20Waitlist"
+              <button
+                onClick={() => setShowWaitlist(true)}
                 onMouseEnter={e => { e.currentTarget.style.backgroundPosition = '100% 50%'; e.currentTarget.style.boxShadow = '0 0 0 1px rgba(139,92,246,0.6), 0 0 20px rgba(99,102,241,0.4), 0 0 45px rgba(139,92,246,0.2)' }}
                 onMouseLeave={e => { e.currentTarget.style.backgroundPosition = '0% 50%'; e.currentTarget.style.boxShadow = 'none' }}
                 onMouseMove={e => { const rect = e.currentTarget.getBoundingClientRect(); e.currentTarget.style.backgroundPosition = `${((e.clientX - rect.left) / rect.width * 100).toFixed(1)}% 50%` }}
-                className="shrink-0 inline-flex items-center gap-2 px-6 py-2.5 rounded-xl text-[13px] font-semibold text-white whitespace-nowrap"
+                className="shrink-0 inline-flex items-center gap-2 px-6 py-2.5 rounded-xl text-[13px] font-semibold text-white whitespace-nowrap border-0 cursor-pointer"
                 style={{background: 'linear-gradient(135deg, #2563eb, #4f46e5, #8b5cf6, #6366f1)', backgroundSize: '300% 300%', backgroundPosition: '0% 50%', transition: 'box-shadow 0.3s ease, background-position 0.1s ease'}}
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                 </svg>
                 {i.ai_waitlist_cta}
-              </a>
+              </button>
             </div>
           </Reveal>
         </div>
@@ -982,15 +984,15 @@ export default function Home() {
                 </div>
                 <p className="text-gray-600 text-[13px] mb-6">{i.ai_plan_desc}</p>
                 <div className="mt-auto">
-                  <a
-                    href="mailto:hello@metaclean.pro?subject=AI%20Waitlist"
-                    className="block w-full py-2.5 rounded-xl text-[13px] font-medium text-center transition-colors"
-                    style={{border: '1px solid rgba(139,92,246,0.3)', color: '#c084fc', background: 'rgba(139,92,246,0.07)'}}
+                  <button
+                    onClick={() => setShowWaitlist(true)}
+                    className="block w-full py-2.5 rounded-xl text-[13px] font-medium text-center transition-colors cursor-pointer border"
+                    style={{borderColor: 'rgba(139,92,246,0.3)', color: '#c084fc', background: 'rgba(139,92,246,0.07)'}}
                     onMouseEnter={e => { e.currentTarget.style.background = 'rgba(139,92,246,0.14)'; e.currentTarget.style.borderColor = 'rgba(139,92,246,0.5)' }}
                     onMouseLeave={e => { e.currentTarget.style.background = 'rgba(139,92,246,0.07)'; e.currentTarget.style.borderColor = 'rgba(139,92,246,0.3)' }}
                   >
                     {i.ai_waitlist_cta}
-                  </a>
+                  </button>
                 </div>
               </div>
             </Reveal>
@@ -1001,6 +1003,8 @@ export default function Home() {
       </div>
 
       <Footer />
+
+      <WaitlistModal open={showWaitlist} onClose={() => setShowWaitlist(false)} lang={lang} />
     </main>
   )
 }

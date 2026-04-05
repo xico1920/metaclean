@@ -7,6 +7,7 @@ import Footer from '@/app/components/Footer'
 import { glowStyle, glowHandlers } from '@/lib/glow'
 import { supabase } from '@/lib/supabase'
 import Reveal from '@/app/components/Reveal'
+import WaitlistModal from '@/app/components/WaitlistModal'
 
 function Check() {
   return <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4.5 12.75l6 6 9-13.5" /></svg>
@@ -56,6 +57,7 @@ export default function Pricing() {
   const router = useRouter()
   const [mounted, setMounted] = useState(false)
   const [upgrading, setUpgrading] = useState(false)
+  const [showWaitlist, setShowWaitlist] = useState(false)
   useEffect(() => {
     const t = setTimeout(() => setMounted(true), 30)
     return () => clearTimeout(t)
@@ -258,15 +260,15 @@ export default function Pricing() {
                 ))}
               </div>
               <div className="mt-auto">
-                <a
-                  href="mailto:hello@metaclean.pro?subject=AI%20Waitlist"
+                <button
+                  onClick={() => setShowWaitlist(true)}
                   className="block w-full py-3 rounded-xl text-[13px] font-medium text-center transition-colors"
-                  style={{border: '1px solid rgba(139,92,246,0.35)', color: '#c084fc', background: 'rgba(139,92,246,0.08)'}}
+                  style={{border: '1px solid rgba(139,92,246,0.35)', color: '#c084fc', background: 'rgba(139,92,246,0.08)', cursor: 'pointer'}}
                   onMouseEnter={e => { e.currentTarget.style.background = 'rgba(139,92,246,0.18)'; e.currentTarget.style.borderColor = 'rgba(139,92,246,0.55)' }}
                   onMouseLeave={e => { e.currentTarget.style.background = 'rgba(139,92,246,0.08)'; e.currentTarget.style.borderColor = 'rgba(139,92,246,0.35)' }}
                 >
                   Join the waitlist
-                </a>
+                </button>
               </div>
             </div>
           </Reveal>
@@ -299,6 +301,7 @@ export default function Pricing() {
 
       <Footer />
 
+      <WaitlistModal open={showWaitlist} onClose={() => setShowWaitlist(false)} lang="en" />
     </main>
   )
 }
