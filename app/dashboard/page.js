@@ -1359,7 +1359,7 @@ function DashboardInner() {
     )
   }
 
-  const isAdmin = user?.email === process.env.NEXT_PUBLIC_ADMIN_EMAIL
+  const isAdmin = !!user && user.email === process.env.NEXT_PUBLIC_ADMIN_EMAIL
   const isPro = isAdmin || profile?.plan === 'pro'
   const imagesUsed = profile?.images_used_today ?? 0
   const usageLimit = isPro ? null : FREE_LIMIT
@@ -1858,15 +1858,17 @@ function DashboardInner() {
         )}
 
         {/* Pro: manage subscription */}
-        {isPro && (
+        {isPro && user && (
           <div className="mb-6 flex items-center justify-between px-5 py-3.5 rounded-xl" style={{background: 'rgba(99,102,241,0.06)', border: '1px solid rgba(99,102,241,0.15)'}}>
             <div className="flex items-center gap-2 text-[13px] text-indigo-300">
               <div className="w-1.5 h-1.5 rounded-full bg-indigo-400" />
               Pro plan · Unlimited images
             </div>
-            <button onClick={handleManageSub} className="text-[12px] text-indigo-400 hover:text-indigo-300 transition-colors">
-              {i.manage_sub} →
-            </button>
+            {profile?.stripe_customer_id && (
+              <button onClick={handleManageSub} className="text-[12px] text-indigo-400 hover:text-indigo-300 transition-colors">
+                {i.manage_sub} →
+              </button>
+            )}
           </div>
         )}
 
