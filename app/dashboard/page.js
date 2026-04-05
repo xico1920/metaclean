@@ -1340,6 +1340,14 @@ function DashboardInner() {
   }
 
   const [managingSub, setManagingSub] = useState(false)
+
+  // Reset loader if user navigates back from Stripe portal
+  useEffect(() => {
+    const reset = () => setManagingSub(false)
+    window.addEventListener('pageshow', reset)
+    return () => window.removeEventListener('pageshow', reset)
+  }, [])
+
   const handleManageSub = async () => {
     if (managingSub) return
     setManagingSub(true)
