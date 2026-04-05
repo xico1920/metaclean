@@ -104,6 +104,9 @@ export default function WaitlistModal({ open, onClose, lang = 'en' }) {
       >
         {/* Modal */}
         <div
+          role="dialog"
+          aria-modal="true"
+          aria-label={copy.title}
           className="wl-modal"
           onClick={e => e.stopPropagation()}
           style={{

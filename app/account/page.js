@@ -180,6 +180,7 @@ export default function AccountPage() {
       router.push('/?deleted=1')
     } catch {
       setDeleteError('Something went wrong. Please try again.')
+      setDeleteInput('')
       setDeleting(false)
     }
   }

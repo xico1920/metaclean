@@ -13,7 +13,7 @@ export default class ErrorBoundary extends Component {
   }
 
   componentDidCatch(error, info) {
-    Sentry.captureException(error, { extra: info })
+    Sentry.captureException(error, { extra: { componentStack: info.componentStack } })
     console.error('ErrorBoundary caught:', error)
   }
 

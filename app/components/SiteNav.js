@@ -48,6 +48,7 @@ export default function SiteNav() {
         href={href}
         className="hidden sm:block text-[13px] transition-colors"
         style={{ color: active ? 'rgba(255,255,255,0.9)' : 'rgba(156,163,175,1)' }}
+        aria-current={active ? 'page' : undefined}
         onMouseEnter={e => { if (!active) e.currentTarget.style.color = 'rgba(255,255,255,0.9)' }}
         onMouseLeave={e => { if (!active) e.currentTarget.style.color = 'rgba(156,163,175,1)' }}
       >

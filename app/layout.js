@@ -1,6 +1,6 @@
 import "./globals.css"
 
-const BASE_URL = 'https://metaclean.pro'
+const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://metaclean.pro'
 
 export const metadata = {
   metadataBase: new URL(BASE_URL),

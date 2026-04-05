@@ -218,7 +218,7 @@ export async function POST(request) {
       }
 
       // ── Usage limit check ─────────────────────────────────────────────────
-      const isAdmin = user.email === process.env.ADMIN_EMAIL
+      const isAdmin = profile?.is_admin === true
       if (!isAdmin && profile.plan === 'free' && imagesUsed >= FREE_LIMIT) {
         return NextResponse.json({ error: 'Daily limit reached', limitReached: true }, { status: 403 })
       }
@@ -258,7 +258,7 @@ export async function POST(request) {
 
     const config = PLATFORMS[platform] || PLATFORMS.meta
     const inputBuffer = Buffer.from(await file.arrayBuffer())
-    const baseName = originalName.replace(/\.[^.]+$/, '')
+    const baseName = originalName.replace(/\.[^.]+$/, '').replace(/[^a-zA-Z0-9._-]/g, '_')
 
     const processedFiles = []
 
