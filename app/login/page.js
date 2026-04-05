@@ -40,7 +40,9 @@ const t = {
     terms_pre: 'By signing up you agree to our', terms: 'Terms', and: 'and', privacy: 'Privacy Policy',
     pwd_weak: 'Weak', pwd_fair: 'Fair', pwd_good: 'Good', pwd_strong: 'Strong',
     pwd_rule_len: 'At least 8 characters', pwd_rule_upper: 'Uppercase letter', pwd_rule_lower: 'Lowercase letter', pwd_rule_num: 'Number',
+    pwd_confirm_label: 'Confirm password',
     err_fields: 'Please fill in all fields.',
+    err_pwd_match: 'Passwords do not match.',
     err_cancel: 'Sign in was cancelled.',
     err_duplicate: 'An account with this email already exists. Please log in instead.',
   },
@@ -66,7 +68,9 @@ const t = {
     terms_pre: 'Ao registares-te, concordas com os nossos', terms: 'Termos', and: 'e', privacy: 'Política de Privacidade',
     pwd_weak: 'Fraca', pwd_fair: 'Razoável', pwd_good: 'Boa', pwd_strong: 'Forte',
     pwd_rule_len: 'Pelo menos 8 caracteres', pwd_rule_upper: 'Maiúscula', pwd_rule_lower: 'Minúscula', pwd_rule_num: 'Número',
+    pwd_confirm_label: 'Confirmar password',
     err_fields: 'Por favor preenche todos os campos.',
+    err_pwd_match: 'As passwords não coincidem.',
     err_cancel: 'O login foi cancelado.',
     err_duplicate: 'Já existe uma conta com este email. Faz login.',
   },
@@ -92,7 +96,9 @@ const t = {
     terms_pre: 'Al registrarte aceptas nuestros', terms: 'Términos', and: 'y', privacy: 'Política de Privacidad',
     pwd_weak: 'Débil', pwd_fair: 'Regular', pwd_good: 'Buena', pwd_strong: 'Fuerte',
     pwd_rule_len: 'Al menos 8 caracteres', pwd_rule_upper: 'Mayúscula', pwd_rule_lower: 'Minúscula', pwd_rule_num: 'Número',
+    pwd_confirm_label: 'Confirmar contraseña',
     err_fields: 'Por favor rellena todos los campos.',
+    err_pwd_match: 'Las contraseñas no coinciden.',
     err_cancel: 'El inicio de sesión fue cancelado.',
     err_duplicate: 'Ya existe una cuenta con este email. Inicia sesión.',
   },
@@ -115,6 +121,7 @@ export default function Login() {
   const [displayMode, setDisplayMode] = useState('login') // lags behind mode — only updates after fade-out
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [checkingSession, setCheckingSession] = useState(true)
@@ -147,6 +154,7 @@ export default function Login() {
       setDisplayMode(newMode)
       setError('')
       setPassword('')
+      setConfirmPassword('')
     }, 160)
     setTimeout(() => setTransitioning(false), 170)
   }
@@ -174,7 +182,7 @@ export default function Login() {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    if (!email || !password) { setError(i.err_fields); return }
+    if (!email || !password || (mode === 'signup' && !confirmPassword)) { setError(i.err_fields); return }
     setError('')
     setLoading(true)
 
@@ -183,6 +191,7 @@ export default function Login() {
         const { error: signInError } = await supabase.auth.signInWithPassword({ email, password })
         if (signInError) throw signInError
       } else {
+        if (password !== confirmPassword) { setError(i.err_pwd_match); setLoading(false); return }
         const unmet = rules.filter(r => !r.test(password))
         if (unmet.length > 0) { setError(`Password must include: ${unmet.map(r => r.label.toLowerCase()).join(', ')}.`); setLoading(false); return }
         const { data, error: signUpError } = await supabase.auth.signUp({ email, password })
@@ -503,6 +512,42 @@ export default function Login() {
                       )
                     })()}
                   </div>
+
+                  {displayMode === 'signup' && (
+                    <div>
+                      <label className="block text-[11px] text-gray-500 mb-1.5 font-semibold uppercase tracking-wider">{i.pwd_confirm_label}</label>
+                      <input
+                        type="password"
+                        placeholder="••••••••"
+                        value={confirmPassword}
+                        autoComplete="new-password"
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        style={{
+                          ...inputStyle,
+                          borderColor: confirmPassword.length > 0 && confirmPassword !== password
+                            ? 'rgba(239,68,68,0.5)'
+                            : confirmPassword.length > 0 && confirmPassword === password
+                            ? 'rgba(34,197,94,0.5)'
+                            : 'rgba(255,255,255,0.09)',
+                        }}
+                        onFocus={(e) => { e.target.style.borderColor = 'rgba(99,102,241,0.6)'; e.target.style.background = 'rgba(99,102,241,0.04)'; e.target.style.boxShadow = '0 0 0 3px rgba(99,102,241,0.08)' }}
+                        onBlur={(e) => {
+                          e.target.style.boxShadow = 'none'
+                          e.target.style.background = 'rgba(255,255,255,0.04)'
+                          e.target.style.borderColor = confirmPassword.length > 0 && confirmPassword !== password
+                            ? 'rgba(239,68,68,0.5)'
+                            : confirmPassword.length > 0 && confirmPassword === password
+                            ? 'rgba(34,197,94,0.5)'
+                            : 'rgba(255,255,255,0.09)'
+                        }}
+                      />
+                      {confirmPassword.length > 0 && (
+                        <p className="mt-1.5 text-[11px]" style={{color: confirmPassword === password ? '#4ade80' : '#f87171'}}>
+                          {confirmPassword === password ? '✓ Passwords match' : '✗ ' + i.err_pwd_match}
+                        </p>
+                      )}
+                    </div>
+                  )}
                 </div>
 
                 {error && (
