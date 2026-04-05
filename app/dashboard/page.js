@@ -1339,15 +1339,23 @@ function DashboardInner() {
     if (json.url) window.location.href = json.url
   }
 
+  const [managingSub, setManagingSub] = useState(false)
   const handleManageSub = async () => {
-    const { data } = await supabase.auth.getSession()
-    const token = data.session?.access_token
-    const res = await fetch('/api/stripe/portal', {
-      method: 'POST',
-      headers: { 'Authorization': `Bearer ${token}` },
-    })
-    const json = await res.json()
-    if (json.url) window.location.href = json.url
+    if (managingSub) return
+    setManagingSub(true)
+    try {
+      const { data } = await supabase.auth.getSession()
+      const token = data.session?.access_token
+      const res = await fetch('/api/stripe/portal', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` },
+      })
+      const json = await res.json()
+      if (json.url) window.location.href = json.url
+      else setManagingSub(false)
+    } catch {
+      setManagingSub(false)
+    }
   }
 
   const handleSignOut = async () => {
@@ -1854,8 +1862,22 @@ function DashboardInner() {
               Pro plan · Unlimited images
             </div>
             {profile?.stripe_customer_id && (
-              <button onClick={handleManageSub} className="text-[12px] text-indigo-400 hover:text-indigo-300 transition-colors">
-                {i.manage_sub} →
+              <button
+                onClick={handleManageSub}
+                disabled={managingSub}
+                className="flex items-center gap-1.5 text-[12px] text-indigo-400 hover:text-indigo-300 transition-colors disabled:opacity-60"
+              >
+                {managingSub ? (
+                  <>
+                    <svg className="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
+                    </svg>
+                    Loading…
+                  </>
+                ) : (
+                  <>{i.manage_sub} →</>
+                )}
               </button>
             )}
           </div>
