@@ -46,6 +46,7 @@ const t = {
     err_pwd_match: 'Passwords do not match.',
     err_cancel: 'Sign in was cancelled.',
     err_duplicate: 'An account with this email already exists. Please log in instead.',
+    err_oauth_conflict: 'This email is already registered with a password. Log in with your email and password instead.',
   },
   pt: {
     badge: 'Grátis para começar',
@@ -74,6 +75,7 @@ const t = {
     err_pwd_match: 'As passwords não coincidem.',
     err_cancel: 'O login foi cancelado.',
     err_duplicate: 'Já existe uma conta com este email. Faz login.',
+    err_oauth_conflict: 'Este email já está registado com password. Entra com o teu email e password.',
   },
   es: {
     badge: 'Gratis para empezar',
@@ -102,6 +104,7 @@ const t = {
     err_pwd_match: 'Las contraseñas no coinciden.',
     err_cancel: 'El inicio de sesión fue cancelado.',
     err_duplicate: 'Ya existe una cuenta con este email. Inicia sesión.',
+    err_oauth_conflict: 'Este email ya está registado con contraseña. Inicia sesión con tu email y contraseña.',
   },
 }
 
@@ -163,7 +166,11 @@ export default function Login() {
     const params = new URLSearchParams(window.location.search)
     if (params.get('mode') === 'signup') setMode('signup')
     if (params.get('error')) {
-      setError(t[localStorage.getItem('metaclean_lang') || 'en']?.err_cancel || 'Sign in was cancelled.')
+      const lang = localStorage.getItem('metaclean_lang') || 'en'
+      const tr = t[lang]
+      const desc = params.get('error_description') || ''
+      const isConflict = desc.toLowerCase().includes('already registered') || desc.toLowerCase().includes('already been registered') || desc.toLowerCase().includes('provider') || params.get('error') === 'access_denied'
+      setError(isConflict ? tr?.err_oauth_conflict : tr?.err_cancel)
       window.history.replaceState({}, '', window.location.pathname)
     }
 
