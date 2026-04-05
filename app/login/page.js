@@ -6,6 +6,7 @@ import { supabase } from '@/lib/supabase'
 import Footer from '@/app/components/Footer'
 import Logo from '@/app/components/Logo'
 import { glowStyle, glowHandlers } from '@/lib/glow'
+import LangDropdown from '@/app/components/LangDropdown'
 
 const benefitIcons = [
   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" /></svg>,
@@ -128,7 +129,6 @@ export default function Login() {
   const [mounted, setMounted] = useState(false)
   const [transitioning, setTransitioning] = useState(false)
   const [lang, setLang] = useState('en')
-  const [langOpen, setLangOpen] = useState(false)
   const [langTransitioning, setLangTransitioning] = useState(false)
 
   const i = t[lang]
@@ -140,7 +140,6 @@ export default function Login() {
     setTimeout(() => {
       setLang(l)
       localStorage.setItem('metaclean_lang', l)
-      setLangOpen(false)
     }, 140)
     setTimeout(() => setLangTransitioning(false), 155)
   }
@@ -353,46 +352,12 @@ export default function Login() {
         {/* Mobile nav */}
         <div className="lg:hidden flex items-center justify-between px-5 py-4" style={{borderBottom: '1px solid rgba(255,255,255,0.05)', ...fadeIn(0)}}>
           <Logo clipId="loginMobileLogo" />
-          <div className="relative">
-            <button onClick={() => setLangOpen(o => !o)} className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[12px] text-gray-400 hover:text-gray-200 transition-colors" style={{border: '1px solid rgba(255,255,255,0.07)'}}>
-              <img src={flags[lang]} alt={lang} style={{width:'16px', height:'11px', objectFit:'cover', borderRadius:'2px'}} />
-              <span className="uppercase font-medium tracking-wider">{lang}</span>
-              <svg className="w-3 h-3 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
-            </button>
-            {langOpen && (
-              <div className="absolute right-0 mt-1.5 w-32 rounded-xl overflow-hidden z-30 anim-pop" style={{background: '#0d0d14', border: '1px solid rgba(255,255,255,0.08)', boxShadow: '0 20px 40px rgba(0,0,0,0.5)'}}>
-                {['en','pt','es'].map((l) => (
-                  <button key={l} onClick={() => setLangAndSave(l)} className="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-[12px] hover:bg-white/5 transition-colors">
-                    <img src={flags[l]} alt={l} style={{width:'16px', height:'11px', objectFit:'cover', borderRadius:'2px'}} />
-                    <span className={`uppercase font-medium tracking-wider ${lang === l ? 'text-blue-400' : 'text-gray-400'}`}>{l}</span>
-                    {lang === l && <svg className="w-3 h-3 text-blue-400 ml-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4.5 12.75l6 6 9-13.5" /></svg>}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
+          <LangDropdown lang={lang} onChange={setLangAndSave} />
         </div>
 
         {/* Desktop lang selector */}
         <div className="hidden lg:flex justify-end px-8 pt-5 relative z-10" style={fadeIn(0)}>
-          <div className="relative">
-            <button onClick={() => setLangOpen(o => !o)} className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[12px] text-gray-400 hover:text-gray-200 transition-colors" style={{border: '1px solid rgba(255,255,255,0.07)'}}>
-              <img src={flags[lang]} alt={lang} style={{width:'16px', height:'11px', objectFit:'cover', borderRadius:'2px'}} />
-              <span className="uppercase font-medium tracking-wider">{lang}</span>
-              <svg className="w-3 h-3 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
-            </button>
-            {langOpen && (
-              <div className="absolute right-0 mt-1.5 w-32 rounded-xl overflow-hidden z-30 anim-pop" style={{background: '#0d0d14', border: '1px solid rgba(255,255,255,0.08)', boxShadow: '0 20px 40px rgba(0,0,0,0.5)'}}>
-                {['en','pt','es'].map((l) => (
-                  <button key={l} onClick={() => setLangAndSave(l)} className="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-[12px] hover:bg-white/5 transition-colors">
-                    <img src={flags[l]} alt={l} style={{width:'16px', height:'11px', objectFit:'cover', borderRadius:'2px'}} />
-                    <span className={`uppercase font-medium tracking-wider ${lang === l ? 'text-blue-400' : 'text-gray-400'}`}>{l}</span>
-                    {lang === l && <svg className="w-3 h-3 text-blue-400 ml-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4.5 12.75l6 6 9-13.5" /></svg>}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
+          <LangDropdown lang={lang} onChange={setLangAndSave} />
         </div>
 
         <div className="flex-1 flex items-center justify-center px-5 sm:px-8 py-10">

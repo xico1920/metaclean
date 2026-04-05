@@ -10,6 +10,7 @@ import Logo from '@/app/components/Logo'
 import { PLATFORM_CONFIGS, PlatformIcon } from '@/lib/platforms'
 import { glowStyle, glowHandlers } from '@/lib/glow'
 import JSZip from 'jszip'
+import LangDropdown from '@/app/components/LangDropdown'
 
 export const dynamic = 'force-dynamic'
 
@@ -804,6 +805,9 @@ function DashboardInner() {
   const [savePresetOpen, setSavePresetOpen] = useState(false)
   const [presetNameInput, setPresetNameInput] = useState('')
   const [presetSaving, setPresetSaving] = useState(false)
+
+  // Safe zone toggle
+  const [showSafeZone, setShowSafeZone] = useState(true)
 
   // Onboarding
   const [showOnboarding, setShowOnboarding] = useState(false)
@@ -1692,22 +1696,7 @@ function DashboardInner() {
           </div>
 
           {/* Language */}
-          <div className="relative">
-            <button onClick={() => setLangOpen(!langOpen)} className="flex items-center gap-1.5 px-2 sm:px-2.5 py-1.5 rounded-lg text-[12px] text-gray-400 hover:text-gray-200 transition-colors" style={{border: '1px solid rgba(255,255,255,0.07)'}}>
-              <img src={flags[lang]} alt={lang} style={{width:'14px', height:'10px', objectFit:'cover', borderRadius:'2px'}} />
-              <span className="uppercase font-medium tracking-wider text-[11px] hidden sm:inline">{lang}</span>
-            </button>
-            {langOpen && (
-              <div className="absolute right-0 mt-1.5 w-28 rounded-xl overflow-hidden z-30" style={{background: '#0d0d14', border: '1px solid rgba(255,255,255,0.08)', boxShadow: '0 20px 40px rgba(0,0,0,0.5)'}}>
-                {Object.keys(t).map((l) => (
-                  <button key={l} onClick={() => { setLang(l); localStorage.setItem('metaclean_lang', l); setLangOpen(false) }} className="w-full flex items-center gap-2 px-3 py-2.5 text-[12px] hover:bg-white/5 transition-colors">
-                    <img src={flags[l]} alt={l} style={{width:'14px', height:'10px', objectFit:'cover', borderRadius:'2px'}} />
-                    <span className={`uppercase font-medium tracking-wider ${lang === l ? 'text-blue-400' : 'text-gray-400'}`}>{l}</span>
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
+          <LangDropdown lang={lang} onChange={(l) => { setLang(l); localStorage.setItem('metaclean_lang', l) }} />
 
           {/* Account settings + sign out — desktop only, logged-in users only */}
           {user && (
@@ -2016,9 +2005,20 @@ function DashboardInner() {
                 )}
               </div>
               {platformCfg.safeZone && (
-                <div className="mt-2.5 flex items-center gap-1.5 text-[11px] text-gray-500">
-                  <svg className="w-3 h-3 text-amber-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" /></svg>
-                  Safe zone overlay active — danger zones highlighted in upload area
+                <div className="mt-2.5 flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-1.5 text-[11px] text-gray-500">
+                    <svg className="w-3 h-3 text-amber-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" /></svg>
+                    {i.safe_zone} overlay {showSafeZone ? 'on' : 'off'}
+                  </div>
+                  <button
+                    onClick={() => setShowSafeZone(v => !v)}
+                    className="flex items-center gap-1.5 text-[11px] transition-colors"
+                    style={{color: showSafeZone ? '#6366f1' : 'rgba(255,255,255,0.25)'}}
+                  >
+                    <div className="relative w-7 h-4 rounded-full transition-colors duration-200 flex items-center" style={{background: showSafeZone ? 'rgba(99,102,241,0.4)' : 'rgba(255,255,255,0.08)', border: showSafeZone ? '1px solid rgba(99,102,241,0.6)' : '1px solid rgba(255,255,255,0.1)'}}>
+                      <div className="absolute w-2.5 h-2.5 rounded-full bg-white transition-all duration-200" style={{left: showSafeZone ? '14px' : '2px', boxShadow: '0 1px 3px rgba(0,0,0,0.4)'}} />
+                    </div>
+                  </button>
                 </div>
               )}
 
@@ -2222,7 +2222,7 @@ function DashboardInner() {
                 minHeight: '160px',
               }}
             >
-              <SafeZoneOverlay platform={selectedPlatform} i={i} />
+              {showSafeZone && files.length > 0 && <SafeZoneOverlay platform={selectedPlatform} i={i} />}
               {files.length === 0 ? (
                 <div className="relative z-10">
                   <div className="w-12 h-12 rounded-2xl mx-auto mb-4 flex items-center justify-center" style={{background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)'}}>

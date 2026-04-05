@@ -6,6 +6,7 @@ import { supabase } from '@/lib/supabase'
 import Logo from '@/app/components/Logo'
 import Footer from '@/app/components/Footer'
 import { glowStyle, glowHandlers } from '@/lib/glow'
+import LangDropdown from '@/app/components/LangDropdown'
 
 const FREE_LIMIT = 10
 
@@ -31,7 +32,7 @@ const t = {
     delete_desc: 'Permanently delete your account and all associated data. This action cannot be undone.',
     delete_cta: 'Delete my account',
     delete_confirm_title: 'Confirm account deletion',
-    delete_confirm_desc: (email) => `Type your email address ${email} to confirm you want to permanently delete your account.`,
+    delete_confirm_desc: () => `Type the email address associated with your account to confirm you want to permanently delete it.`,
     delete_confirm_placeholder: 'Type your email to confirm',
     delete_confirm_cta: 'Permanently delete account',
     delete_confirm_cancel: 'Cancel',
@@ -59,7 +60,7 @@ const t = {
     delete_desc: 'Elimina permanentemente a tua conta e todos os dados associados. Esta ação não pode ser desfeita.',
     delete_cta: 'Eliminar a minha conta',
     delete_confirm_title: 'Confirmar eliminação da conta',
-    delete_confirm_desc: (email) => `Escreve o teu endereço de email ${email} para confirmar que queres eliminar permanentemente a tua conta.`,
+    delete_confirm_desc: () => `Escreve o endereço de email associado à tua conta para confirmar que queres eliminá-la permanentemente.`,
     delete_confirm_placeholder: 'Escreve o teu email para confirmar',
     delete_confirm_cta: 'Eliminar conta permanentemente',
     delete_confirm_cancel: 'Cancelar',
@@ -87,7 +88,7 @@ const t = {
     delete_desc: 'Elimina permanentemente tu cuenta y todos los datos asociados. Esta acción no se puede deshacer.',
     delete_cta: 'Eliminar mi cuenta',
     delete_confirm_title: 'Confirmar eliminación de cuenta',
-    delete_confirm_desc: (email) => `Escribe tu dirección de email ${email} para confirmar que quieres eliminar permanentemente tu cuenta.`,
+    delete_confirm_desc: () => `Escribe la dirección de email asociada a tu cuenta para confirmar que quieres eliminarla permanentemente.`,
     delete_confirm_placeholder: 'Escribe tu email para confirmar',
     delete_confirm_cta: 'Eliminar cuenta permanentemente',
     delete_confirm_cancel: 'Cancelar',
@@ -250,16 +251,7 @@ export default function AccountPage() {
           <span className="text-[13px] text-gray-500 hidden sm:block">{i.title}</span>
         </div>
         <div className="flex items-center gap-3">
-          {/* Lang */}
-          <div className="flex gap-1.5">
-            {Object.keys(flags).map(l => (
-              <button key={l} onClick={() => { setLang(l); localStorage.setItem('metaclean_lang', l) }}
-                className="p-1 rounded opacity-50 hover:opacity-100 transition-opacity"
-                style={{ opacity: lang === l ? 1 : undefined }}>
-                <img src={flags[l]} alt={l} style={{ width: 16, height: 11, objectFit: 'cover', borderRadius: 2 }} />
-              </button>
-            ))}
-          </div>
+          <LangDropdown lang={lang} onChange={(l) => { setLang(l); localStorage.setItem('metaclean_lang', l) }} />
           <Link href="/dashboard" className="text-[12px] text-gray-500 hover:text-gray-300 transition-colors">
             ← {i.back}
           </Link>
@@ -412,7 +404,7 @@ export default function AccountPage() {
                 {i.delete_confirm_title}
               </h2>
               <p className="text-[13px] text-gray-500 leading-relaxed mb-5">
-                {i.delete_confirm_desc(user?.email || '')}
+                {i.delete_confirm_desc()}
               </p>
 
               <input

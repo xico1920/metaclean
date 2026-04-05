@@ -1,7 +1,6 @@
 'use client'
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
-import Footer from '@/app/components/Footer'
 
 const phrases = {
   en: [
@@ -405,7 +404,21 @@ export default function NotFound() {
 
       </div>
 
-      <Footer lang={lang} />
+      {/* Minimal footer */}
+      <div style={{...anim(600), position: 'relative', zIndex: 3, marginTop: '3rem', display: 'flex', alignItems: 'center', gap: '20px', flexWrap: 'wrap', justifyContent: 'center'}}>
+        {[
+          { href: '/', label: 'Home' },
+          { href: '/features', label: 'Features' },
+          { href: '/pricing', label: 'Pricing' },
+          { href: '/privacy', label: 'Privacy' },
+          { href: '/terms', label: 'Terms' },
+        ].map(({ href, label }) => (
+          <Link key={href} href={href} style={{fontSize: '12px', color: 'rgba(75,85,99,1)', textDecoration: 'none', transition: 'color 0.2s'}}
+            onMouseEnter={e => e.currentTarget.style.color = 'rgba(156,163,175,1)'}
+            onMouseLeave={e => e.currentTarget.style.color = 'rgba(75,85,99,1)'}
+          >{label}</Link>
+        ))}
+      </div>
 
       <style>{`
         @keyframes pulse404 {
