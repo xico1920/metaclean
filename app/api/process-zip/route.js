@@ -90,7 +90,7 @@ export async function POST(request) {
     const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single()
     if (!profile) return NextResponse.json({ error: 'Profile not found' }, { status: 404 })
 
-    const isAdmin = user.email === process.env.ADMIN_EMAIL
+    const isAdmin = profile?.is_admin === true
     const isPro   = isAdmin || profile.plan === 'pro'
 
     // ── Parse request ─────────────────────────────────────────────────────────

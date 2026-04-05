@@ -21,7 +21,7 @@ export default function BlogPost({ children }) {
     return () => window.removeEventListener('metaclean:lang', onLang)
   }, [])
 
-  const i = t[lang]
+  const i = t[lang] || t.en
 
   return (
     <div style={{ minHeight: '100vh', background: '#060609', color: 'white', fontFamily: '-apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif' }}>

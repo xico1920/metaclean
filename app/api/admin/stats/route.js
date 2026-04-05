@@ -12,7 +12,11 @@ export async function GET(request) {
     }
     const token = authHeader.slice(7)
     const { data: { user }, error: authError } = await supabase.auth.getUser(token)
-    if (authError || !user || user.email !== process.env.ADMIN_EMAIL) {
+    if (authError || !user) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    }
+    const { data: callerProfile } = await supabase.from('profiles').select('is_admin').eq('id', user.id).single()
+    if (!callerProfile?.is_admin) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
